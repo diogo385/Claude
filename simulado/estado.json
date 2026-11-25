@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-25T12:31:13.683527-03:00",
+  "ultima_execucao": "2026-11-25T13:26:59.040302-03:00",
   "ops_dia": {
     "data": "2026-11-25",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 341298.0,
-    "eth": 9602.07,
-    "sol": 393.5,
-    "xrp": 5.252,
-    "bnb": 3131.0,
-    "link": 50.46,
-    "ltc": 234.7,
-    "doge": 0.3118,
-    "ada": 0.809,
-    "avax": 37.1,
-    "near": 16.0
+    "btc": 344345.0,
+    "eth": 9669.69,
+    "sol": 398.5,
+    "xrp": 5.314,
+    "bnb": 3166.0,
+    "link": 50.82,
+    "ltc": 237.6,
+    "doge": 0.3141,
+    "ada": 0.82,
+    "avax": 37.27,
+    "near": 16.13
   },
   "reserva": {
     "saldo": 500.0,
@@ -120,38 +120,42 @@
     "sinais": {
       "ltc": {
         "status": "caindo",
-        "queda": 0.1805,
-        "repique": 0.0
+        "queda": 0.1704,
+        "repique": 0.0089
       },
       "doge": {
         "status": "caindo",
-        "queda": 0.1912,
-        "repique": 0.0
+        "queda": 0.1852,
+        "repique": 0.0064
       },
       "ada": {
         "status": "caindo",
-        "queda": 0.191,
-        "repique": 0.0
+        "queda": 0.18,
+        "repique": 0.0136
       },
       "avax": {
         "status": "caindo",
-        "queda": 0.2355,
+        "queda": 0.232,
         "repique": 0.0
       },
       "near": {
         "status": "caindo",
-        "queda": 0.2399,
+        "queda": 0.2337,
         "repique": 0.0
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-25T12:31:13.683527-03:00",
-  "ultimo_salvamento": "2026-11-25T12:31:13.683527-03:00",
-  "tg_offset": 324349880,
+  "ultima_checagem_carteiras": "2026-11-25T13:26:59.040302-03:00",
+  "ultimo_salvamento": "2026-11-25T13:26:59.040302-03:00",
+  "tg_offset": 324349881,
   "valores_24h": [
     [
       "2026-11-25T12:31:13.683527-03:00",
       1828.53
+    ],
+    [
+      "2026-11-25T13:26:59.040302-03:00",
+      1836.89
     ]
   ],
   "trava_queda": false,
