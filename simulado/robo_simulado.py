@@ -3,9 +3,9 @@
 - Usa preços reais e públicos da Binance (sem conta, sem chave).
 - Opera um dinheiro de mentira: R$ 1.000 iniciais.
 - Carteira-alvo: BTC 35% · ETH 15% · SOL 8% · XRP 5% · BNB 4% · LINK 3% · reais 30%.
-- Checa o mercado a cada 4 horas e opera o ativo mais fora do alvo. Até 20 operações por dia:
+- Checa o mercado a cada 15 minutos e opera o ativo mais fora do alvo. Até 20 operações por dia,
   a 1ª quando o desvio chega a 1 ponto; a 2ª e a 3ª só se a oportunidade for muito boa
-  (desvio de 2,5 pontos ou mais). O resumo diário sai na checagem das 7h (Brasília).
+  todas com desvio de 1 ponto ou mais. O resumo diário sai na checagem das 7h (Brasília).
 - Reserva de oportunidade: R$ 500 fora da carteira. Entra em degraus de R$ 125 quando a carteira
   cai 20%, 30%, 40% e 50% desde o pico (medido por cota, sem contar os aportes).
 - Carteira satélite (risco maior): aporte de R$ 250 em LTC 20% · DOGE 20% · ADA 18% · AVAX 16% · NEAR 16%
@@ -45,10 +45,10 @@ OPORT_REPIQUE = 0.03     # ...e 3% ou mais acima do fundo dos últimos 3 dias (p
 OPORT_FUNDO_DIAS = 3
 OPORT_VALOR = 25.0       # quanto compra em cada oportunidade (no máximo 1 posição aberta por moeda)
 OPORT_LUCRO = 0.015      # vende com +1,5%: cobre ~0,3% de custos (ida e volta) e deixa ~1,2% de ganho
-INTERVALO_CARTEIRAS = 3.5  # horas: rebalanceamento das carteiras segue a cada ~4 h; oportunidades, a cada 15 min
+INTERVALO_CARTEIRAS = 0.2  # horas: carteiras e oportunidades checadas a cada execução (15 min)
 SALVAR_A_CADA = 55         # minutos: sem novidade, grava o estado no repositório no máximo ~1 vez por hora
 DESVIO_MIN = 0.01        # 1ª operação do dia: ativo 1 ponto ou mais fora do alvo
-DESVIO_EXTRA = 0.025     # 2ª e 3ª operações do dia: só com 2,5 pontos ou mais (oportunidade muito boa)
+DESVIO_EXTRA = 0.01      # operações seguintes do dia: também com 1 ponto (teste simulado)
 MAX_OPS_DIA = 20         # no máximo 20 operações por dia em cada carteira (teste simulado)
 HORA_RESUMO = 7          # a partir desta hora (Brasília) manda o resumo do dia
 TAXA = 0.001             # 0,1% (Binance)
@@ -452,7 +452,7 @@ def main():
         est["ops_periodo"] = 0
     # grava no repositório só quando algo aconteceu ou ~1 vez por hora (limita commits e atualizações do site)
     ult_salv = est.get("ultimo_salvamento")
-    salvar = (novo or bool(movs) or resumo_agora or checar_carteiras or not ult_salv
+    salvar = (novo or bool(movs) or resumo_agora or not ult_salv
               or (agora - datetime.fromisoformat(ult_salv)).total_seconds() >= SALVAR_A_CADA * 60)
     if salvar:
         est["ultimo_salvamento"] = agora.isoformat()
@@ -467,7 +467,7 @@ def main():
         compras = "\n".join(f"• {a.upper()} {ALVO[a]*100:.0f}% a {preco(px[a])}" for a in ALVO)
         telegram(f"{ROTULO} · Carteira nova iniciada\n"
                  f"Dinheiro de mentira: {brl(CAPITAL)} na carteira + {brl(RESERVA_INICIAL)} de reserva\n{compras}\n• Reais {(1 - sum(ALVO.values()))*100:.0f}%\n"
-                 f"Checo o mercado a cada 4 horas. Faço até {MAX_OPS_DIA} operações por dia: a 1ª quando um ativo desvia 1 ponto do alvo; a 2ª e a 3ª só se a oportunidade for muito boa (2,5 pontos ou mais). Resumo todo dia às 7h.")
+                 f"Checo o mercado a cada 15 minutos. Faço até {MAX_OPS_DIA} operações por dia, quando um ativo desvia 1 ponto ou mais do alvo. Resumo todo dia às 7h.")
         return
     degraus_txt = ", ".join(f"{d*100:.0f}%" for d in DEGRAUS)
     if migrou:
@@ -524,7 +524,7 @@ def main():
         if n >= MAX_OPS_DIA:
             rodape = f"Operação {n} de {MAX_OPS_DIA} hoje. Limite do dia atingido."
         else:
-            rodape = f"Operação {n} de até {MAX_OPS_DIA} hoje. Outra hoje só se a oportunidade for muito boa (desvio de 2,5 pontos ou mais)."
+            rodape = f"Operação {n} de até {MAX_OPS_DIA} hoje."
         emoji = "🟢" if op["tipo"] == "COMPRA" else "🔴"
         telegram(f"{ROTULO} · {emoji} {op['tipo']}\n"
                  f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
@@ -554,5 +554,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         telegram(f"{ROTULO} · ⚠️ O robô não conseguiu rodar agora.\nMotivo: {e}\n"
-                 f"Nada foi alterado na carteira simulada. Tento de novo na próxima checagem (em até 4 horas).")
+                 f"Nada foi alterado na carteira simulada. Tento de novo na próxima checagem (em 15 minutos).")
         sys.exit(1)

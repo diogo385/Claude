@@ -62,10 +62,10 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 ## 5. Regras de operação
 
 ### 5.1 Rebalanceamento: carteira principal e satélite
-- **Checagem a cada ~4 horas.**
+- **Checagem a cada 15 minutos.**
 - Opera sempre a **moeda mais fora do alvo** e a devolve exatamente ao alvo.
 - **1ª operação do dia:** desvio de **1 ponto** ou mais.
-- **2ª e 3ª operações do dia:** só com desvio de **2,5 pontos** ou mais.
+- **Operações seguintes do dia:** também com **1 ponto** (teste simulado; antes eram 2,5 pontos).
 - **Máximo de 20 operações por dia em cada carteira** (teste simulado), com contadores separados.
 - **Custo simulado:** 0,1% de taxa + 0,05% de diferença de preço por operação.
 
@@ -91,8 +91,7 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 
 | Quando | O quê |
 |---|---|
-| **A cada 15 minutos** | Oportunidades da satélite e checagem da reserva principal |
-| **A cada ~4 horas** | Rebalanceamento das duas carteiras |
+| **A cada 15 minutos** | Rebalanceamento das duas carteiras, oportunidades da satélite e reserva principal |
 | **7h (Brasília)** | Resumo do dia no Telegram e registro de um ponto no histórico |
 
 O GitHub pode atrasar as execuções agendadas em alguns minutos. Para não sobrecarregar o site, o estado só é gravado quando algo acontece ou cerca de 1 vez por hora.
@@ -255,3 +254,4 @@ PLANO.md              este documento
 | 25/11 | Monitor com ganhos e perdas por cripto (aplicado × vale agora). Histórico em página própria |
 | 25/11 | Robô passa a checar a cada 15 minutos (carteiras seguem a cada ~4 h) |
 | 25/11 | Limite de operações por dia de 3 para 20 em cada carteira |
+| 25/11 | Rebalanceamento a cada 15 minutos e todas as operações com gatilho de 1 ponto (teste simulado) |
