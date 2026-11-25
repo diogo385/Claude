@@ -166,7 +166,7 @@ h1 span { color: var(--amber); }
         <h1><span>Argos Trade</span> Cripto <span class="ver">v0.2 · simulado</span></h1>
         <div class="sub">
           <span><i class="dot" id="runDot"></i><span id="runTxt">carregando</span> · <span class="num" id="clock">--:--:--</span></span>
-          <span class="tag" id="tagAlvo">ATÉ 3 OPERAÇÕES/DIA</span>
+          <span class="tag" id="tagAlvo">ATÉ 20 OPERAÇÕES/DIA</span>
         </div>
       </div>
       <div class="kpis">
@@ -315,7 +315,7 @@ h1 span { color: var(--amber); }
       const mk = el("div", "mark"); mk.style.left = (alvo * 100) + "%";
       tr.append(f, mk); row.append(top, tr); al.appendChild(row);
     });
-    set("tagAlvo", ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
+    set("tagAlvo", "ATÉ 20 OPERAÇÕES/DIA · " + ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
   }
 
   async function carregarRobo() {

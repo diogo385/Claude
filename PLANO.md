@@ -66,7 +66,7 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 - Opera sempre a **moeda mais fora do alvo** e a devolve exatamente ao alvo.
 - **1ª operação do dia:** desvio de **1 ponto** ou mais.
 - **2ª e 3ª operações do dia:** só com desvio de **2,5 pontos** ou mais.
-- **Máximo de 3 operações por dia em cada carteira**, com contadores separados.
+- **Máximo de 20 operações por dia em cada carteira** (teste simulado), com contadores separados.
 - **Custo simulado:** 0,1% de taxa + 0,05% de diferença de preço por operação.
 
 ### 5.2 Reserva de oportunidade da principal (R$ 500)
@@ -105,7 +105,7 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 
 | Evento | Mensagem |
 |---|---|
-| Rebalanceamento | 🟢 COMPRA / 🔴 VENDA, com o motivo e "operação N de até 3 hoje" |
+| Rebalanceamento | 🟢 COMPRA / 🔴 VENDA, com o motivo e "operação N de até 20 hoje" |
 | Satélite | 🛰️ Satélite · COMPRA / VENDA |
 | Oportunidade da satélite | 🎯 OPORTUNIDADE · COMPRA (com a venda programada) e 💰 LUCRO · VENDA |
 | Reserva principal | 💰 Reserva acionada (degrau, valor e saldo restante) |
@@ -166,7 +166,7 @@ O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 |---|---|
 | Saldo negativo ou qualquer sinal de dívida | Para tudo e avisa |
 | Ordem maior que o saldo disponível | Nunca acontece: o robô limita ao saldo |
-| Mais de 3 operações por dia em cada carteira | Bloqueado |
+| Mais de 20 operações por dia em cada carteira | Bloqueado |
 | Falha de preços ou de conexão | Nada muda, tenta de novo e avisa |
 | Robô sem rodar | O monitor mostra **ATRASO** depois de 3 horas sem checagem |
 | Queda forte | Só aviso e uso da reserva. Nunca vende tudo em pânico |
@@ -254,3 +254,4 @@ PLANO.md              este documento
 | 25/11 | Reserva da satélite de R$ 100: giro curto com venda em +1,5%. Robô passa a rodar toda hora |
 | 25/11 | Monitor com ganhos e perdas por cripto (aplicado × vale agora). Histórico em página própria |
 | 25/11 | Robô passa a checar a cada 15 minutos (carteiras seguem a cada ~4 h) |
+| 25/11 | Limite de operações por dia de 3 para 20 em cada carteira |
