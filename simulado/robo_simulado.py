@@ -45,6 +45,9 @@ OPORT_REPIQUE = 0.03     # ...e 3% ou mais acima do fundo dos últimos 3 dias (p
 OPORT_FUNDO_DIAS = 3
 OPORT_VALOR = 25.0       # quanto compra em cada oportunidade (no máximo 1 posição aberta por moeda)
 OPORT_LUCRO = 0.015      # vende com +1,5%: cobre ~0,3% de custos (ida e volta) e deixa ~1,2% de ganho
+OPORT_MAX_POSICOES = 2   # no máximo 2 posições de giro abertas ao mesmo tempo (backtest: menos dinheiro preso)
+TRAVA_QUEDA_24H = 0.07   # patrimônio 7% abaixo do máximo das últimas 24 h: pausa só as compras de giro
+SAUDE = PASTA / "saude.json"   # registro de falhas do robô
 INTERVALO_CARTEIRAS = 0.2  # horas: carteiras e oportunidades checadas a cada execução (15 min)
 SALVAR_A_CADA = 55         # minutos: sem novidade, grava o estado no repositório no máximo ~1 vez por hora
 DESVIO_MIN = 0.01        # 1ª operação do dia: ativo 1 ponto ou mais fora do alvo
@@ -259,7 +262,7 @@ def fechamentos_horarios(par, horas=OPORT_TOPO_DIAS * 24 + 1):
     return None
 
 
-def oportunidades_satelite(est, px, agora):
+def oportunidades_satelite(est, px, agora, comprar=True, vender=True):
     """Reserva da satélite: cria (uma vez), vende posições com lucro e compra nas oportunidades.
     Devolve (criada, vendas, compras)."""
     sat = est["satelite"]
@@ -273,7 +276,7 @@ def oportunidades_satelite(est, px, agora):
     # 1) saída: posição de oportunidade com +30% é vendida e o dinheiro volta para a reserva
     for pos in list(sat["posicoes"]):
         a = pos["ativo"]
-        if px[a] >= pos["preco"] * (1 + OPORT_LUCRO):
+        if vender and px[a] >= pos["preco"] * (1 + OPORT_LUCRO):
             bruto = pos["qtd"] * px[a]
             res["saldo"] += bruto * (1 - CUSTO)
             sat["posicoes"].remove(pos)
@@ -297,6 +300,10 @@ def oportunidades_satelite(est, px, agora):
             status = "caindo"
         else:
             status = "oportunidade"
+        if status == "oportunidade" and not comprar:
+            status = "oportunidade (pausada)"
+        elif status == "oportunidade" and len(sat["posicoes"]) >= OPORT_MAX_POSICOES:
+            status = "oportunidade (limite de posições)"
         if status == "oportunidade" and res["saldo"] >= OPORT_VALOR:
             qtd = OPORT_VALOR * (1 - CUSTO) / px[a]
             res["saldo"] -= OPORT_VALOR
@@ -352,6 +359,42 @@ def lancar(movs):
             w.writerow([m["data_hora"], m["conta"], m["tipo"], m["descricao"], f"{m['valor']:.2f}", f"{m['taxa']:.4f}", f"{saldo:.2f}"])
 
 
+# ---------- controle pelo Telegram ----------
+def ler_comandos(est):
+    """Lê comandos novos enviados ao bot, aceitando só o chat do dono. Devolve a lista de comandos."""
+    token, chat = os.environ.get("TELEGRAM_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat:
+        return []
+    try:
+        off = est.get("tg_offset", 0)
+        with urllib.request.urlopen(f"https://api.telegram.org/bot{token}/getUpdates?offset={off}&timeout=0", timeout=20) as r:
+            dados = json.loads(r.read())
+    except Exception:
+        return []
+    cmds = []
+    for u in dados.get("result", []):
+        est["tg_offset"] = u["update_id"] + 1
+        m = u.get("message") or {}
+        if str((m.get("chat") or {}).get("id")) != str(chat):
+            continue          # ignora qualquer outro chat: só o dono comanda o robô
+        texto = (m.get("text") or "").strip().lower()
+        if texto.startswith("/"):
+            cmds.append(texto.split()[0].split("@")[0])
+    return cmds
+
+
+def atualizar_trava(est, v_total, agora):
+    """Guarda o patrimônio das últimas 24 h e liga a trava se caiu 7% ou mais do máximo do período."""
+    hist = [x for x in est.get("valores_24h", []) if (agora - datetime.fromisoformat(x[0])).total_seconds() <= 24 * 3600]
+    maximo = max([x[1] for x in hist] + [v_total])
+    hist.append([agora.isoformat(), round(v_total, 2)])
+    est["valores_24h"] = hist[-120:]
+    antes = est.get("trava_queda", False)
+    est["trava_queda"] = v_total <= maximo * (1 - TRAVA_QUEDA_24H)
+    est["queda_24h"] = round(1 - v_total / maximo, 4)
+    return antes != est["trava_queda"]
+
+
 # ---------- execução ----------
 def main():
     agora = datetime.now(BRASILIA)
@@ -361,16 +404,28 @@ def main():
     est = estado_inicial(px, agora) if novo else json.loads(ESTADO.read_text())
     c = est["carteira"]
     migrou = preparar_reserva(est, novo)
-    aportes = [] if novo else usar_reserva(est, c, valor(c, px), agora)   # reserva principal: checada a cada execução
+    # comandos do dono pelo Telegram (/pausar, /retomar, /status, /hoje, /ajuda)
+    cmds = [] if novo else ler_comandos(est)
+    pausa_mudou = False
+    for cmd in cmds:
+        if cmd == "/pausar" and not est.get("pausado"):
+            est["pausado"], pausa_mudou = True, True
+        elif cmd == "/retomar" and est.get("pausado"):
+            est["pausado"], pausa_mudou = False, True
+    pausado = est.get("pausado", False)
+    # trava de queda em 24 h (pausa só as compras de giro da satélite)
+    v_pre = valor(c, px) + est["reserva"]["saldo"] + (valor_satelite(est["satelite"], px) if "satelite" in est else 0.0)
+    trava_mudou = False if novo else atualizar_trava(est, v_pre, agora)
+    aportes = [] if novo or pausado else usar_reserva(est, c, valor(c, px), agora)   # reserva principal: checada a cada execução
 
     if est.get("ops_dia", {}).get("data") != hoje:
         est["ops_dia"] = {"data": hoje, "n": 0}
     limite = MAX_OPS_DIA - est["ops_dia"]["n"]
     ult_cart = est.get("ultima_checagem_carteiras")
     checar_carteiras = novo or not ult_cart or (agora - datetime.fromisoformat(ult_cart)).total_seconds() >= INTERVALO_CARTEIRAS * 3600
-    if checar_carteiras:
+    if checar_carteiras and not pausado:
         est["ultima_checagem_carteiras"] = agora.isoformat()
-    feitas = [] if novo or limite <= 0 or not checar_carteiras else rebalancear(c, px, limite, est["ops_dia"]["n"])
+    feitas = [] if novo or pausado or limite <= 0 or not checar_carteiras else rebalancear(c, px, limite, est["ops_dia"]["n"])
     est["gatilho"], est["gatilho_extra"], est["max_ops_dia"] = DESVIO_MIN, DESVIO_EXTRA, MAX_OPS_DIA
     # carteira satélite: aporte (uma vez) e rebalanceamento com as mesmas regras, contador próprio
     sat_montagem = [] if novo else preparar_satelite(est, px, agora)
@@ -380,14 +435,15 @@ def main():
         if sat["ops_dia"].get("data") != hoje:
             sat["ops_dia"] = {"data": hoje, "n": 0}
         lim = MAX_OPS_DIA - sat["ops_dia"]["n"]
-        sat_feitas = [] if lim <= 0 or not checar_carteiras else rebalancear(sat["carteira"], px, lim, sat["ops_dia"]["n"], SAT_ALVO)
+        sat_feitas = [] if pausado or lim <= 0 or not checar_carteiras else rebalancear(sat["carteira"], px, lim, sat["ops_dia"]["n"], SAT_ALVO)
         sat["ops_dia"]["n"] += len(sat_feitas)
         sat["rebalanceamentos"] += len(sat_feitas)
         sat["taxas"] += sum(f["taxa"] for f in sat_feitas)
         est["ops_periodo"] = est.get("ops_periodo", 0) + len(sat_feitas)
     sat_res_criada, sat_vendas_op, sat_compras_op = False, [], []
     if "satelite" in est and not sat_montagem:
-        sat_res_criada, sat_vendas_op, sat_compras_op = oportunidades_satelite(est, px, agora)
+        sat_res_criada, sat_vendas_op, sat_compras_op = oportunidades_satelite(
+            est, px, agora, comprar=not pausado and not est.get("trava_queda"), vender=not pausado)
         est["ops_periodo"] += len(sat_vendas_op) + len(sat_compras_op)
     est["ops_dia"]["n"] += len(feitas)
     est["rebalanceamentos"] = est.get("rebalanceamentos", 0) + len(feitas)
@@ -444,15 +500,15 @@ def main():
         m = mov_operacao(dict(op, tipo="COMPRA"), px, "Satélite", agora); m["descricao"] += " (oportunidade, com a reserva da satélite)"; movs.append(m)
     lancar(movs)
     if not HISTORICO.exists():
-        HISTORICO.write_text("data;patrimonio;carteira_parada;operacoes_no_dia\n")
+        HISTORICO.write_text("data;patrimonio;carteira_parada;operacoes_no_dia;capital\n")
     ops_24h = est["ops_periodo"]
     if resumo_agora:  # uma linha por dia, na checagem da manhã
         with open(HISTORICO, "a") as f:
-            f.write(f"{agora:%Y-%m-%d};{v_tot:.2f};{v_par_tot:.2f};{ops_24h}\n")
+            f.write(f"{agora:%Y-%m-%d};{v_tot:.2f};{v_par_tot:.2f};{ops_24h};{est['capital_total']:.2f}\n")
         est["ops_periodo"] = 0
     # grava no repositório só quando algo aconteceu ou ~1 vez por hora (limita commits e atualizações do site)
     ult_salv = est.get("ultimo_salvamento")
-    salvar = (novo or bool(movs) or resumo_agora or not ult_salv
+    salvar = (novo or bool(movs) or resumo_agora or bool(cmds) or trava_mudou or not ult_salv
               or (agora - datetime.fromisoformat(ult_salv)).total_seconds() >= SALVAR_A_CADA * 60)
     if salvar:
         est["ultimo_salvamento"] = agora.isoformat()
@@ -469,6 +525,13 @@ def main():
                  f"Dinheiro de mentira: {brl(CAPITAL)} na carteira + {brl(RESERVA_INICIAL)} de reserva\n{compras}\n• Reais {(1 - sum(ALVO.values()))*100:.0f}%\n"
                  f"Checo o mercado a cada 15 minutos. Faço até {MAX_OPS_DIA} operações por dia, quando um ativo desvia 1 ponto ou mais do alvo. Resumo todo dia às 7h.")
         return
+    if pausa_mudou:
+        telegram(f"{ROTULO} · ⏸️ Robô PAUSADO\nNenhuma operação nova até você mandar /retomar. Os avisos e o resumo continuam."
+                 if pausado else f"{ROTULO} · ▶️ Robô RETOMADO\nOperações voltam a valer a partir desta checagem.")
+    if trava_mudou:
+        telegram(f"{ROTULO} · 🛑 Trava de queda ligada\nPatrimônio {num(est['queda_24h']*100, 1)}% abaixo do máximo das últimas 24 h. "
+                 f"Compras de giro da satélite pausadas; rebalanceamento e vendas com lucro seguem normais."
+                 if est["trava_queda"] else f"{ROTULO} · ✅ Trava de queda desligada\nCompras de giro da satélite liberadas de novo.")
     degraus_txt = ", ".join(f"{d*100:.0f}%" for d in DEGRAUS)
     if migrou:
         telegram(f"{ROTULO} · 💰 Reserva de oportunidade criada\n"
@@ -531,6 +594,31 @@ def main():
                  f"Motivo: {a.upper()} estava em {num(op['peso_antes']*100, 1)}% da carteira (alvo {ALVO[a]*100:.0f}%)\n"
                  f"Taxa: {brl(op['taxa'])}\n"
                  f"{rodape}")
+    for cmd in cmds:
+        if cmd in ("/status", "/start"):
+            sat_txt = ""
+            if "satelite" in est:
+                st = est["satelite"]
+                sat_txt = (f"Satélite: {brl(v_sat)} · reserva dela {brl(st.get('reserva', {}).get('saldo', 0))} · "
+                           f"giros abertos {len(st.get('posicoes', []))}/{OPORT_MAX_POSICOES}\n")
+            telegram(f"{ROTULO} · 📟 Status\n"
+                     f"Situação: {'⏸️ PAUSADO' if pausado else '▶️ operando'}{' · 🛑 trava de queda ligada' if est.get('trava_queda') else ''}\n"
+                     f"Patrimônio total: {brl(v_tot)} ({pct(v_tot / est['capital_total'] - 1)} desde o início)\n"
+                     f"Carteira: {brl(v)} · Reserva: {brl(reserva)}\n{sat_txt}"
+                     f"Sem robô: {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))}\n"
+                     f"Operações hoje: principal {est['ops_dia']['n']} · satélite {est.get('satelite', {}).get('ops_dia', {}).get('n', 0)}")
+        elif cmd == "/hoje":
+            hist = est.get("valores_24h", [])
+            ref = hist[0][1] if hist else v_tot
+            telegram(f"{ROTULO} · 📅 Últimas 24 h\n"
+                     f"Patrimônio: {brl(ref)} → {brl(v_tot)} ({'+' if v_tot >= ref else '−'}{brl(abs(v_tot - ref))}, {pct(v_tot / ref - 1)})\n"
+                     f"Queda máxima no período: {num(est.get('queda_24h', 0)*100, 1)}% · operações desde o último resumo: {est.get('ops_periodo', 0)}")
+        elif cmd in ("/ajuda", "/help"):
+            telegram(f"{ROTULO} · Comandos\n/status — situação agora\n/hoje — resultado das últimas 24 h\n"
+                     f"/pausar — para todas as operações\n/retomar — volta a operar\n"
+                     f"Respondo na próxima checagem (até ~15 min).")
+        elif cmd not in ("/pausar", "/retomar"):
+            telegram(f"{ROTULO} · Não conheço o comando {cmd}. Mande /ajuda.")
     if not resumo_agora:
         return
     dias = (agora.date() - datetime.fromisoformat(est["inicio"]).date()).days
@@ -540,7 +628,8 @@ def main():
               + (f"Satélite: {brl(v_sat)} ({pct(v_sat / (SAT_APORTE + est['satelite'].get('parada_reserva', 0)) - 1)}) · reserva dela: {brl(est['satelite'].get('reserva', {}).get('saldo', 0))} · oportunidades abertas: {len(est['satelite'].get('posicoes', []))}\n" if "satelite" in est else "") +
               f"Sem robô (tudo parado): {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))} de diferença\n"
               f"Operações nas últimas 24 h: {ops_24h} · rebalanceamentos: {est['rebalanceamentos']} · taxas: {brl(est['taxas'])}\n"
-              f"Divisão: {texto_pesos(pesos(c, px))}")
+              f"Divisão: {texto_pesos(pesos(c, px))}"
+              + ("\n⏸️ Robô está PAUSADO (mande /retomar para voltar)." if pausado else ""))
     queda = 1 - (v / est["investido"]) / est["pico_cota"]
     if queda >= 0.10:
         prox = next((d for d in DEGRAUS if d not in est["reserva"]["usados"]), None)
@@ -553,6 +642,15 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
+        try:
+            saude = json.loads(SAUDE.read_text()) if SAUDE.exists() else {"erros": []}
+            saude["erros"] = (saude.get("erros", []) + [{"quando": datetime.now(BRASILIA).isoformat(), "motivo": str(e)[:300]}])[-50:]
+            SAUDE.write_text(json.dumps(saude, indent=2, ensure_ascii=False))
+            if os.environ.get("GITHUB_OUTPUT"):
+                with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                    f.write("salvar=erro\n")
+        except Exception:
+            pass
         telegram(f"{ROTULO} · ⚠️ O robô não conseguiu rodar agora.\nMotivo: {e}\n"
                  f"Nada foi alterado na carteira simulada. Tento de novo na próxima checagem (em 15 minutos).")
         sys.exit(1)

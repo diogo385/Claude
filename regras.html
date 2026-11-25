@@ -55,7 +55,7 @@ th { color: var(--muted); font-weight: 500; font-size: 12px; }
     <ul>
       <li>Aporte separado de <b>R$ 250</b>. A carteira principal não muda.</li>
       <li>Mesmas regras de operação, com contador próprio de 20 por dia.</li>
-      <li><b>Reserva da satélite: R$ 100</b>, parados. Compra <b>R$ 25</b> de uma moeda quando ela está <b>10% ou mais abaixo do topo de 14 dias</b> e já subiu <b>3% do fundo de 3 dias</b>. Uma posição aberta por moeda.</li>
+      <li><b>Reserva da satélite: R$ 100</b>, parados. Compra <b>R$ 25</b> de uma moeda quando ela está <b>10% ou mais abaixo do topo de 14 dias</b> e já subiu <b>3% do fundo de 3 dias</b>. Uma posição aberta por moeda e <b>no máximo 2 ao mesmo tempo</b>.</li>
       <li>Essas compras ficam separadas do rebalanceamento e são <b>vendidas com +1,5%</b> (cobre ~0,3% de custos e deixa ~1,2% de ganho); o dinheiro volta para a reserva da satélite. Pode haver várias por dia.</li>
     </ul>
   </section>
@@ -97,10 +97,20 @@ th { color: var(--muted); font-weight: 500; font-size: 12px; }
   </section>
 
   <section>
+    <h2>Comandos no Telegram</h2>
+    <ul>
+      <li><b>/status</b>: situação agora · <b>/hoje</b>: últimas 24 h · <b>/ajuda</b>: lista de comandos.</li>
+      <li><b>/pausar</b>: para todas as operações · <b>/retomar</b>: volta a operar.</li>
+      <li>Só o seu chat é aceito. A resposta chega na próxima checagem (até ~15 min).</li>
+    </ul>
+  </section>
+
+  <section>
     <h2>Travas</h2>
     <ul>
       <li>Só saldo próprio: <b>sem dívida, sem margem, sem saque</b>.</li>
       <li>Saldo negativo detectado → o robô para e avisa.</li>
+      <li><b>Trava de queda:</b> patrimônio 7% ou mais abaixo do máximo das últimas 24 h → pausa só as compras de giro da satélite, até se recuperar.</li>
       <li>Falha de dados ou conexão → nada muda e tenta de novo na próxima checagem.</li>
     </ul>
   </section>

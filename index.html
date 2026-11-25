@@ -132,6 +132,21 @@ h1 span { color: var(--amber); }
 .pnl .barra i { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
 .pnl .barra::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line-hi); }
 .pnl-tot { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-bottom: 10px; font-size: 12px; color: var(--muted); }
+.perf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.perf .box h2 { margin-bottom: 8px; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 12px; }
+.kv span { color: var(--muted); } .kv b { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kv .tot { border-top: 1px solid var(--line-hi); padding-top: 4px; }
+.veredito { margin-top: 8px; font-size: 12px; padding: 6px 8px; border-radius: 6px; background: var(--panel); }
+.periodos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.periodos div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.periodos span { display: block; color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.periodos b { font-family: var(--display); font-size: 1.15rem; }
+.periodos i { display: block; font-style: normal; font-size: 11px; }
+.uw { width: 100%; height: auto; display: block; margin-top: 6px; }
+.uw text { font-family: var(--mono); fill: var(--dim); font-size: 10px; }
+.saude-link { color: var(--teal); }
+@media (max-width: 900px) { .perf { grid-template-columns: 1fr; } }
 .pnl-tot b { font-family: var(--display); font-size: 1.25rem; margin-left: 6px; }
 .side.sat { color: var(--teal); border: 1px solid var(--teal); margin-left: 4px; }
 .side.aporte { color: var(--amber); border: 1px solid var(--amber); }
@@ -157,7 +172,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=6">📈 Mercado ao vivo</a><a class="btn ghost" href="historico.html?v=10">Histórico</a><a class="btn ghost" href="extrato.html?v=11">Extrato</a><a class="btn ghost" href="regras.html?v=11">Regras</a><span class="mode">simulado</span></span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=6">📈 Mercado ao vivo</a><a class="btn ghost" href="historico.html?v=10">Histórico</a><a class="btn ghost" href="extrato.html?v=11">Extrato</a><a class="btn ghost" href="regras.html?v=12">Regras</a><span class="mode">simulado</span></span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -181,6 +196,7 @@ h1 span { color: var(--amber); }
         <section class="box">
           <h2>Evolução do patrimônio</h2>
           <svg class="eq" id="eq" viewBox="0 0 760 220" role="img" aria-label="Curva de patrimônio do robô simulado"></svg>
+          <svg class="uw" id="uw" viewBox="0 0 760 90" role="img" aria-label="Queda desde o pico"></svg>
         </section>
 
         <section class="box">
@@ -188,6 +204,12 @@ h1 span { color: var(--amber); }
           <div class="pnl-tot" id="pnlTot"></div>
           <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Aplicado</th><th>Vale agora</th><th>Ganho / perda</th><th>%</th><th>Preço médio</th><th>Cotação</th><th>24h</th><th></th></tr></thead><tbody id="pnlBody"></tbody></table></div>
         </section>
+
+        <div class="perf">
+          <section class="box"><h2>Resultado por período</h2><div class="periodos" id="periodos"></div></section>
+          <section class="box"><h2>O robô está se pagando?</h2><div class="kv" id="pagando"></div><div class="veredito" id="veredito">--</div></section>
+          <section class="box"><h2>🛰️ Giro da satélite</h2><div class="kv" id="giro"></div></section>
+        </div>
 
         <div class="two">
           <section class="box">
@@ -283,7 +305,7 @@ h1 span { color: var(--amber); }
   const brasilia = () => new Date(Date.now() - 3 * 3600e3);
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
 
-  let sat = null, satAtivos = [], opsSat = [];
+  let sat = null, satAtivos = [], opsSat = [], extrato = [], saude = { erros: [] };
   let estado = null, hist = [], ops = [], px = null, px24 = {}, pxHora = 0, ativos = [], GATILHO = 0.01;
 
   function aviso(t) { const m = $("msg"); m.textContent = t; m.hidden = !t; }
@@ -326,6 +348,8 @@ h1 span { color: var(--amber); }
       hist = csv(await baixar("historico.csv"));
       try { ops = csv(await baixar("operacoes.csv")); } catch (e) { ops = []; }
       sat = estado.satelite || null; satAtivos = sat ? Object.keys(sat.alvo) : [];
+      try { extrato = csv(await baixar("extrato.csv")); } catch (e) { extrato = []; }
+      try { saude = JSON.parse(await baixar("saude.json")); } catch (e) { saude = { erros: [] }; }
       try { opsSat = sat ? csv(await baixar("operacoes_satelite.csv")) : []; } catch (e) { opsSat = []; }
       if (mudou) montarEstrutura();
       aviso("");
@@ -416,7 +440,8 @@ h1 span { color: var(--amber); }
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
     const vivo = horasDesde < 3;
     $("runDot").className = "dot" + (vivo ? "" : " off");
-    set("runTxt", vivo ? "rodando" : "sem checagem há mais de 3 h");
+    set("runTxt", !vivo ? "sem checagem há mais de 3 h" : estado.pausado ? "PAUSADO (mande /retomar)" : estado.trava_queda ? "rodando · trava de queda ligada" : "rodando");
+    if (estado.pausado) $("runDot").className = "dot off";
 
     ativos.forEach(a => {
       const ch = $("chip-" + a); if (!ch) return;
@@ -458,7 +483,11 @@ h1 span { color: var(--amber); }
     set("aExe", `${usouHoje ? "limite do dia atingido" : `${nHojeR} de ${maxDia} operações hoje`} · próxima checagem em ${h}h ${pad(m)}min`);
     set("aTel", ultExec ? "última checagem " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
     set("aVida", vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem checagem há mais de 3 h");
-    set("aVidaSt", vivo ? "OK" : "ATRASO");
+    const falhas = (saude.erros || []).filter(x => Date.now() - new Date(x.quando) < 864e5).length;
+    $("aVida").textContent = "";
+    $("aVida").append(vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"} · ${falhas} ${falhas === 1 ? "falha" : "falhas"} em 24 h · ` : "sem checagem há mais de 3 h · ");
+    const lk = el("a", "saude-link", "execuções"); lk.href = "https://github.com/diogo385/Claude/actions/workflows/robo-simulado.yml"; lk.target = "_blank"; lk.rel = "noopener"; $("aVida").appendChild(lk);
+    set("aVidaSt", !vivo ? "ATRASO" : falhas ? "FALHAS" : "OK");
     set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
 
     ativos.concat(["reais"]).forEach(a => {
@@ -496,10 +525,87 @@ h1 span { color: var(--amber); }
 
     renderSat(p);
     renderPnl(p);
+    renderPerf(v, vp);
     grafico(v, vp);
   }
 
+  // ---------- desempenho ----------
+  const depositadoAte = quando => extrato.filter(m => m.tipo === "DEPÓSITO" && m.data_hora <= quando).reduce((t, m) => t + +m.valor, 0);
+  function renderPerf(v, vp) {
+    // resultado por período (descontando aportes feitos no período)
+    const agoraTxt = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 16).replace("T", " ");
+    const totalDep = depositadoAte("9999");
+    const per = $("periodos"); per.textContent = "";
+    const bloco = (rot, ganho, base) => {
+      const d = el("div"); d.append(el("span", "", rot));
+      d.appendChild(el("b", ganho >= 0 ? "up" : "down", `${sgn(ganho)}${brl(Math.abs(ganho))}`));
+      d.appendChild(el("i", ganho >= 0 ? "up" : "down", base > 0 ? pct(ganho / base) : "--")); per.appendChild(d);
+    };
+    const v24 = (estado.valores_24h || [])[0];
+    if (v24) { const q = v24[0].slice(0, 16).replace("T", " "); const dep = totalDep - depositadoAte(q); bloco("24 horas", v - v24[1] - dep, v24[1] + dep); }
+    else bloco("24 horas", 0, 0);
+    [[7, "7 dias"], [30, "30 dias"]].forEach(([n, rot]) => {
+      const limite = new Date(Date.now() - 3 * 3600e3 - n * 864e5).toISOString().slice(0, 10);
+      const linha = hist.filter(h => h.data <= limite).pop() || hist[0];
+      if (!linha) return bloco(rot, 0, 0);
+      const capBase = +linha.capital || depositadoAte(linha.data + " 23:59"), base = +linha.patrimonio, dep = totalDep - capBase;
+      bloco(rot + (linha === hist[0] && linha.data > limite ? " (desde o início)" : ""), v - base - dep, base + dep);
+    });
+    bloco("desde o início", v - totalDep, totalDep);
+
+    // o robô está se pagando?
+    const taxasOps = ops.reduce((t, o) => t + +o.taxa, 0)
+      + opsSat.filter(o => !(o.tipo === "COMPRA" && +o.peso_antes === 0)).reduce((t, o) => t + +o.taxa, 0);
+    const liquido = v - vp, bruto = liquido + taxasOps;
+    const kv = $("pagando"); kv.textContent = "";
+    const linhaKV = (rot, val, cls) => { const z = Math.abs(val) < 0.005; kv.append(el("span", cls || "", rot), el("b", (cls || "") + (z ? "" : val > 0 ? " up" : " down"), z ? "R$ 0,00" : `${val > 0 ? "+" : "−"}${brl(Math.abs(val))}`)); };
+    linhaKV("ganho das operações (antes das taxas)", bruto);
+    linhaKV("taxas pagas nas operações", -taxasOps);
+    linhaKV("resultado líquido vs sem robô", liquido, "tot");
+    const nOps = ops.length + opsSat.filter(o => !(o.tipo === "COMPRA" && +o.peso_antes === 0)).length;
+    $("veredito").textContent = nOps < 10 ? `Ainda cedo: ${nOps} operações até agora. Precisa de algumas semanas para concluir.`
+      : liquido >= 0 ? "✅ Sim: o robô ganha mais do que gasta em taxas." : bruto > 0 ? "⚠️ O robô ganha, mas as taxas estão comendo o ganho." : "❌ Não: o robô está pior que deixar tudo parado.";
+
+    // giro da satélite
+    const g = $("giro"); g.textContent = "";
+    const giros = opsSat.filter(o => o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO");
+    const entradas = {}, duracoes = []; let lucro = 0, vendas = 0;
+    giros.forEach(o => {
+      const a = o.ativo;
+      if (o.tipo === "OPORTUNIDADE") entradas[a] = o.data_hora;
+      else { vendas++; lucro += (+o.valor_reais - +o.taxa) - 25; if (entradas[a]) { duracoes.push((new Date(o.data_hora.replace(" ", "T")) - new Date(entradas[a].replace(" ", "T"))) / 36e5); delete entradas[a]; } }
+    });
+    const abertas = sat ? (sat.posicoes || []) : [];
+    const p = px || estado.ultimos_precos || {};
+    const presoAgora = abertas.reduce((t, x) => t + x.qtd * (p[x.ativo] || x.preco), 0), presoCusto = abertas.reduce((t, x) => t + x.custo, 0);
+    const kvs = [["giros concluídos (com lucro)", String(vendas)],
+      ["lucro realizado", `${sgn(lucro)}${brl(Math.abs(lucro))}`, lucro >= 0 ? "up" : "down"],
+      ["lucro médio por giro", vendas ? brl(lucro / vendas) : "--"],
+      ["tempo médio em posição", duracoes.length ? (duracoes.reduce((t, x) => t + x, 0) / duracoes.length >= 24 ? nf(duracoes.reduce((t, x) => t + x, 0) / duracoes.length / 24, 1) + " dias" : nf(duracoes.reduce((t, x) => t + x, 0) / duracoes.length, 1) + " h") : "--"],
+      ["posições abertas", `${abertas.length} de 2`],
+      ["abertas: custo → vale agora", abertas.length ? `${brl(presoCusto)} → ${brl(presoAgora)}` : "--", abertas.length ? (presoAgora >= presoCusto ? "up" : "down") : ""],
+      ["reserva de giro disponível", brl((sat && sat.reserva && sat.reserva.saldo) || 0)]];
+    if (estado.trava_queda) kvs.push(["trava de queda", "LIGADA · compras pausadas", "warn"]);
+    kvs.forEach(([k, val, cls]) => g.append(el("span", "", k), el("b", cls || "", val)));
+  }
+
+  function quedaPico(vAgora) {
+    const pts = hist.map(h => ({ d: h.data, r: +h.patrimonio / Math.max(1, +h.capital || depositadoAte(h.data + " 23:59")) }));
+    pts.push({ d: "agora", r: vAgora / Math.max(1, depositadoAte("9999")) });
+    let pico = 0; const dd = pts.map(x => { pico = Math.max(pico, x.r); return { d: x.d, q: x.r / pico - 1 }; });
+    const W = 760, H = 90, L = 50, R = 12, T = 8, B = 18, N = dd.length;
+    const minQ = Math.min(-0.05, ...dd.map(x => x.q));
+    const x = i => N === 1 ? (L + W - R) / 2 : L + (W - L - R) * i / (N - 1), y = q => T + (H - T - B) * (q / minQ);
+    let o = `<text x="${L - 6}" y="${T + 4}" text-anchor="end">0%</text><text x="${L - 6}" y="${H - B}" text-anchor="end">${nf(minQ * 100, 0)}%</text>`;
+    o += `<line x1="${L}" x2="${W - R}" y1="${T}" y2="${T}" stroke="#24493f"/>`;
+    const path = dd.map((p_, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p_.q).toFixed(1)}`).join("");
+    o += `<path d="${path}L${x(N - 1)},${T}L${x(0)},${T}Z" fill="#ff5d6c" fill-opacity=".18"/><path d="${path}" fill="none" stroke="#ff5d6c" stroke-width="1.5"/>`;
+    o += `<text x="${L + 8}" y="${H - B - 4}" style="fill:#ff5d6c">queda desde o pico (descontando aportes) · agora ${nf(dd[N - 1].q * 100, 1)}%</text>`;
+    $("uw").innerHTML = o;
+  }
+
   function grafico(vAgora, vpAgora) {
+    quedaPico(vAgora);
     const pts = hist.map(r => ({ d: r.data, a: +r.patrimonio, p: +r.carteira_parada }));
     pts.push({ d: "agora", a: vAgora, p: vpAgora });
     const N = pts.length, W = 760, H = 220, L = 50, R = 12, T = 12, B = 22;

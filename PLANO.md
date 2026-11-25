@@ -1,6 +1,6 @@
 # Argos Trade Cripto · Plano
 
-Versão 2.1 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
+Versão 2.2 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 
 > Na mitologia grega, Argos é o gigante de cem olhos que nunca dormia: um vigia que não descansa.
 
@@ -81,6 +81,8 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 - **Compra:** quando a moeda está **10% ou mais abaixo do topo de 14 dias** e já **subiu 3% desde o fundo de 3 dias**, ou seja, parou de cair. O robô compra **R$ 25**, com **uma posição aberta por moeda**.
 - **Venda:** quando a posição chega a **+1,5%**. Isso cobre ~0,3% de custos (ida e volta) e deixa **~1,2% de ganho líquido**. O dinheiro volta para a reserva.
 - Essas posições ficam **separadas do rebalanceamento**, e pode haver **várias operações por dia**.
+- **No máximo 2 posições abertas ao mesmo tempo.** No backtest, isso deixou a reserva em +R$ 18,87, contra +R$ 3,11 sem limite.
+- A saída por tempo ("vender empatado depois de X dias") foi testada e **piorou** o resultado. Não foi adotada.
 - **Sem stop.** Se a moeda continuar caindo, a posição fica presa. O dono aceitou esse risco.
 
 ### 5.4 Aportes
@@ -124,6 +126,14 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 | **Mercado ao vivo** | botão 📈 no monitor | Gráfico de velas das 6 moedas da principal, livro de ofertas, negociações e linhas de gatilho do robô |
 | **Extrato** | botão no monitor | Toda entrada e saída de dinheiro com o saldo em reais, as duas reservas e os sinais da satélite |
 | **Regras** | botão no monitor | Todas as regras num lugar só |
+
+**Comandos no Telegram:** /status, /hoje, /pausar, /retomar e /ajuda. A resposta chega na próxima checagem (até ~15 min).
+
+**Painéis de desempenho (monitor):**
+- **Resultado por período:** 24 horas, 7 dias, 30 dias e desde o início, descontando os aportes.
+- **"O robô está se pagando?":** ganho das operações antes das taxas, taxas pagas e resultado líquido contra o "sem robô", com um veredito.
+- **Giro da satélite:** giros concluídos, lucro realizado e médio, tempo médio em posição, posições abertas (custo → vale agora) e reserva disponível.
+- **Queda desde o pico:** gráfico abaixo da evolução do patrimônio, descontando aportes.
 
 **Bloco "Ganhos e perdas por cripto" (monitor), ao vivo:** para cada moeda, o valor **aplicado**, quanto **vale agora**, o ganho ou perda em R$ e em %, o preço médio de compra (custo médio com taxas), a cotação e a **variação de 24h**. As moedas ficam agrupadas em principal, satélite e oportunidades abertas, com o total de cada grupo. No topo: total aplicado, valor atual, resultado em aberto, resultado já realizado, melhor e pior moeda.
 | Maquete do console | claude.ai (artefato) | Versão de exemplo, sem dados reais |
@@ -172,6 +182,9 @@ O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 | Mais de 20 operações por dia em cada carteira | Bloqueado |
 | Falha de preços ou de conexão | Nada muda, tenta de novo e avisa |
 | Robô sem rodar | O monitor mostra **ATRASO** depois de 3 horas sem checagem |
+| Queda de 7% em 24 h | **Trava de queda:** pausa só as compras de giro da satélite até recuperar (com aviso) |
+| Dono quer parar | **/pausar** no Telegram para tudo; **/retomar** volta (só o chat do dono é aceito) |
+| Falhas | Registradas em `simulado/saude.json` e mostradas no monitor (falhas em 24 h e link para as execuções) |
 | Queda forte | Só aviso e uso da reserva. Nunca vende tudo em pânico |
 
 **No dinheiro real, entram também:** chave de API sem saque e restrita ao IP do servidor, conta de margem nunca ativada, e checagem periódica das permissões da chave.
@@ -187,6 +200,12 @@ O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 | **2 · Simulado ao vivo** | **🟡 Em andamento desde 24/11/2026** | 60 a 90 dias sem falha grave e com resultado coerente com o backtest |
 | 3 · Dinheiro real pequeno | Pendente | Repositório privado, conta na Binance Brasil (KYC e 2FA), servidor com IP fixo (Oracle Cloud gratuito, em São Paulo), chave sem saque e o mesmo código com executor real |
 | 4 · Continuidade | Pendente | Revisão mensal, e mais capital só se o dono quiser |
+
+**Regras previstas para o dinheiro real** (pesquisa: Shrimpy, XBTO, Elliptic e as recomendações da Anthropic para agentes):
+- voltar a **faixas mais largas** (2 a 5 pontos), com **rebalanceamento parcial** (só metade do caminho até o alvo) e **faixas assimétricas** (vender mais rápido nas altas, comprar com mais calma nas quedas), porque faixas de 1% são as mais prejudicadas pelas taxas;
+- **pagar as taxas em BNB** (cerca de 25% de desconto na Binance) e usar ordens limitadas;
+- **confirmação do dono no Telegram** para operações acima de um valor (por exemplo, R$ 100) e para aportes;
+- o modo de teste atual (1 ponto, a cada 15 minutos, até 20 por dia) fica só no simulado, e o quadro "O robô está se pagando?" decide com dados.
 
 **Por que a fase 3 precisa de servidor:** o GitHub Actions muda de IP a cada execução, e a Binance só deixa a chave negociar a partir de um IP fixo.
 
@@ -260,3 +279,4 @@ PLANO.md              este documento
 | 25/11 | Robô passa a checar a cada 15 minutos (carteiras seguem a cada ~4 h) |
 | 25/11 | Limite de operações por dia de 3 para 20 em cada carteira |
 | 25/11 | Rebalanceamento a cada 15 minutos e todas as operações com gatilho de 1 ponto (teste simulado) |
+| 25/11 | Pesquisa (GitHub, estudos e Anthropic) e recomendações implementadas: comandos e pausa pelo Telegram, trava de queda em 24 h, máximo de 2 giros abertos, painéis de desempenho, gráfico de queda e registro de falhas |
