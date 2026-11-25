@@ -31,6 +31,9 @@ body {
 .wrap { max-width: 1240px; margin: 0 auto; padding: 18px 16px 48px; display: grid; gap: 16px; }
 .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
+.btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--cyan); text-decoration: none; border: 1px solid var(--cyan); border-radius: 6px; padding: 6px 12px; background: rgba(62,224,255,.06); }
+.btn:hover { box-shadow: 0 0 14px rgba(62,224,255,.3); }
+.btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .top { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; justify-content: space-between; }
 .eyebrow { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; color: var(--cyan); text-transform: uppercase; }
 h1 { font-family: var(--display); font-size: clamp(1.4rem, 3.2vw, 2rem); font-weight: 700; letter-spacing: .02em; margin: 2px 0 0; text-transform: uppercase; }
@@ -106,6 +109,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
       <h1>Mercado <em>Cripto</em> // Ao vivo</h1>
     </div>
     <div class="status">
+      <a class="btn" href="./">← Monitor</a>
       <span id="conn" class="chip warn">Conectando</span>
       <span>atraso <span class="num" id="lat">--</span> · <span class="num" id="clock">--</span></span>
     </div>
@@ -153,11 +157,27 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
   "use strict";
   const ASSETS = [
     { s: "BTCBRL", name: "Bitcoin" }, { s: "ETHBRL", name: "Ethereum" }, { s: "SOLBRL", name: "Solana" },
-    { s: "BNBBRL", name: "BNB" }, { s: "XRPBRL", name: "XRP" }, { s: "USDTBRL", name: "Tether" }
+    { s: "XRPBRL", name: "XRP" }, { s: "BNBBRL", name: "BNB" }, { s: "LINKBRL", name: "Chainlink" }
   ];
   const REST = ["https://data-api.binance.vision", "https://api.binance.com"];
   const WS = ["wss://data-stream.binance.vision/stream", "wss://stream.binance.com:9443/stream"];
   const $ = id => document.getElementById(id);
+  // carteira do robô simulado, para desenhar os gatilhos de compra e venda
+  let robo = null;
+  async function carregarRobo() {
+    try { const r = await fetch(`simulado/estado.json?t=${Date.now()}`, { cache: "no-store" }); if (r.ok) { robo = await r.json(); drawCandles(); } } catch (e) { /* sem robô: gráfico sem gatilhos */ }
+  }
+  function gatilhos(sym, preco) {
+    if (!robo || !robo.alvo) return null;
+    const a = sym.replace("BRL", "").toLowerCase(); if (!(a in robo.alvo)) return null;
+    const c = robo.carteira, up = robo.ultimos_precos || {};
+    const O = c.reais + Object.keys(robo.alvo).filter(o => o !== a).reduce((t, o) => {
+      const vivo = state[o.toUpperCase() + "BRL"]; return t + c[o] * ((vivo && vivo.px) || up[o] || 0); }, 0);
+    const q = c[a], alvo = robo.alvo[a], g = robo.gatilho || 0.01;
+    if (!q || !O) return null;
+    const P = w => w * O / ((1 - w) * q);
+    return { vende: P(alvo + g), compra: P(Math.max(0.001, alvo - g)) };
+  }
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
   let sel = ASSETS[0].s, tf = "1m", candles = [], ws = null, wsIdx = 0, restIdx = 0, retry = 0, lastEvent = 0;
@@ -288,6 +308,19 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
       const bw = Math.max(1, cw * .62), top = y(Math.max(k.o, k.c)), bh = Math.max(1, Math.abs(y(k.o) - y(k.c)));
       g.fillRect(x - bw / 2, top, bw, bh);
     });
+    // gatilhos do robô
+    const gt = gatilhos(sel, candles_[candles_.length - 1].c);
+    if (gt) [["vende", css("--amber"), "venderia"], ["compra", css("--good"), "compraria"]].forEach(([k, cor, rot]) => {
+      const v = gt[k]; g.fillStyle = cor; g.strokeStyle = cor; g.font = "11px " + css("--mono");
+      const txt = v.toLocaleString("pt-BR", { maximumFractionDigits: dec(v) });
+      if (v > min && v < max) {
+        const yy = Math.round(y(v)) + .5; g.setLineDash([6, 4]); g.globalAlpha = .8;
+        g.beginPath(); g.moveTo(P.l, yy); g.lineTo(w - P.r, yy); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+        g.fillText(`robô ${rot} ${txt}`, P.l + 6, yy - 5);
+      } else {
+        const acima = v >= max; g.fillText(`${acima ? "▲" : "▼"} robô ${rot} em R$ ${txt}`, P.l + 6, acima ? P.t + 10 : h - P.b - 6);
+      }
+    });
     // linha do preço atual
     const last = candles_[candles_.length - 1].c, ly = Math.round(y(last)) + .5, cy = css("--cyan");
     g.strokeStyle = cy; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(P.l, ly); g.lineTo(w - P.r, ly); g.stroke(); g.setLineDash([]);
@@ -339,7 +372,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     setConn("warn", retry ? "Reconectando" : "Conectando");
     try { ws = new WebSocket(url); } catch (e) { return scheduleReconnect(); }
     const opened = { ok: false };
-    ws.onopen = () => { opened.ok = true; retry = 0; setConn("good", "Ao vivo"); showMsg(""); };
+    ws.onopen = () => { opened.ok = true; nuncaAbriu = false; retry = 0; setConn("good", "Ao vivo"); showMsg(""); };
     ws.onmessage = ev => {
       let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
       if (!m.stream || !m.data) return;
@@ -355,7 +388,30 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     ws.onclose = () => { if (!opened.ok) wsIdx++; scheduleReconnect(); };
     ws.onerror = () => { try { ws.close(); } catch (e) {} };
   }
+  // plano B: sem conexão contínua, consulta a cada 5 s pela API comum
+  let poll = null, nuncaAbriu = true, ultimoTrade = 0;
+  function sondar() {
+    if (poll) return;
+    setConn("good", "Ao vivo · 5 s"); showMsg("");
+    const passo = async () => {
+      try {
+        const q = encodeURIComponent(JSON.stringify(ASSETS.map(a => a.s)));
+        const t = await rest(`/api/v3/ticker/24hr?symbols=${q}`);
+        t.forEach(d => { const st = state[d.symbol]; if (!st) return;
+          st.px = +d.lastPrice; st.open = +d.openPrice; st.hi = +d.highPrice; st.lo = +d.lowPrice; st.qv = +d.quoteVolume; updateCard(d.symbol); });
+        const k = await rest(`/api/v3/klines?symbol=${sel}&interval=${tf}&limit=2`);
+        k.forEach(x => onKline({ t: x[0], o: x[1], h: x[2], l: x[3], c: x[4] }));
+        onDepth(await rest(`/api/v3/depth?symbol=${sel}&limit=10`));
+        const tr = await rest(`/api/v3/trades?symbol=${sel}&limit=12`);
+        tr.filter(x => x.time > ultimoTrade).forEach(x => onTrade({ p: x.price, q: x.qty, m: x.isBuyerMaker, T: x.time }));
+        if (tr.length) ultimoTrade = Math.max(ultimoTrade, ...tr.map(x => x.time));
+        lastEvent = Date.now(); $("lat").textContent = "5 s";
+      } catch (e) { setConn("bad", "Sem conexão"); }
+    };
+    passo(); poll = setInterval(passo, 5000);
+  }
   function scheduleReconnect() {
+    if (nuncaAbriu && wsIdx >= WS.length) return sondar();
     retry++; setConn("bad", "Desconectado");
     if (retry >= 3) showMsg("Sem conexão com a Binance. Tentando de novo… Se persistir, verifique a internet ou se a rede bloqueia o site.");
     setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(retry, 5)));
@@ -371,7 +427,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
   // Seleção de ativo e tempo gráfico
   function select(s) {
     if (s === sel) return;
-    sel = s;
+    sel = s; ultimoTrade = 0;
     document.querySelectorAll(".asset").forEach(b => b.setAttribute("aria-pressed", b.dataset.s === s));
     $("bookSym").textContent = s.replace("BRL", "/BRL");
     $("book").innerHTML = ""; const tr = $("trades"); while (tr.children.length > 1) tr.removeChild(tr.lastChild);
@@ -393,7 +449,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
 
   buildCards();
   $("bookSym").textContent = sel.replace("BRL", "/BRL");
-  loadSparks(); loadCandles(); connect();
+  loadSparks(); loadCandles(); connect(); carregarRobo(); setInterval(carregarRobo, 5 * 60000);
 })();
 </script>
 </body>
