@@ -146,7 +146,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="regras.html?v=6">Regras</a><span class="mode">simulado</span></span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="extrato.html?v=6">Extrato</a><a class="btn ghost" href="regras.html?v=6">Regras</a><span class="mode">simulado</span></span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -186,14 +186,6 @@ h1 span { color: var(--amber); }
           </div>
         </section>
 
-        <section class="box" id="satBox" hidden>
-          <h2>🛰️ Carteira satélite <small id="satInfo"></small></h2>
-          <div class="res">
-            <div><div class="big num" id="satVal" style="color: var(--teal)">--</div><div class="lab" id="satLab">--</div></div>
-            <div class="alloc" id="satAlloc"></div>
-          </div>
-        </section>
-
         <section class="box">
           <h2>Histórico de operações <small id="logCount">--</small></h2>
           <div class="scroll" id="logBox"><div class="empty">carregando…</div></div>
@@ -201,7 +193,7 @@ h1 span { color: var(--amber); }
 
         <div class="two">
           <section class="box">
-            <h2>Carteira vs alvo</h2>
+            <h2>Carteira principal vs alvo</h2>
             <div class="alloc" id="alloc"></div>
           </section>
           <section class="box">
@@ -209,6 +201,14 @@ h1 span { color: var(--amber); }
             <ul class="tail" id="tail"><li>carregando…</li></ul>
           </section>
         </div>
+
+        <section class="box" id="satBox" hidden>
+          <h2>🛰️ Carteira satélite <small id="satInfo"></small></h2>
+          <div class="res">
+            <div><div class="big num" id="satVal" style="color: var(--teal)">--</div><div class="lab" id="satLab">--</div></div>
+            <div class="alloc" id="satAlloc"></div>
+          </div>
+        </section>
 
         <section class="box">
           <h2>Fluxo de decisão</h2>

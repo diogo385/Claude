@@ -1,0 +1,15 @@
+data_hora;conta;tipo;descricao;valor;taxa;saldo_reais
+2026-11-24 23:49;Principal;DEPÓSITO;Depósito inicial da carteira principal;1000.00;0.0000;1000.00
+2026-11-24 23:49;Principal;COMPRA;Compra de 0,000997 BTC a R$ 350.421,00 (montagem);-350.00;0.5250;650.00
+2026-11-24 23:49;Principal;COMPRA;Compra de 0,015269 ETH a R$ 9.808,97 (montagem);-150.00;0.2250;500.00
+2026-11-24 23:49;Principal;COMPRA;Compra de 0,196458 SOL a R$ 406,60 (montagem);-80.00;0.1200;420.00
+2026-11-24 23:49;Principal;COMPRA;Compra de 9,2028 XRP a R$ 5,4250 (montagem);-50.00;0.0750;370.00
+2026-11-24 23:49;Principal;COMPRA;Compra de 0,012481 BNB a R$ 3.200,00 (montagem);-40.00;0.0600;330.00
+2026-11-24 23:49;Principal;COMPRA;Compra de 0,578729 LINK a R$ 51,76 (montagem);-30.00;0.0450;300.00
+2026-11-25 08:56;Reserva;DEPÓSITO;Reserva de oportunidade;500.00;0.0000;800.00
+2026-11-25 11:31;Satélite;DEPÓSITO;Aporte da carteira satélite;250.00;0.0000;1050.00
+2026-11-25 11:31;Satélite;COMPRA;Compra de 0,211547 LTC a R$ 236,00 (montagem);-50.00;0.0750;1000.00
+2026-11-25 11:31;Satélite;COMPRA;Compra de 159,35 DOGE a R$ 0,3133 (montagem);-50.00;0.0750;950.00
+2026-11-25 11:31;Satélite;COMPRA;Compra de 55,1996 ADA a R$ 0,8140 (montagem);-45.00;0.0675;905.00
+2026-11-25 11:31;Satélite;COMPRA;Compra de 1,0671 AVAX a R$ 37,43 (montagem);-40.00;0.0600;865.00
+2026-11-25 11:31;Satélite;COMPRA;Compra de 2,4398 NEAR a R$ 16,37 (montagem);-40.00;0.0600;825.00

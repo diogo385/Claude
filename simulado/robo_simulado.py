@@ -29,6 +29,7 @@ ESTADO = PASTA / "estado.json"
 OPERACOES = PASTA / "operacoes.csv"
 HISTORICO = PASTA / "historico.csv"
 OPERACOES_SAT = PASTA / "operacoes_satelite.csv"
+EXTRATO = PASTA / "extrato.csv"   # toda entrada e saída de dinheiro, com o saldo em reais da conta
 
 VERSAO = 2
 CAPITAL = 1000.0
@@ -249,6 +250,33 @@ def registrar(arquivo, ops, px, agora):
                         f"{op['reais']:.2f}", f"{px[op['ativo']]:.8f}", f"{op['taxa']:.4f}", f"{op['peso_antes']:.4f}"])
 
 
+# ---------- extrato ----------
+def mov_operacao(op, px, conta, agora, montagem=False):
+    """Converte uma compra/venda em linha de extrato (valor com sinal = efeito no saldo em reais)."""
+    a = op["ativo"].upper()
+    valor = -op["reais"] if op["tipo"] == "COMPRA" else op["reais"] - op["taxa"]
+    desc = f"{'Compra' if op['tipo'] == 'COMPRA' else 'Venda'} de {qtd_txt(op['qtd'])} {a} a {preco(px[op['ativo']])}"
+    if montagem:
+        desc += " (montagem)"
+    return {"data_hora": agora.strftime("%Y-%m-%d %H:%M"), "conta": conta, "tipo": op["tipo"], "descricao": desc,
+            "valor": valor, "taxa": op["taxa"]}
+
+
+def lancar(movs):
+    """Acrescenta movimentações ao extrato, recalculando o saldo em reais a partir da última linha."""
+    if not movs:
+        return
+    if not EXTRATO.exists():
+        EXTRATO.write_text("data_hora;conta;tipo;descricao;valor;taxa;saldo_reais\n")
+    linhas = EXTRATO.read_text().strip().split("\n")
+    saldo = float(linhas[-1].split(";")[-1]) if len(linhas) > 1 else 0.0
+    with open(EXTRATO, "a", newline="") as f:
+        w = csv.writer(f, delimiter=";")
+        for m in movs:
+            saldo += m["valor"]
+            w.writerow([m["data_hora"], m["conta"], m["tipo"], m["descricao"], f"{m['valor']:.2f}", f"{m['taxa']:.4f}", f"{saldo:.2f}"])
+
+
 # ---------- execução ----------
 def main():
     agora = datetime.now(BRASILIA)
@@ -308,6 +336,23 @@ def main():
             w.writerow([agora.strftime("%Y-%m-%d %H:%M"), op["tipo"], op["ativo"].upper(), f"{op['qtd']:.8f}",
                         f"{op['reais']:.2f}", f"{px[op['ativo']]:.6f}", f"{op['taxa']:.4f}", f"{op['peso_antes']:.4f}"])
     registrar(OPERACOES_SAT, sat_montagem + sat_feitas, px, agora)
+    quando = agora.strftime("%Y-%m-%d %H:%M")
+    movs = []
+    if novo:
+        movs.append({"data_hora": quando, "conta": "Principal", "tipo": "DEPÓSITO", "descricao": "Depósito inicial da carteira principal", "valor": CAPITAL, "taxa": 0})
+        for a, w in ALVO.items():
+            movs.append(mov_operacao({"tipo": "COMPRA", "ativo": a, "qtd": c[a], "reais": CAPITAL * w, "taxa": CAPITAL * w * CUSTO}, px, "Principal", agora, True))
+    if migrou:
+        movs.append({"data_hora": quando, "conta": "Reserva", "tipo": "DEPÓSITO", "descricao": "Reserva de oportunidade", "valor": RESERVA_INICIAL, "taxa": 0})
+    for ap in aportes:
+        movs.append({"data_hora": quando, "conta": "Reserva", "tipo": "TRANSFERÊNCIA",
+                     "descricao": f"Reserva → carteira principal: {brl(ap['valor'])} (degrau de {ap['degrau']*100:.0f}%)", "valor": 0.0, "taxa": 0})
+    movs += [mov_operacao(op, px, "Principal", agora) for op in feitas]
+    if sat_montagem:
+        movs.append({"data_hora": quando, "conta": "Satélite", "tipo": "DEPÓSITO", "descricao": "Aporte da carteira satélite", "valor": SAT_APORTE, "taxa": 0})
+        movs += [mov_operacao(op, px, "Satélite", agora, True) for op in sat_montagem]
+    movs += [mov_operacao(op, px, "Satélite", agora) for op in sat_feitas]
+    lancar(movs)
     if not HISTORICO.exists():
         HISTORICO.write_text("data;patrimonio;carteira_parada;operacoes_no_dia\n")
     ops_24h = est["ops_periodo"]
