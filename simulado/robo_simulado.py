@@ -3,8 +3,9 @@
 - Usa preços reais e públicos da Binance (sem conta, sem chave).
 - Opera um dinheiro de mentira: R$ 1.000 iniciais.
 - Carteira-alvo: BTC 35% · ETH 15% · SOL 8% · XRP 5% · BNB 4% · LINK 3% · reais 30%.
-- Checa o mercado a cada 4 horas. Faz NO MÁXIMO 1 operação por dia, no ativo mais fora do alvo,
-  quando ele desvia 1,5 ponto ou mais. O resumo diário sai na checagem das 21h.
+- Checa o mercado a cada 4 horas e opera o ativo mais fora do alvo. Até 3 operações por dia:
+  a 1ª quando o desvio chega a 1,5 ponto; a 2ª e a 3ª só se a oportunidade for muito boa
+  (desvio de 2,5 pontos ou mais). O resumo diário sai na checagem das 21h.
 - Guarda tudo em simulado/estado.json, simulado/operacoes.csv e simulado/historico.csv.
 - Avisa no Telegram se TELEGRAM_TOKEN e TELEGRAM_CHAT_ID estiverem configurados.
 
@@ -28,8 +29,9 @@ VERSAO = 2
 CAPITAL = 1000.0
 ALVO = {"btc": 0.35, "eth": 0.15, "sol": 0.08, "xrp": 0.05, "bnb": 0.04, "link": 0.03}  # o resto (30%) fica em reais
 PARES = {a: a.upper() + "BRL" for a in ALVO}
-DESVIO_MIN = 0.015       # oportunidade: ativo 1,5 ponto ou mais fora do alvo
-MAX_OPS_DIA = 1          # no máximo 1 operação por dia
+DESVIO_MIN = 0.015       # 1ª operação do dia: ativo 1,5 ponto ou mais fora do alvo
+DESVIO_EXTRA = 0.025     # 2ª e 3ª operações do dia: só com 2,5 pontos ou mais (oportunidade muito boa)
+MAX_OPS_DIA = 3          # no máximo 3 operações por dia
 HORA_RESUMO = 20         # a partir desta hora (Brasília) manda o resumo do dia
 TAXA = 0.001             # 0,1% (Binance)
 DESLIZE = 0.0005         # 0,05% de diferença de preço
@@ -108,6 +110,7 @@ def estado_inicial(px, agora):
         "alvo": ALVO,
         "pares": PARES,
         "gatilho": DESVIO_MIN,
+        "gatilho_extra": DESVIO_EXTRA,
         "max_ops_dia": MAX_OPS_DIA,
         "carteira": montar(px),
         "parada": montar(px),            # mesma carteira, nunca rebalanceada (comparação)
@@ -119,8 +122,9 @@ def estado_inicial(px, agora):
     }
 
 
-def rebalancear(c, px, limite):
-    """Opera o(s) ativo(s) mais fora do alvo, até `limite` operações. Nunca usa saldo que não existe."""
+def rebalancear(c, px, limite, ja_feitas):
+    """Opera o(s) ativo(s) mais fora do alvo, até `limite` operações. Nunca usa saldo que não existe.
+    A 1ª operação do dia exige DESVIO_MIN; as seguintes exigem DESVIO_EXTRA."""
     feitas = []
     v = valor(c, px)
     fila = sorted(ALVO, key=lambda a: -abs(c[a] * px[a] / v - ALVO[a]))
@@ -129,7 +133,8 @@ def rebalancear(c, px, limite):
             break
         peso = c[a] * px[a] / v
         ajuste = ALVO[a] * v - c[a] * px[a]
-        if abs(peso - ALVO[a]) < DESVIO_MIN or abs(ajuste) < ORDEM_MIN:
+        gatilho = DESVIO_MIN if ja_feitas + len(feitas) == 0 else DESVIO_EXTRA
+        if abs(peso - ALVO[a]) < gatilho or abs(ajuste) < ORDEM_MIN:
             continue
         if ajuste > 0:  # compra
             gasto = min(ajuste, c["reais"])
@@ -169,7 +174,8 @@ def main():
     if est.get("ops_dia", {}).get("data") != hoje:
         est["ops_dia"] = {"data": hoje, "n": 0}
     limite = MAX_OPS_DIA - est["ops_dia"]["n"]
-    feitas = [] if novo or limite <= 0 else rebalancear(c, px, limite)
+    feitas = [] if novo or limite <= 0 else rebalancear(c, px, limite, est["ops_dia"]["n"])
+    est["gatilho"], est["gatilho_extra"], est["max_ops_dia"] = DESVIO_MIN, DESVIO_EXTRA, MAX_OPS_DIA
     est["ops_dia"]["n"] += len(feitas)
     est["rebalanceamentos"] = est.get("rebalanceamentos", 0) + len(feitas)
     est["operacoes"] += len(feitas)
@@ -202,16 +208,22 @@ def main():
         compras = "\n".join(f"• {a.upper()} {ALVO[a]*100:.0f}% a {brl(px[a])}" for a in ALVO)
         telegram(f"{ROTULO} · Carteira nova iniciada\n"
                  f"Dinheiro de mentira: {brl(CAPITAL)}\n{compras}\n• Reais {(1 - sum(ALVO.values()))*100:.0f}%\n"
-                 f"Checo o mercado a cada 4 horas e faço no máximo 1 operação por dia, quando um ativo desviar 1,5 ponto ou mais do alvo. Resumo todo dia às 21h.")
+                 f"Checo o mercado a cada 4 horas. Faço até 3 operações por dia: a 1ª quando um ativo desvia 1,5 ponto do alvo; a 2ª e a 3ª só se a oportunidade for muito boa (2,5 pontos ou mais). Resumo todo dia às 21h.")
         return
-    for op in feitas:
+    n_antes = est["ops_dia"]["n"] - len(feitas)
+    for i, op in enumerate(feitas, start=1):
         a = op["ativo"]
+        n = n_antes + i
+        if n >= MAX_OPS_DIA:
+            rodape = f"Operação {n} de {MAX_OPS_DIA} hoje. Limite do dia atingido."
+        else:
+            rodape = f"Operação {n} de até {MAX_OPS_DIA} hoje. Outra hoje só se a oportunidade for muito boa (desvio de 2,5 pontos ou mais)."
         emoji = "🟢" if op["tipo"] == "COMPRA" else "🔴"
         telegram(f"{ROTULO} · {emoji} {op['tipo']}\n"
                  f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({brl(px[a])}/{a.upper()})\n"
                  f"Motivo: {a.upper()} estava em {num(op['peso_antes']*100, 1)}% da carteira (alvo {ALVO[a]*100:.0f}%)\n"
                  f"Taxa: {brl(op['taxa'])}\n"
-                 f"Operação do dia feita. Próxima, só a partir de amanhã.")
+                 f"{rodape}")
     if not resumo_agora:
         return
     dias = (agora.date() - datetime.fromisoformat(est["inicio"]).date()).days

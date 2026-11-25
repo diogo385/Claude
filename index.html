@@ -140,7 +140,7 @@ h1 span { color: var(--amber); }
         <h1><span>Argo Trade</span> Cripto <span class="ver">v0.2 · simulado</span></h1>
         <div class="sub">
           <span><i class="dot" id="runDot"></i><span id="runTxt">carregando</span> · <span class="num" id="clock">--:--:--</span></span>
-          <span class="tag" id="tagAlvo">ATÉ 1 OPERAÇÃO/DIA</span>
+          <span class="tag" id="tagAlvo">ATÉ 3 OPERAÇÕES/DIA</span>
         </div>
       </div>
       <div class="kpis">
@@ -166,7 +166,7 @@ h1 span { color: var(--amber); }
 
       <main class="main">
         <section class="box">
-          <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>checa a cada 4 h · até 1 operação por dia</small></h2>
+          <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>checa a cada 4 h · até 3 operações por dia</small></h2>
           <div class="chips" id="chips"></div>
           <svg class="flow" viewBox="0 0 760 170" role="img" aria-label="Fluxo de decisão do robô">
             <defs><radialGradient id="gC" cx=".35" cy=".3"><stop offset="0" stop-color="#12352c"/><stop offset="1" stop-color="#071512"/></radialGradient></defs>
@@ -217,7 +217,7 @@ h1 span { color: var(--amber); }
           <section class="box">
             <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
             <div class="alloc" id="alloc"></div>
-            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e faz no máximo 1 operação por dia, no ativo mais fora do alvo (1,5 ponto ou mais).</p>
+            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e opera o ativo mais fora do alvo: 1ª operação do dia com 1,5 ponto; 2ª e 3ª só com 2,5 pontos ou mais.</p>
           </section>
           <section class="box">
             <h2>$ tail -f argo.log <small>última checagem</small></h2>
@@ -292,7 +292,7 @@ h1 span { color: var(--amber); }
     });
     const seg = $("mkSym"); seg.textContent = "";
     ativos.forEach((a, i) => { const b = el("button", "", `${SIMB[a] || ""} ${a.toUpperCase()}`.trim()); b.type = "button"; b.dataset.a = a; b.setAttribute("aria-pressed", i === 0); seg.appendChild(b); });
-    set("tagAlvo", "ATÉ 1 OPERAÇÃO/DIA · " + ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
+    set("tagAlvo", "ATÉ 3 OPERAÇÕES/DIA · " + ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
   }
 
   async function carregarRobo() {
@@ -356,8 +356,11 @@ h1 span { color: var(--amber); }
     const dev = {}; ativos.forEach(a => dev[a] = w[a] - estado.alvo[a]);
     const maior = ativos.reduce((m, a) => Math.abs(dev[a]) > Math.abs(dev[m]) ? a : m, ativos[0]);
     const hojeBR = brasilia().toISOString().slice(0, 10);
-    const usouHoje = estado.ops_dia && estado.ops_dia.data === hojeBR && estado.ops_dia.n >= (estado.max_ops_dia || 1);
-    const agiria = !usouHoje && Math.abs(dev[maior]) >= GATILHO;
+    const nHojeR = estado.ops_dia && estado.ops_dia.data === hojeBR ? estado.ops_dia.n : 0;
+    const maxDia = estado.max_ops_dia || 1, gExtra = estado.gatilho_extra || 0.025;
+    const usouHoje = nHojeR >= maxDia;
+    const gAgora = nHojeR === 0 ? GATILHO : gExtra;
+    const agiria = !usouHoje && Math.abs(dev[maior]) >= gAgora;
     const pt = x => sgn(x) + nf(Math.abs(x) * 100, 1) + " pt";
     set("fCol", px ? "preços ok" : "último preço salvo");
     set("fEstT", maior.toUpperCase() + " " + pt(dev[maior]));
@@ -366,7 +369,7 @@ h1 span { color: var(--amber); }
     set("fExe", agiria ? "age na próxima checagem" : "sem ordem");
     $("wExe").setAttribute("stroke", agiria ? "#3df59a" : "#4f7067");
     set("tDev", nf(Math.abs(dev[maior]) * 100, 1) + " pt", Math.abs(dev[maior]) >= GATILHO ? "warn" : "");
-    set("tDevS", `${maior.toUpperCase()} · gatilho em 1,5 pt`);
+    set("tDevS", `${maior.toUpperCase()} · gatilho agora: ${nf(gAgora * 100, 1)} pt (${nHojeR} de ${maxDia} hoje)`);
     set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital · inclui a montagem");
 
     const seg = px ? Math.round((Date.now() - pxHora) / 1000) : null;
@@ -380,7 +383,7 @@ h1 span { color: var(--amber); }
     do { prox.setUTCHours(prox.getUTCHours() + 1); } while ((prox.getUTCHours() + 3) % 4 !== 0);
     const falta = prox - b, h = Math.floor(falta / 36e5), m = Math.floor(falta % 36e5 / 6e4);
     set("tNext", `${h}h ${pad(m)}min`);
-    set("aExe", `${usouHoje ? "operação do dia já feita" : "pronto para operar"} · próxima checagem em ${h}h ${pad(m)}min`);
+    set("aExe", `${usouHoje ? "limite do dia atingido" : `${nHojeR} de ${maxDia} operações hoje`} · próxima checagem em ${h}h ${pad(m)}min`);
     set("aTel", ultExec ? "última checagem " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
     set("aVida", vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem checagem há mais de 9 h");
     set("aVidaSt", vivo ? "OK" : "ATRASO");
@@ -405,8 +408,8 @@ h1 span { color: var(--amber); }
     const nHoje = estado.ops_dia && estado.ops_dia.data === hojeBR ? estado.ops_dia.n : 0;
     [["info", "coletor", ativos.slice(0, 3).map(a => `${a.toUpperCase()} ${ep[a] ? brl(ep[a], casas(ep[a])) : "--"}`).join(" · ") + " …"],
      ["info", "estratégia", `${ativos.length} moedas avaliadas · gatilho 1,5 pt`],
-     ["ok", "porteiro", nHoje ? `${nHoje} ordem aprovada hoje · limite 1/dia` : "nada a aprovar hoje · travas ok"],
-     ["ok", "executor", nHoje ? "operação do dia feita" : "sem ordem"],
+     ["ok", "porteiro", nHoje ? `${nHoje} ordem(ns) aprovada(s) hoje · limite ${estado.max_ops_dia || 1}/dia` : "nada a aprovar hoje · travas ok"],
+     ["ok", "executor", nHoje ? `${nHoje} operação(ões) hoje` : "sem ordem"],
      ["w", "telegram", "avisos em dia"],
      ["ok", "diário", `estado salvo · ${ops.length} operações registradas`]].forEach(([cls, quem, txt]) => {
       const li = el("li"), t = el("time", "", hora), s = el("span", cls, quem); li.append(t, s, " " + txt); tail.appendChild(li);
@@ -440,7 +443,7 @@ h1 span { color: var(--amber); }
     const box = $("logBox"); box.textContent = "";
     set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
     if (!ops.length) {
-      box.appendChild(el("div", "empty", "Nenhum rebalanceamento ainda (a montagem inicial da carteira não entra aqui). O robô faz no máximo 1 operação por dia, no ativo que estiver 1,5 ponto ou mais fora do alvo. Nos testes, isso deu cerca de 3 operações por mês."));
+      box.appendChild(el("div", "empty", "Nenhum rebalanceamento ainda (a montagem inicial da carteira não entra aqui). O robô opera o ativo mais fora do alvo: a 1ª operação do dia com desvio de 1,5 ponto, a 2ª e a 3ª só com 2,5 pontos ou mais. Nos testes, isso deu cerca de 3 operações por mês."));
       return;
     }
     const t = el("table", "log"), tb = el("tbody");
