@@ -1,6 +1,6 @@
 # Argos Trade Cripto · Plano
 
-Versão 2.0 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
+Versão 2.1 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 
 > Na mitologia grega, Argos é o gigante de cem olhos que nunca dormia: um vigia que não descansa.
 
@@ -64,8 +64,9 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 ### 5.1 Rebalanceamento: carteira principal e satélite
 - **Checagem a cada 15 minutos.**
 - Opera sempre a **moeda mais fora do alvo** e a devolve exatamente ao alvo.
-- **1ª operação do dia:** desvio de **1 ponto** ou mais.
-- **Operações seguintes do dia:** também com **1 ponto** (teste simulado; antes eram 2,5 pontos).
+- **Gatilho:** desvio de **1 ponto** ou mais, em qualquer operação do dia.
+- Antes, as operações extras do dia exigiam 2,5 pontos. No teste simulado, todas passaram a usar 1 ponto.
+- **Na satélite**, como ela é pequena, a ordem mínima de R$ 10 faz o rebalanceamento só acontecer com desvios de ~4 a 5 pontos.
 - **Máximo de 20 operações por dia em cada carteira** (teste simulado), com contadores separados.
 - **Custo simulado:** 0,1% de taxa + 0,05% de diferença de preço por operação.
 
@@ -118,10 +119,13 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 
 | Página | Endereço | O que mostra |
 |---|---|---|
-| **Monitor** | diogo385.github.io/Claude | Patrimônio total, evolução, histórico de operações, carteira principal, satélite, fluxo de decisão e agentes |
+| **Monitor** | diogo385.github.io/Claude | Patrimônio total, evolução, **ganhos e perdas por cripto**, carteira principal, satélite, fluxo de decisão e agentes |
+| **Histórico** | botão no monitor | Todas as operações agrupadas por dia, com filtros (principal, satélite, oportunidades, reserva) |
 | **Mercado ao vivo** | botão 📈 no monitor | Gráfico de velas das 6 moedas da principal, livro de ofertas, negociações e linhas de gatilho do robô |
 | **Extrato** | botão no monitor | Toda entrada e saída de dinheiro com o saldo em reais, as duas reservas e os sinais da satélite |
 | **Regras** | botão no monitor | Todas as regras num lugar só |
+
+**Bloco "Ganhos e perdas por cripto" (monitor), ao vivo:** para cada moeda, o valor **aplicado**, quanto **vale agora**, o ganho ou perda em R$ e em %, o preço médio de compra (custo médio com taxas), a cotação e a **variação de 24h**. As moedas ficam agrupadas em principal, satélite e oportunidades abertas, com o total de cada grupo. No topo: total aplicado, valor atual, resultado em aberto, resultado já realizado, melhor e pior moeda.
 | Maquete do console | claude.ai (artefato) | Versão de exemplo, sem dados reais |
 
 ---
@@ -217,6 +221,7 @@ O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 ```
 index.html            monitor (GitHub Pages)
 painel-ativos.html    mercado ao vivo
+historico.html        histórico de operações
 extrato.html          extrato da conta
 regras.html           regras
 assets/               logo e ícone
@@ -251,7 +256,7 @@ PLANO.md              este documento
 | 25/11 | Carteira satélite de R$ 250 (LTC, DOGE, ADA, AVAX, NEAR), abaixo da principal no monitor |
 | 25/11 | Extrato da conta. Quadro da reserva movido para o extrato |
 | 25/11 | Reserva da satélite de R$ 100: giro curto com venda em +1,5%. Robô passa a rodar toda hora |
-| 25/11 | Monitor com ganhos e perdas por cripto (aplicado × vale agora). Histórico em página própria |
+| 25/11 | Monitor com ganhos e perdas por cripto (aplicado × vale agora, variação de 24h). Histórico em página própria |
 | 25/11 | Robô passa a checar a cada 15 minutos (carteiras seguem a cada ~4 h) |
 | 25/11 | Limite de operações por dia de 3 para 20 em cada carteira |
 | 25/11 | Rebalanceamento a cada 15 minutos e todas as operações com gatilho de 1 ponto (teste simulado) |
