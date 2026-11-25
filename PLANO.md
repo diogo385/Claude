@@ -1,311 +1,254 @@
 # Argos Trade Cripto · Plano
 
-Versão 1.1 · 25/11/2026 · funcionamento 100% autônomo, com notificações no Telegram
+Versão 2.0 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
+
+> Na mitologia grega, Argos é o gigante de cem olhos que nunca dormia: um vigia que não descansa.
 
 ---
 
-## 1. Objetivo e expectativa
+## 1. O que é e o que esperar
 
-**O que é:** um robô **100% autônomo** que administra uma carteira pequena de cripto na corretora de forma automática e disciplinada. Depois de configurado, ele funciona sem você precisar fazer nada e te informa de tudo pelo Telegram. Ele compra quando um ativo cai abaixo da proporção-alvo e vende quando sobe acima dela, usando **somente saldo próprio**.
+**O que é:** um robô **100% autônomo** que administra carteiras de cripto **só com saldo próprio**. Ele rebalanceia as carteiras, aproveita quedas com reservas e avisa **toda operação** no Telegram.
 
-**O que esperar, com sinceridade:**
-- O resultado depende principalmente do preço do bitcoin. O robô não cria lucro do nada.
-- A vantagem esperada do robô é **pequena**: dezenas de reais por ano sobre R$ 1.000. Ela aparece mais em mercados laterais e voláteis.
-- É um projeto de **aprendizado com custo quase zero e risco limitado**, não uma fonte de renda.
-- **Se o backtest mostrar que o robô não acrescenta nada, o projeto para ali**, sem ter custado dinheiro.
+**Expectativa sincera, com base nos testes:**
+- Quase todo o resultado vem do preço das moedas. O robô não cria lucro do nada.
+- **Rebalancear funciona:** de 2021 a 2026, qualquer forma de rebalanceamento rendeu bem mais que a carteira parada (+128% a +195%, contra +89%). Quanto mais moedas na carteira, maior o ganho do rebalanceamento.
+- **O jeito exato importa pouco:** rebalancear todo dia, a cada 3 meses ou uma vez por ano deu resultados parecidos, e a diferença veio mais da sorte de calendário.
+- **As quedas doem em qualquer estratégia:** cerca de −60% em 2021–2022.
+- É um projeto de **aprendizado, com risco limitado e custo zero**, não uma fonte de renda.
 
 ---
 
 ## 2. Regras que nunca mudam
 
-1. **Só saldo próprio.** Sem margem, futuros, empréstimo ou qualquer outra forma de dívida.
-2. **O robô nunca saca.** A chave de API não tem permissão de saque.
-3. **Só ordens à vista (spot)** e **só ordens limitadas**, com preço máximo definido, nunca "a qualquer preço".
-4. **Nenhuma trava pode ser afrouxada pelo próprio sistema.** Mudar limite exige ação manual sua.
-5. **Na dúvida, não opera.** Dado velho, erro de API ou saldo inconsistente fazem o robô pausar.
-6. **O capital é um valor que você aceita perder inteiro.**
+1. **Só saldo próprio.** Sem margem, futuros, empréstimo ou dívida de qualquer tipo.
+2. **O robô nunca saca** dinheiro da corretora.
+3. **Só mercado à vista (spot)**, só ordens limitadas no dinheiro real e ordem mínima de R$ 10.
+4. **Toda operação é avisada no Telegram na hora**, seja autônoma ou pedida: compras, vendas, aportes, montagens e uso das reservas.
+5. **O próprio sistema nunca afrouxa as travas.** Mudança de regra só com decisão do dono.
+6. **Na dúvida, não opera.** Erro de dados ou de conexão: nada muda, e ele tenta de novo na próxima checagem.
+7. **O capital é um valor que você aceita perder.**
 
 ---
 
-## 3. Decisões já tomadas
+## 3. Decisões tomadas
 
 | Item | Decisão | Motivo |
 |---|---|---|
-| Corretora | **Binance Brasil**. Alternativa: Foxbit. | Menor taxa (~0,1%), melhor API, exige restringir IP para negociar. Com capital pequeno, o efeito do imposto é mínimo. |
-| Descartada | Mercado Bitcoin | Hack de cerca de US$ 49 milhões em novembro de 2026, com saques congelados. |
-| Estratégia | Rebalanceamento com faixa de tolerância | Opera pouco (taxa baixa), é fácil de auditar e não precisa adivinhar o mercado. |
-| Carteira-alvo | **50% BTC · 15% ETH · 35% em reais** | Poucos ativos, com reserva para comprar nas quedas. |
-| Capital real | **R$ 1.000**, só na fase 3 | Suficiente para passar do mínimo de ordem e pequeno o bastante para um erro sair barato. |
-| Servidor | **Oracle Cloud Always Free, região São Paulo** | Gratuito, IP fixo e fora dos EUA, o que a Binance exige. |
-| Supervisor IA | **Sem API paga.** Revisão semanal feita nesta conversa com o Claude. | Custo zero. A estratégia funciona só com regras fixas. |
-| Autonomia | **100% autônomo.** Nenhuma situação normal pede resposta sua. | Pedido seu. Nas quedas de mercado ele continua operando, porque é quando compra barato. |
-| Acompanhamento | **Telegram:** cada operação, resumo diário, relatório semanal e alertas | Você acompanha tudo sem abrir nada. |
-| Custo mensal | **R$ 0 de infraestrutura.** Só a taxa da corretora (centavos por mês). | Pedido de custo zero. |
+| Nome | **Argos Trade Cripto** (família Argos Trade; Argos Trade B3 no futuro) | — |
+| Corretora (dinheiro real) | **Binance Brasil** | Taxa ~0,1%, melhor API e exigência de IP fixo para negociar. Tem CNPJ brasileiro, e a isenção de R$ 35 mil/mês precisa ser confirmada com o contador |
+| Corretora estrangeira | **Descartada** | É legal, mas não "desvincula do Brasil": 15% sobre o lucro sem isenção, declaração por conta própria e remessa tratada como câmbio desde 2026 |
+| Mercado Bitcoin | Descartado | Hack de US$ 49 milhões em nov/2026, com saques congelados |
+| Infraestrutura do simulado | **GitHub Actions + GitHub Pages + Telegram** | Custo zero e funciona com o PC desligado |
+| Autonomia | **100%** | Nenhuma situação normal pede ação do dono |
+| Resumo diário | **7h (Brasília)** | Pedido do dono |
 
 ---
 
-## 4. Arquitetura
+## 4. Como o dinheiro está dividido (simulado)
 
-```mermaid
-flowchart LR
-    EX[(Corretora<br>Binance)] -->|preços e saldo| C[1 · Coletor]
-    C --> E[2 · Estratégia<br>rebalanceamento]
-    E -->|proposta de ordem| R[3 · Porteiro de risco]
-    R -->|aprovada| X[4 · Executor<br>único com a chave]
-    R -.->|vetada| DB
-    X -->|ordem limitada à vista| EX
-    X --> DB[(5 · Banco de dados<br>SQLite)]
-    C --> DB
-    DB --> P[6 · Painel web]
-    DB --> T[7 · Telegram<br>alertas e comandos]
-    DB --> REL[8 · Relatório semanal<br>revisado com o Claude]
-```
-
-| Peça | Função | Proibido |
+| Parte | Valor inicial | Para que serve |
 |---|---|---|
-| **1 · Coletor** | A cada ciclo lê preços (BTC/BRL, ETH/BRL), saldo e ordens abertas. Marca o horário de cada dado. | Qualquer escrita. |
-| **2 · Estratégia** | Calcula os percentuais atuais. Se algum ativo saiu da faixa, propõe a ordem que o traz de volta ao alvo. | Enviar ordem. |
-| **3 · Porteiro de risco** | Confere cada proposta contra todas as travas da seção 6. Aprova ou veta e registra o motivo. | Ser contornado. |
-| **4 · Executor** | Envia a ordem limitada, acompanha, reajusta o preço até 3 vezes ou desiste. Registra tudo. | Aceitar pedido que não venha do porteiro. |
-| **5 · Banco de dados** | Guarda preços usados, propostas, vetos, ordens, execuções, taxas e saldos diários. | — |
-| **6 · Painel web** | O console da maquete com dados reais: patrimônio, comparação com referências, travas, carteira e diário. Com login. | Ficar aberto sem senha. |
-| **7 · Telegram** | Envia automaticamente cada operação, o resumo diário, o relatório semanal e os alertas (seção 9). Aceita os comandos opcionais `/status`, `/pausar`, `/retomar`, `/parar` e `/relatorio`. | Mudar limites. |
-| **8 · Relatório semanal** | Gerado e enviado sozinho no Telegram. Se quiser minha análise, você encaminha para cá. | — |
+| **Carteira principal** | R$ 1.000 | O foco do sistema: BTC 35 · ETH 15 · SOL 8 · XRP 5 · BNB 4 · LINK 3 · Reais 30 |
+| **Reserva de oportunidade** | R$ 500 | Entra na carteira principal quando ela cai forte (degraus) |
+| **Carteira satélite** | R$ 250 | Teste de risco maior: LTC 20 · DOGE 20 · ADA 18 · AVAX 16 · NEAR 16 · Reais 10 |
+| **Reserva da satélite** | R$ 100 | Compras de oportunidade de giro curto nas moedas da satélite |
+| **Total depositado** | **R$ 1.850** | |
+
+As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negociado. As memecoins puras (PEPE, SHIB) e as moedas novas demais (SUI, POL, RENDER) ficaram de fora.
 
 ---
 
-## 5. Estratégia em detalhe
+## 5. Regras de operação
 
-**Ciclo:** a cada 15 minutos. Rebalanceamento não precisa de mais que isso.
+### 5.1 Rebalanceamento: carteira principal e satélite
+- **Checagem a cada ~4 horas.**
+- Opera sempre a **moeda mais fora do alvo** e a devolve exatamente ao alvo.
+- **1ª operação do dia:** desvio de **1 ponto** ou mais.
+- **2ª e 3ª operações do dia:** só com desvio de **2,5 pontos** ou mais.
+- **Máximo de 3 operações por dia em cada carteira**, com contadores separados.
+- **Custo simulado:** 0,1% de taxa + 0,05% de diferença de preço por operação.
 
-**Faixas de tolerância:**
+### 5.2 Reserva de oportunidade da principal (R$ 500)
+- Entram **R$ 125** quando a carteira principal cai **20%, 30%, 40% e 50%** desde o pico.
+- A queda é medida pela **cota da carteira**, sem contar os aportes.
+- O dinheiro entra como reais, e o rebalanceamento compra as moedas que mais caíram.
+- Se a carteira fizer um novo pico e ainda houver reserva, os degraus voltam a valer.
 
-| Ativo | Alvo | Faixa | Fora da faixa |
-|---|---|---|---|
-| BTC | 50% | 45% a 55% | Volta para 50% |
-| ETH | 15% | 12% a 18% | Volta para 15% |
-| Reais | 35% | É o que sobra | — |
+### 5.3 Reserva da satélite (R$ 100): giro curto
+- **Monitora as 5 moedas toda hora.** Cada uma tem um status: normal, caindo, OPORTUNIDADE ou posição aberta.
+- **Compra:** quando a moeda está **10% ou mais abaixo do topo de 14 dias** e já **subiu 3% desde o fundo de 3 dias**, ou seja, parou de cair. O robô compra **R$ 25**, com **uma posição aberta por moeda**.
+- **Venda:** quando a posição chega a **+1,5%**. Isso cobre ~0,3% de custos (ida e volta) e deixa **~1,2% de ganho líquido**. O dinheiro volta para a reserva.
+- Essas posições ficam **separadas do rebalanceamento**, e pode haver **várias operações por dia**.
+- **Sem stop.** Se a moeda continuar caindo, a posição fica presa. O dono aceitou esse risco.
 
-**Execução de cada ordem:**
-1. Envia uma ordem limitada no melhor preço do lado do livro em que ela espera ser executada (paga a taxa de quem oferta, que é menor).
-2. Se não executar em 10 minutos, cancela e reenvia no novo melhor preço. No máximo 3 tentativas.
-3. Depois disso, desiste e tenta de novo no próximo ciclo, se ainda for necessário.
-4. Respeita o valor mínimo de ordem da corretora e ignora ajustes menores que R$ 20.
-
-**Aporte mensal (opcional):** se você depositar todo mês, o valor entra como reais e o próprio rebalanceamento distribui.
-
-**Fora da versão 1:** grade (grid), seguir tendência e outras moedas. Só entram se provarem valor em backtest próprio.
-
----
-
-## 6. Travas de segurança
-
-### Camada 1 · Na corretora (vale mesmo se o código tiver bug)
-- Chave de API com **leitura e negociação à vista**. **Saque desligado.**
-- Chave **restrita ao IP fixo** do servidor.
-- **Conta de margem nunca ativada.** Futuros também não.
-- Autenticação de dois fatores em toda a conta, e senha forte e exclusiva.
-
-### Camada 2 · No código (o porteiro de risco)
-
-| Trava | Limite | Ação |
-|---|---|---|
-| Valor por ordem | No máximo 15% do patrimônio | Veta |
-| Operações por dia | No máximo 6 | Veta até o dia seguinte |
-| Capital sob controle | Teto fixo, por exemplo R$ 1.050 | Ignora saldo acima do teto |
-| Saldo suficiente | Nunca vende o que não tem nem compra sem reais | Veta |
-| Dados velhos | Preço com mais de 2 minutos | Não opera |
-| Volatilidade extrema | Movimento acima de 6% em 1 hora | Pausa novas ordens por 4 horas |
-| **Robô pior que a carteira parada** | 5 pontos abaixo da mesma carteira sem operar | **Para sozinho** e avisa |
-| **Queda do mercado** | Patrimônio 25% abaixo do pico | **Avisa e continua operando** normalmente. Não pausa nem vende tudo. Repete o aviso a cada 10 pontos a mais de queda. |
-| Saldo inconsistente | Saldo da corretora diferente do esperado | Para e avisa |
-| Erros seguidos de API | 3 seguidos | Pausa 1 hora e avisa |
-| Margem ou dívida | Qualquer saldo negativo ou empréstimo detectado | **Para tudo** e avisa com urgência |
-
-### Camada 3 · Na operação
-- **Paradas automáticas:** só por motivo técnico (robô pior que a carteira parada, saldo inconsistente, sinal de dívida). Nesses casos ele cancela as ordens abertas, **não vende nada**, para e explica no Telegram o que houve.
-- **Pausas temporárias** (volatilidade extrema ou erros de API) se resolvem sozinhas e são avisadas no Telegram.
-- **Sinal de vida:** um monitor separado avisa no Telegram se o robô ficar 30 minutos sem responder.
-- **Checagem a cada hora:** a chave continua sem permissão de saque e a conta segue sem margem.
-- **Parada de emergência:** cancela as ordens abertas e desliga o robô. **Nada é vendido.**
-- **Backup diário** do banco de dados.
+### 5.4 Aportes
+- Aportes novos são feitos a pedido do dono. Cada um é lançado no extrato, avisado no Telegram e incluído na comparação "sem robô", para ela continuar justa.
 
 ---
 
-## 7. Infraestrutura a custo zero
+## 6. Horários
 
-| Item | Solução |
+| Quando | O quê |
 |---|---|
-| Servidor | Oracle Cloud Always Free, região São Paulo, menor máquina disponível, Ubuntu. |
-| Linguagem | Python 3 |
-| Comunicação com a corretora | Biblioteca **ccxt** (código aberto). Facilita trocar de corretora se precisar. |
-| Banco de dados | SQLite, um arquivo só |
-| Painel | Página web servida pelo próprio robô, com login |
-| Alertas | Bot de Telegram, gratuito |
-| Empacotamento | Docker, para reiniciar sozinho se o servidor reiniciar |
-| Segredos | Chaves num arquivo `.env` no servidor, **nunca no GitHub** |
-| Código | Este repositório no GitHub |
+| **Toda hora** | Oportunidades da satélite e checagem da reserva principal |
+| **A cada ~4 horas** | Rebalanceamento das duas carteiras |
+| **7h (Brasília)** | Resumo do dia no Telegram e registro de um ponto no histórico |
 
-**Cuidados com a Oracle:**
-- Máquina considerada ociosa pode ser recuperada pela Oracle (uso de CPU abaixo de 20% por 7 dias). A princípio, mudar a conta para "pague pelo uso" evita isso e continua gratuito dentro dos limites. **Confirmar antes.**
-- Há relatos de falta de vaga em algumas regiões. Se acontecer, tentar de novo mais tarde.
-
-**Plano B de servidor:** um computador seu que fique ligado. O problema é que o IP residencial costuma mudar, e a chave da Binance precisa de IP fixo.
+O GitHub pode atrasar as execuções agendadas em alguns minutos.
 
 ---
 
-## 8. Fases
+## 7. Avisos no Telegram (bot "Argos Trade Cripto")
 
-### Fase 0 · Preparação (semana 1)
-- [ ] **Você:** criar conta na Binance Brasil, concluir a verificação de identidade e ativar o 2FA. Ainda sem depositar.
-- [ ] **Você:** criar conta na Oracle Cloud e escolher a região São Paulo.
-- [ ] **Você:** criar um bot no Telegram e me passar só o nome dele. O token fica com você.
-- [ ] **Eu:** montar a estrutura do código no repositório.
+Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 
-### Fase 1 · Backtest (semanas 1 e 2)
-**Pergunta:** essa estratégia teria acrescentado alguma coisa de 2021 a 2026?
-
-- **Dados:** velas de 1 hora de BTC/BRL e ETH/BRL, do arquivo público da Binance (data.binance.vision).
-- **Custos simulados:** taxa de 0,1% mais 0,05% de diferença de preço em cada operação.
-- **Comparações:**
-  1. a mesma carteira 50/15/35 **parada**, sem rebalancear;
-  2. **compra mensal de BTC** com o mesmo dinheiro;
-  3. **100% BTC** comprado no início e segurado.
-- **Contra o autoengano:** as faixas são decididas antes do teste. Os parâmetros são calibrados em 2021–2023 e validados em 2024–2026, que é um período que a calibração não viu. Também mostro como o resultado muda com faixas de 3, 5 e 10 pontos.
-- **Medidas:** retorno total, maior queda, número de operações, taxas pagas e diferença contra cada referência, ano a ano.
-
-**Avança se** ganhar da carteira parada, depois das taxas, no período de validação, ou empatar com queda máxima menor. **Senão, o projeto para.**
-
-### Fase 2 · Simulado ao vivo (60 a 90 dias)
-- Robô completo no servidor, com **preços reais e dinheiro de mentira**.
-- Testa servidor, alertas, painel, travas e recuperação de falhas.
-- Durante a fase, desligo o servidor de propósito e corto a internet, para ver se as travas funcionam.
-
-**Avança se** passar 60 dias sem falha grave e com resultado coerente com o backtest.
-
-### Fase 3 · Dinheiro real pequeno (60 a 90 dias)
-- Depósito de **R$ 1.000** via Pix. Chave criada com as permissões da seção 6.
-- Mesmo código da fase 2, trocando só a chave.
-
-**Avança se** o resultado continuar coerente e as travas funcionarem na prática.
-
-### Fase 4 · Continuidade
-- Revisão mensal.
-- Aumento de capital **só se você quiser**, em passos pequenos, e nunca dinheiro que vá fazer falta.
-
-### Quando desistir, em qualquer fase
-- O robô não ganha da carteira parada depois das taxas.
-- Alguma trava falha.
-- O projeto deixa de ser divertido ou útil para você.
+| Evento | Mensagem |
+|---|---|
+| Rebalanceamento | 🟢 COMPRA / 🔴 VENDA, com o motivo e "operação N de até 3 hoje" |
+| Satélite | 🛰️ Satélite · COMPRA / VENDA |
+| Oportunidade da satélite | 🎯 OPORTUNIDADE · COMPRA (com a venda programada) e 💰 LUCRO · VENDA |
+| Reserva principal | 💰 Reserva acionada (degrau, valor e saldo restante) |
+| Aportes e montagens | 💵 Aporte, seguido de uma mensagem para cada compra |
+| Resumo das 7h | ☀️ Patrimônio total, carteira, reserva, satélite, comparação "sem robô", operações das últimas 24 h e divisão |
+| Falha | ⚠️ O robô não conseguiu rodar (nada é alterado) |
 
 ---
 
-## 9. Autonomia e notificações
+## 8. Onde acompanhar
 
-### Funcionamento autônomo
-Depois de configurado, o robô roda sozinho 24 horas por dia: coleta preços, decide, opera, se protege e reporta. **Nenhuma situação normal exige ação sua.** Os comandos do Telegram existem só se você *quiser* intervir.
-
-### O que chega no Telegram
-
-**A cada operação, na hora:**
-```
-🟢 COMPRA executada
-0,00021 BTC por R$ 114,90 (R$ 547.140/BTC)
-Motivo: BTC caiu para 44,8% da carteira (faixa 45–55%)
-Taxa: R$ 0,11
-Carteira agora: BTC 50% · ETH 15% · R$ 35%
-Patrimônio: R$ 1.041,20
-```
-
-**Resumo diário**, às 21h, com horário ajustável:
-```
-📊 Resumo de 25/11
-Patrimônio: R$ 1.041,20 (+0,8% no dia)
-Operações hoje: 1 · Taxas: R$ 0,11
-vs carteira parada: +0,3 ponto
-Travas: todas OK
-```
-
-**Relatório semanal**, todo domingo: resultado da semana e desde o início, comparação com as três referências, operações, taxas e eventos de risco.
-
-**Alertas**, só quando algo foge do normal:
-
-| Tipo | Exemplo | O robô faz |
+| Página | Endereço | O que mostra |
 |---|---|---|
-| ℹ️ Informativo | Queda de 25% desde o pico | Continua operando |
-| ⏸️ Pausa temporária | Volatilidade extrema; corretora instável | Retoma sozinho |
-| 🛑 Parada técnica | Saldo inconsistente; robô pior que a carteira parada | Cancela as ordens e para, sem vender nada |
-| 🚨 Urgente | Sinal de dívida ou margem; chave com permissão indevida | Para tudo |
-| 📵 Sem sinal | Robô sem responder há 30 minutos (monitor separado) | — |
+| **Monitor** | diogo385.github.io/Claude | Patrimônio total, evolução, histórico de operações, carteira principal, satélite, fluxo de decisão e agentes |
+| **Mercado ao vivo** | botão 📈 no monitor | Gráfico de velas das 6 moedas da principal, livro de ofertas, negociações e linhas de gatilho do robô |
+| **Extrato** | botão no monitor | Toda entrada e saída de dinheiro com o saldo em reais, as duas reservas e os sinais da satélite |
+| **Regras** | botão no monitor | Todas as regras num lugar só |
+| Maquete do console | claude.ai (artefato) | Versão de exemplo, sem dados reais |
 
-Se for mensagem demais, dá para desligar o aviso de cada operação e manter só o resumo diário e os alertas.
+---
 
-### O que ainda depende de você
-| Quando | O quê | Tempo seu |
+## 9. Infraestrutura do simulado (custo zero)
+
+| Peça | Como funciona |
+|---|---|
+| Robô | `simulado/robo_simulado.py`, que o **GitHub Actions** roda toda hora |
+| Preços | Dados públicos da Binance (`data-api.binance.vision`), sem conta e sem chave |
+| Dados | `simulado/estado.json`, `historico.csv`, `operacoes.csv`, `operacoes_satelite.csv` e `extrato.csv`, gravados no repositório a cada execução |
+| Avisos | Bot do Telegram. O token e o Chat ID ficam como **segredos do GitHub** |
+| Monitor | **GitHub Pages** a partir do branch do projeto |
+| Arquivo | A carteira v1 (BTC/ETH, 24–25/11) está guardada em `simulado/arquivo/v1-btc-eth/` |
+
+**Atenção:** o repositório é **público**. Para o simulado não há problema, porque os segredos ficam escondidos, mas ele deve virar **privado antes do dinheiro real**.
+
+---
+
+## 10. Resumo dos testes (backtest com dados reais da Binance)
+
+| Teste | Resultado principal |
+|---|---|
+| Rebalanceamento 50/15/35, 2021–2026 | Robô +146% contra +89% da carteira parada. Rebalancear 1 vez por ano deu +195% |
+| Frequência | Diário, trimestral, anual ou por faixas: todos parecidos (+128% a +195%) |
+| "Oportunidades" frequentes na principal | Pioraram (+66% a +102%), porque as taxas comem o ganho |
+| Carteira diversificada (6 moedas) | +88% contra +63% da 50/15/35 (jun/2021–nov/2026), com queda máxima um pouco maior |
+| Até 3 operações por dia, extras com 2,5 pts | Mesmo resultado; as extras são raras |
+| Gatilho de 1 ponto | Mesmo resultado, com o dobro de operações (~6 por mês) |
+| Reserva em degraus (R$ 500) | Mesmo lucro de investir tudo, com queda menor (−58% contra −65%) quando a queda vem cedo |
+| Moedas da satélite desde 2025 | Caíram de 83% a 86%. A cesta perdeu 46% com o robô, contra 55% parada |
+| Reserva da satélite, giro curto (+1,5%) | −32% contra −33% com a reserva parada: 180 vendas com lucro, mas 5 posições presas |
+
+O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
+
+---
+
+## 11. Travas
+
+| Trava | Situação |
+|---|---|
+| Saldo negativo ou qualquer sinal de dívida | Para tudo e avisa |
+| Ordem maior que o saldo disponível | Nunca acontece: o robô limita ao saldo |
+| Mais de 3 operações por dia em cada carteira | Bloqueado |
+| Falha de preços ou de conexão | Nada muda, tenta de novo e avisa |
+| Robô sem rodar | O monitor mostra **ATRASO** depois de 3 horas sem checagem |
+| Queda forte | Só aviso e uso da reserva. Nunca vende tudo em pânico |
+
+**No dinheiro real, entram também:** chave de API sem saque e restrita ao IP do servidor, conta de margem nunca ativada, e checagem periódica das permissões da chave.
+
+---
+
+## 12. Fases
+
+| Fase | Situação | Critério para avançar |
 |---|---|---|
-| Uma vez | Configuração inicial: contas, chave de API e Telegram, com passo a passo | ~1 hora |
-| Opcional | Encaminhar o relatório semanal para cá, se quiser análise | 2 min |
-| Raramente | Resolver uma parada técnica junto comigo (o Telegram avisa) | Variável |
-| Todo ano | Encaminhar a planilha de operações ao contador | 10 min |
+| 0 · Pesquisa e plano | ✅ Concluída | — |
+| 1 · Backtest | ✅ Concluída | Rebalancear ganhou da carteira parada |
+| **2 · Simulado ao vivo** | **🟡 Em andamento desde 24/11/2026** | 60 a 90 dias sem falha grave e com resultado coerente com o backtest |
+| 3 · Dinheiro real pequeno | Pendente | Repositório privado, conta na Binance Brasil (KYC e 2FA), servidor com IP fixo (Oracle Cloud gratuito, em São Paulo), chave sem saque e o mesmo código com executor real |
+| 4 · Continuidade | Pendente | Revisão mensal, e mais capital só se o dono quiser |
+
+**Por que a fase 3 precisa de servidor:** o GitHub Actions muda de IP a cada execução, e a Binance só deixa a chave negociar a partir de um IP fixo.
+
+**Quando desistir:** se o robô não ganhar da carteira parada depois das taxas, se alguma trava falhar, ou se o projeto deixar de ser útil.
 
 ---
 
-## 10. Impostos e registro
-- **Binance Brasil:** há indicação de que vale a isenção para vendas de até R$ 35 mil por mês, por ela ter CNPJ brasileiro, mas **não está confirmado**. No pior caso, 15% sobre o lucro. Com R$ 1.000 de capital o valor é muito pequeno. **Confirmar com o contador.**
-- A MP 1.303, que acabaria com a isenção, caducou em 2025, mas o tema pode voltar ao Congresso.
-- O robô gera uma planilha com todas as operações (data, ativo, quantidade, preço, taxa) para a declaração e para a DeCripto.
+## 13. Impostos (confirmar com o contador)
+- **Corretora brasileira:** isenção para vendas de até R$ 35 mil por mês. A MP 1.303, que acabaria com ela, caducou em 2025, mas o tema pode voltar.
+- **Binance Brasil:** há indicação de que vale a regra de corretora nacional, por ter CNPJ, mas **não está confirmado**.
+- **Corretora estrangeira:** 15% sobre o lucro, sem isenção.
+- O extrato (`simulado/extrato.csv`) já registra cada operação com data, valor e taxa, o que facilita a declaração e a DeCripto.
 
 ---
 
-## 11. Riscos que continuam existindo
+## 14. Riscos
 
 | Risco | Mitigação |
 |---|---|
-| Queda forte do cripto | Capital pequeno, 35% em reais, pausa em 25% de queda |
-| A corretora quebrar ou travar saques | Deixar lá só o capital do robô |
-| Bug no código | Travas na corretora, fases simuladas e limites pequenos |
-| Chave de API vazar | Sem saque, IP restrito e chave fora do GitHub |
-| A Oracle desligar o servidor | Monitor de sinal de vida avisando no Telegram, Docker e backup. Plano B: computador em casa. |
-| Mudança no imposto | Acompanhar e revisar com o contador |
+| Queda forte das moedas | Reserva em degraus, reais na carteira e capital pequeno |
+| Moedas da satélite (alta volatilidade) | Valor pequeno, separado da principal, risco aceito |
+| Posições de giro presas | Uma por moeda, R$ 25 cada, no máximo R$ 125 |
+| Corretora quebrar ou travar saques | No real, deixar lá só o capital do robô |
+| Bug no código | Simulado primeiro, travas e limites pequenos |
+| Repositório público | Fechar antes do dinheiro real |
+| Mudança de imposto ou regulação | Acompanhar e revisar com o contador |
 
 ---
 
-## 12. Estrutura do código
+## 15. Estrutura do repositório
 
 ```
-agente/
-  config.py         # alvo, faixas e limites (só você altera)
-  coletor.py        # preços e saldo (ccxt)
-  estrategia.py     # cálculo do rebalanceamento
-  risco.py          # porteiro: todas as travas
-  executor.py       # único módulo que envia ordens
-  banco.py          # SQLite
-  painel/           # painel web
-  telegram_bot.py   # notificações (operações, resumo, relatório, alertas) e comandos
-  monitor.py        # monitor separado de sinal de vida
-  relatorio.py      # relatório semanal e exportação para o contador
-backtest/
-  dados.py          # baixa o histórico público
-  simulador.py      # roda a estratégia e as referências
-  resultado.html    # gráfico e tabela do resultado
-painel-ativos.html  # painel de mercado ao vivo (já feito)
-PLANO.md            # este documento
+index.html            monitor (GitHub Pages)
+painel-ativos.html    mercado ao vivo
+extrato.html          extrato da conta
+regras.html           regras
+assets/               logo e ícone
+simulado/
+  robo_simulado.py    o robô
+  estado.json         estado das carteiras e reservas
+  historico.csv       patrimônio diário (7h)
+  operacoes.csv       operações da principal
+  operacoes_satelite.csv
+  extrato.csv         entradas e saídas de dinheiro
+  arquivo/            carteiras antigas
+backtest/             testes históricos e resultados
+.github/workflows/    agendamento do robô (toda hora)
+PLANO.md              este documento
 ```
 
 ---
 
-## 13. Cronograma estimado
+## 16. Histórico de decisões
 
-| Semana | Entrega |
+| Data | Mudança |
 |---|---|
-| 1 | Fase 0 concluída e backtest rodando |
-| 2 | **Resultado do backtest: seguir ou parar** |
-| 3–4 | Robô completo, servidor no ar e simulado ligado |
-| 5–16 | Simulado ao vivo, com revisão semanal |
-| 17+ | Dinheiro real (R$ 1.000), se tudo passar |
-
----
-
-## 14. Próximo passo
-
-**Rodar o backtest.** Para isso, o ambiente de desenvolvimento precisa de acesso ao site de dados públicos da Binance (`data.binance.vision`). A liberação aparece para você aprovar.
+| 24/11 | Pesquisa, prognóstico, plano v1, backtest e painel de mercado. Robô simulado BTC/ETH no ar, com Telegram |
+| 24/11 | Nome Argo Trade Cripto. Monitor no estilo terminal, no GitHub Pages |
+| 25/11 | Carteira diversificada de 6 moedas, recomeçada do zero (a BTC/ETH foi arquivada) |
+| 25/11 | Até 3 operações por dia (extras com 2,5 pts). Resumo movido para as 7h |
+| 25/11 | Reserva de oportunidade de R$ 500 em degraus de R$ 125 |
+| 25/11 | Gatilho de 1,5 para 1 ponto e ordem mínima de R$ 10 |
+| 25/11 | Nome final: **Argos** Trade Cripto. Logo provisório |
+| 25/11 | Monitor reorganizado, página de regras, mercado ao vivo em página própria |
+| 25/11 | Corretora estrangeira avaliada e descartada. Fica a Binance Brasil |
+| 25/11 | Carteira satélite de R$ 250 (LTC, DOGE, ADA, AVAX, NEAR), abaixo da principal no monitor |
+| 25/11 | Extrato da conta. Quadro da reserva movido para o extrato |
+| 25/11 | Reserva da satélite de R$ 100: giro curto com venda em +1,5%. Robô passa a rodar toda hora |
