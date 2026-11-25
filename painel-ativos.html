@@ -73,7 +73,8 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
 .stat { font-family: var(--mono); font-size: .78rem; color: var(--muted); }
 .stat b { color: var(--fg); font-weight: 500; }
 .stat b.up { color: var(--good); } .stat b.down { color: var(--bad); }
-.tf { display: flex; gap: 6px; margin-left: auto; }
+.tf { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+#tf { margin-left: 0; }
 .tf button { font-family: var(--mono); font-size: .72rem; font-weight: 600; letter-spacing: .06em; border-radius: 4px; padding: 5px 9px; cursor: pointer; border: 1px solid var(--line-hi); background: var(--surface-2); color: var(--muted); }
 .tf button[aria-pressed="true"] { color: var(--cyan); border-color: var(--cyan); }
 .tf button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
@@ -128,14 +129,23 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
         <span class="stat">máx <b id="stHi">--</b></span>
         <span class="stat">mín <b id="stLo">--</b></span>
         <span class="stat">volume <b id="stVol">--</b></span>
-        <div class="tf" id="tf">
-          <button type="button" data-tf="1m" aria-pressed="true">1m</button>
-          <button type="button" data-tf="5m" aria-pressed="false">5m</button>
-          <button type="button" data-tf="15m" aria-pressed="false">15m</button>
-          <button type="button" data-tf="1h" aria-pressed="false">1h</button>
+        <span class="stat">no período <b id="stPer">--</b></span>
+        <div class="tf" id="tipo" role="group" aria-label="Tipo de gráfico">
+          <button type="button" data-g="linha" aria-pressed="true">Linha</button>
+          <button type="button" data-g="velas" aria-pressed="false">Velas</button>
+        </div>
+        <div class="tf" id="tf" role="group" aria-label="Período do gráfico">
+          <button type="button" data-tf="24h" aria-pressed="true">24h</button>
+          <button type="button" data-tf="1s" aria-pressed="false">1 sem</button>
+          <button type="button" data-tf="1m" aria-pressed="false">1 mês</button>
+          <button type="button" data-tf="1a" aria-pressed="false">1 ano</button>
+          <button type="button" data-tf="3a" aria-pressed="false">3 anos</button>
+          <button type="button" data-tf="5a" aria-pressed="false">5 anos</button>
+          <button type="button" data-tf="10a" aria-pressed="false">10 anos</button>
+          <button type="button" data-tf="tudo" aria-pressed="false">Tudo</button>
         </div>
       </div>
-      <canvas id="candles" aria-label="Gráfico de velas do ativo selecionado"></canvas>
+      <canvas id="candles" aria-label="Gráfico de preço do ativo selecionado"></canvas>
     </section>
 
     <div class="side">
@@ -190,7 +200,17 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
   }
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-  let sel = ASSETS[0].s, tf = "1m", candles = [], ws = null, wsIdx = 0, restIdx = 0, retry = 0, lastEvent = 0;
+  // períodos do gráfico: cada um usa um tamanho de vela da Binance (iv) e uma quantidade (n)
+  const DIA = 864e5;
+  const PERIODOS = {
+    "24h": { iv: "15m", n: 96, ms: DIA, rot: "24 horas" }, "1s": { iv: "1h", n: 168, ms: 7 * DIA, rot: "1 semana" },
+    "1m": { iv: "4h", n: 180, ms: 30 * DIA, rot: "1 mês" }, "1a": { iv: "1d", n: 365, ms: 365 * DIA, rot: "1 ano" },
+    "3a": { iv: "1w", n: 157, ms: 3 * 365 * DIA, rot: "3 anos" }, "5a": { iv: "1w", n: 261, ms: 5 * 365 * DIA, rot: "5 anos" },
+    "10a": { iv: "1w", n: 522, ms: 10 * 365 * DIA, rot: "10 anos" }, "tudo": { iv: "1w", n: 1000, ms: 0, rot: "todo o histórico" }
+  };
+  let tipo = "linha";
+  try { tipo = localStorage.getItem("argos-tipo-grafico") || "linha"; } catch (e) { /* sem armazenamento */ }
+  let sel = ASSETS[0].s, tf = "24h", candles = [], ws = null, wsIdx = 0, restIdx = 0, retry = 0, lastEvent = 0;
   const state = {}; // por símbolo: { px, open, hi, lo, qv, spark: [] }
 
   // Formatação
@@ -284,7 +304,9 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     candles = [];
     drawCandles();
     try {
-      const k = await rest(`/api/v3/klines?symbol=${sel}&interval=${tf}&limit=120`);
+      const pedido = sel + tf, P_ = PERIODOS[tf];
+      const k = await rest(`/api/v3/klines?symbol=${sel}&interval=${P_.iv}&limit=${P_.n}`);
+      if (pedido !== sel + tf) return;  // o usuário já trocou de moeda ou período
       candles = k.map(r => ({ t: r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4] }));
     } catch (e) { showMsg("Não foi possível baixar o histórico de preços. Verifique a conexão."); }
     drawCandles();
@@ -297,7 +319,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     const P = { l: 8, r: 88, t: 10, b: 24 };
     g.font = "11px " + css("--mono");
     if (!candles.length) { g.fillStyle = css("--muted"); g.fillText("carregando…", P.l + 4, 24); return; }
-    const all = candles; const candles_ = all.slice(-Math.max(30, Math.floor((w - P.l - P.r) / 7)));
+    const candles_ = candles, per = PERIODOS[tf];
     const lo = Math.min(...candles_.map(k => k.l)), hi = Math.max(...candles_.map(k => k.h)), pad = (hi - lo) * .06 || hi * .001;
     const min = lo - pad, max = hi + pad;
     const y = v => P.t + (h - P.t - P.b) * (1 - (v - min) / (max - min));
@@ -311,17 +333,35 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     }
     g.setLineDash([]);
     // eixo de tempo
-    const step = Math.ceil(candles_.length / 6);
-    candles_.forEach((k, i) => { if (i % step === 0) { const d = new Date(k.t); g.fillText(tf === "1h" ? `${d.getDate()}/${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}h` : d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), P.l + i * cw, h - 6); } });
-    // velas
+    const p2 = n => String(n).padStart(2, "0"), MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+    const rotT = t => { const d = new Date(t);
+      return tf === "24h" ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : tf === "1s" ? `${p2(d.getDate())}/${p2(d.getMonth() + 1)} ${p2(d.getHours())}h`
+        : tf === "1m" ? `${p2(d.getDate())}/${p2(d.getMonth() + 1)}` : tf === "1a" ? `${MES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}` : `${MES[d.getMonth()]}/${d.getFullYear()}`; };
+    const nRot = Math.max(2, Math.min(6, Math.floor((w - P.l - P.r) / 110))), step = Math.ceil(candles_.length / nRot);
+    candles_.forEach((k, i) => { if (i % step === 0) g.fillText(rotT(k.t), P.l + i * cw, h - 6); });
     const up = css("--good"), dn = css("--bad");
-    candles_.forEach((k, i) => {
+    const primeiro = candles_[0].o, ultimo = candles_[candles_.length - 1].c, varPer = ultimo / primeiro - 1;
+    const sp = $("stPer"); sp.textContent = (varPer >= 0 ? "+" : "−") + Math.abs(varPer * 100).toLocaleString("pt-BR", { maximumFractionDigits: Math.abs(varPer) >= 1 ? 0 : 1, minimumFractionDigits: Math.abs(varPer) >= 1 ? 0 : 1 }) + "%";
+    sp.style.color = varPer >= 0 ? up : dn;
+    if (tipo === "linha") {
+      // linha de fechamento com área: o mais fácil de ler
+      const cor = varPer >= 0 ? up : dn, xs = i => P.l + i * cw + cw / 2;
+      g.beginPath(); candles_.forEach((k, i) => i ? g.lineTo(xs(i), y(k.c)) : g.moveTo(xs(i), y(k.c)));
+      g.strokeStyle = cor; g.lineWidth = 2; g.lineJoin = "round"; g.stroke(); g.lineWidth = 1;
+      g.lineTo(xs(candles_.length - 1), h - P.b); g.lineTo(xs(0), h - P.b); g.closePath();
+      const gr = g.createLinearGradient(0, P.t, 0, h - P.b); gr.addColorStop(0, cor); gr.addColorStop(1, "transparent");
+      g.globalAlpha = .18; g.fillStyle = gr; g.fill(); g.globalAlpha = 1;
+    } else candles_.forEach((k, i) => {
       const x = P.l + i * cw + cw / 2, col = k.c >= k.o ? up : dn;
       g.strokeStyle = col; g.fillStyle = col;
       g.beginPath(); g.moveTo(Math.round(x) + .5, y(k.h)); g.lineTo(Math.round(x) + .5, y(k.l)); g.stroke();
       const bw = Math.max(1, cw * .62), top = y(Math.max(k.o, k.c)), bh = Math.max(1, Math.abs(y(k.o) - y(k.c)));
       g.fillRect(x - bw / 2, top, bw, bh);
     });
+    // a moeda pode ter menos histórico na Binance (em reais) do que o período pedido
+    g.fillStyle = css("--muted"); g.font = "11px " + css("--mono");
+    const ini = new Date(candles_[0].t), curto = per.ms && Date.now() - candles_[0].t < per.ms * .9;
+    if (curto || tf === "tudo") { const t = `${curto ? "histórico em reais na Binance começa" : "desde"} ${MES[ini.getMonth()]}/${ini.getFullYear()}`; g.fillText(t, w - P.r - g.measureText(t).width - 6, P.t + 10); }
     // gatilhos do robô
     const gt = gatilhos(sel, candles_[candles_.length - 1].c);
     if (gt) [["vende", css("--amber"), "venderia"], ["compra", css("--good"), "compraria"], ["alvoOp", css("--cyan"), "vende o giro"]].forEach(([k, cor, rot]) => {
@@ -348,7 +388,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     if (!candles.length) return;
     const last = candles[candles.length - 1];
     if (bar.t === last.t) candles[candles.length - 1] = bar;
-    else if (bar.t > last.t) { candles.push(bar); if (candles.length > 120) candles.shift(); }
+    else if (bar.t > last.t) { candles.push(bar); if (candles.length > PERIODOS[tf].n) candles.shift(); }
     drawCandles();
   }
 
@@ -375,7 +415,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
 
   // WebSocket
   const tickerStreams = () => ASSETS.map(a => a.s.toLowerCase() + "@miniTicker");
-  const selStreams = () => { const l = sel.toLowerCase(); return [`${l}@kline_${tf}`, `${l}@depth10@100ms`, `${l}@trade`]; };
+  const selStreams = () => { const l = sel.toLowerCase(); return [`${l}@kline_${PERIODOS[tf].iv}`, `${l}@depth10@100ms`, `${l}@trade`]; };
   let subscribed = [], msgId = 1;
 
   function setConn(cls, text) { const c = $("conn"); c.className = "chip " + cls; c.textContent = text; }
@@ -395,7 +435,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
       if (st.endsWith("@miniTicker")) {
         const s = state[d.s]; if (!s) return;
         s.px = +d.c; s.open = +d.o; s.hi = +d.h; s.lo = +d.l; s.qv = +d.q; updateCard(d.s);
-      } else if (st.startsWith(sel.toLowerCase() + "@kline_" + tf)) onKline(d.k);
+      } else if (st.startsWith(sel.toLowerCase() + "@kline_" + PERIODOS[tf].iv)) onKline(d.k);
       else if (st === sel.toLowerCase() + "@depth10@100ms") onDepth(d);
       else if (st === sel.toLowerCase() + "@trade") onTrade(d);
     };
@@ -413,7 +453,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
         const t = await rest(`/api/v3/ticker/24hr?symbols=${q}`);
         t.forEach(d => { const st = state[d.symbol]; if (!st) return;
           st.px = +d.lastPrice; st.open = +d.openPrice; st.hi = +d.highPrice; st.lo = +d.lowPrice; st.qv = +d.quoteVolume; updateCard(d.symbol); });
-        const k = await rest(`/api/v3/klines?symbol=${sel}&interval=${tf}&limit=2`);
+        const k = await rest(`/api/v3/klines?symbol=${sel}&interval=${PERIODOS[tf].iv}&limit=2`);
         k.forEach(x => onKline({ t: x[0], o: x[1], h: x[2], l: x[3], c: x[4] }));
         onDepth(await rest(`/api/v3/depth?symbol=${sel}&limit=10`));
         const tr = await rest(`/api/v3/trades?symbol=${sel}&limit=12`);
@@ -447,6 +487,13 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     $("book").innerHTML = ""; const tr = $("trades"); while (tr.children.length > 1) tr.removeChild(tr.lastChild);
     updateHeadline(); loadCandles(); resubscribe();
   }
+  const marcaTipo = () => document.querySelectorAll("#tipo button").forEach(x => x.setAttribute("aria-pressed", x.dataset.g === tipo));
+  marcaTipo();
+  $("tipo").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.dataset.g === tipo) return;
+    tipo = b.dataset.g; try { localStorage.setItem("argos-tipo-grafico", tipo); } catch (er) { /* ok */ }
+    marcaTipo(); drawCandles();
+  });
   $("tf").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b || b.dataset.tf === tf) return;
     tf = b.dataset.tf; document.querySelectorAll("#tf button").forEach(x => x.setAttribute("aria-pressed", x === b));
