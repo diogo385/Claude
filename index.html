@@ -97,6 +97,14 @@ h1 span { color: var(--amber); }
 .log .r { text-align: right; white-space: nowrap; }
 .empty { color: var(--muted); padding: 10px 0; }
 .scroll { overflow-x: auto; }
+.mk-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 8px; }
+.seg { display: flex; gap: 4px; }
+.seg button { font: inherit; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 5px 9px; cursor: pointer; border: 1px solid var(--line-hi); background: var(--panel); color: var(--muted); }
+.seg button[aria-pressed="true"] { color: var(--teal); border-color: var(--teal); box-shadow: 0 0 10px rgba(46,230,200,.2); }
+.seg button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.mk-px { display: flex; gap: 10px; align-items: baseline; margin-right: auto; }
+.mk-px .big { font-family: var(--display); font-size: 1.5rem; font-weight: 700; }
+#candles { width: 100%; height: 320px; display: block; }
 .foot { color: var(--dim); font-size: 11px; padding: 10px 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .foot a { color: var(--teal); }
 @media (max-width: 900px) {
@@ -192,6 +200,17 @@ h1 span { color: var(--amber); }
             <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
             <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
           </div>
+        </section>
+
+        <section class="box">
+          <h2>Mercado ao vivo <small id="mkInfo">conectando…</small></h2>
+          <div class="mk-bar">
+            <div class="seg" id="mkSym"><button type="button" data-s="BTCBRL" aria-pressed="true">₿ BTC</button><button type="button" data-s="ETHBRL" aria-pressed="false">Ξ ETH</button></div>
+            <div class="mk-px"><span class="big num" id="mkPx">--</span><span class="num" id="mkChg"></span></div>
+            <div class="seg" id="mkTf"><button type="button" data-tf="1m" aria-pressed="false">1m</button><button type="button" data-tf="15m" aria-pressed="true">15m</button><button type="button" data-tf="1h" aria-pressed="false">1h</button><button type="button" data-tf="4h" aria-pressed="false">4h</button><button type="button" data-tf="1d" aria-pressed="false">1d</button></div>
+          </div>
+          <canvas id="candles" aria-label="Gráfico de velas ao vivo"></canvas>
+          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> se fosse 21h agora (desvio de 2 pontos na carteira simulada).</p>
         </section>
 
         <div class="two">
@@ -421,6 +440,128 @@ h1 span { color: var(--amber); }
     });
     t.appendChild(tb); box.appendChild(t);
   }
+
+  // ---------- gráfico de velas ao vivo ----------
+  const WS = ["wss://data-stream.binance.vision/ws", "wss://stream.binance.com:9443/ws"];
+  let mkSym = "BTCBRL", mkTf = "15m", velas = [], ws = null, wsIdx = 0, wsFalhas = 0, gen = 0, poll = null;
+  const casas = v => v >= 1000 ? 0 : 2;
+
+  async function carregarVelas() {
+    const g = ++gen; velas = []; desenhar();
+    for (const base of FONTES) {
+      try {
+        const r = await fetch(`${base}/api/v3/klines?symbol=${mkSym}&interval=${mkTf}&limit=120`);
+        if (!r.ok) continue;
+        const k = await r.json(); if (g !== gen) return;
+        velas = k.map(x => ({ t: x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4] }));
+        desenhar(); conectar(g); return;
+      } catch (e) { /* próxima fonte */ }
+    }
+    set("mkInfo", "sem conexão com a Binance");
+  }
+
+  function aplicar(b) {
+    const u = velas[velas.length - 1]; if (!u) return;
+    if (b.t === u.t) velas[velas.length - 1] = b; else if (b.t > u.t) { velas.push(b); if (velas.length > 120) velas.shift(); }
+  }
+  function sondar(g) { // plano B: consulta a cada 5 s quando a conexão contínua não funciona
+    clearInterval(poll);
+    set("mkInfo", "ao vivo · atualiza a cada 5 s");
+    poll = setInterval(async () => {
+      if (g !== gen) return clearInterval(poll);
+      for (const base of FONTES) {
+        try {
+          const r = await fetch(`${base}/api/v3/klines?symbol=${mkSym}&interval=${mkTf}&limit=2`);
+          if (!r.ok) continue;
+          (await r.json()).forEach(x => aplicar({ t: x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4] }));
+          if (g === gen) desenhar(); return;
+        } catch (e) { /* próxima fonte */ }
+      }
+    }, 5000);
+  }
+  function conectar(g) {
+    clearInterval(poll);
+    if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} }
+    if (wsFalhas >= WS.length) return sondar(g);
+    const sock = new WebSocket(`${WS[wsIdx % WS.length]}/${mkSym.toLowerCase()}@kline_${mkTf}`);
+    ws = sock; let abriu = false;
+    sock.onopen = () => { abriu = true; set("mkInfo", "ao vivo · Binance"); };
+    sock.onmessage = ev => {
+      if (g !== gen) return;
+      let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (!m.k || !velas.length) return;
+      aplicar({ t: m.k.t, o: +m.k.o, h: +m.k.h, l: +m.k.l, c: +m.k.c });
+      desenhar();
+    };
+    sock.onclose = () => { if (g !== gen) return; if (!abriu) { wsIdx++; wsFalhas++; } set("mkInfo", "reconectando…"); setTimeout(() => { if (g === gen) conectar(g); }, 3000); };
+  }
+
+  function gatilhos() {
+    if (!estado || !velas.length) return null;
+    const a = mkSym === "BTCBRL" ? "btc" : "eth", o = a === "btc" ? "eth" : "btc", c = estado.carteira;
+    const ult = hist[hist.length - 1];
+    const pOutro = px ? px[o] : (ult ? +(o === "btc" ? ult.preco_btc : ult.preco_eth) : 0);
+    const O = c.reais + c[o] * pOutro, q = c[a], t = ALVO[a];
+    if (!q || !O) return null;
+    const P = w => w * O / ((1 - w) * q);
+    return { vende: P(t + GATILHO), compra: P(t - GATILHO) };
+  }
+
+  function desenhar() {
+    const cv = $("candles"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const g = cv.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
+    g.font = "11px 'JetBrains Mono', monospace";
+    if (!velas.length) { g.fillStyle = "#7fa398"; g.fillText("carregando…", 10, 20); return; }
+    const P = { l: 6, r: 96, t: 14, b: 22 };
+    const vis = velas.slice(-Math.max(30, Math.floor((W - P.l - P.r) / 7)));
+    let lo = Math.min(...vis.map(k => k.l)), hi = Math.max(...vis.map(k => k.h));
+    const folga = (hi - lo) * .08 || hi * .002; lo -= folga; hi += folga;
+    const y = v => P.t + (H - P.t - P.b) * (1 - (v - lo) / (hi - lo)), cw = (W - P.l - P.r) / vis.length;
+    g.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const v = lo + (hi - lo) * i / 4, yy = Math.round(y(v)) + .5;
+      g.strokeStyle = "#173029"; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(P.l, yy); g.lineTo(W - P.r, yy); g.stroke();
+      g.fillStyle = "#4f7067"; g.fillText(nf(v, casas(v)), W - P.r + 8, yy + 4);
+    }
+    g.setLineDash([]);
+    const passo = Math.ceil(vis.length / 6);
+    vis.forEach((k, i) => { if (i % passo === 0) { const d = new Date(k.t); g.fillStyle = "#4f7067";
+      g.fillText(mkTf === "1d" ? `${pad(d.getDate())}/${pad(d.getMonth() + 1)}` : mkTf === "4h" || mkTf === "1h" ? `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}h` : `${pad(d.getHours())}:${pad(d.getMinutes())}`, P.l + i * cw, H - 6); } });
+    vis.forEach((k, i) => {
+      const x = P.l + i * cw + cw / 2, cor = k.c >= k.o ? "#3df59a" : "#ff5d6c";
+      g.strokeStyle = cor; g.fillStyle = cor;
+      g.beginPath(); g.moveTo(Math.round(x) + .5, y(k.h)); g.lineTo(Math.round(x) + .5, y(k.l)); g.stroke();
+      const bw = Math.max(1, cw * .62), topo = y(Math.max(k.o, k.c)), alt = Math.max(1, Math.abs(y(k.o) - y(k.c)));
+      g.fillRect(x - bw / 2, topo, bw, alt);
+    });
+    // gatilhos do robô
+    const gt = gatilhos();
+    if (gt) [["vende", "#ffb547", "venderia"], ["compra", "#3df59a", "compraria"]].forEach(([k, cor, rot]) => {
+      const v = gt[k]; g.fillStyle = cor; g.strokeStyle = cor;
+      if (v > lo && v < hi) {
+        const yy = Math.round(y(v)) + .5; g.setLineDash([6, 4]); g.globalAlpha = .8;
+        g.beginPath(); g.moveTo(P.l, yy); g.lineTo(W - P.r, yy); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+        g.fillText(`${rot} ${nf(v, casas(v))}`, P.l + 6, yy - 5);
+      } else {
+        const acima = v >= hi; g.fillText(`${acima ? "▲" : "▼"} ${rot} em ${brl(v, casas(v))}`, P.l + 6, acima ? P.t + 8 : H - P.b - 6);
+      }
+    });
+    // preço atual
+    const u = vis[vis.length - 1].c, ly = Math.round(y(u)) + .5;
+    g.strokeStyle = "#2ee6c8"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(P.l, ly); g.lineTo(W - P.r, ly); g.stroke(); g.setLineDash([]);
+    g.fillStyle = "#2ee6c8"; g.shadowColor = "#2ee6c8"; g.shadowBlur = 10; g.fillRect(W - P.r + 2, ly - 9, P.r - 4, 18); g.shadowBlur = 0;
+    g.fillStyle = "#06100e"; g.font = "600 11px 'JetBrains Mono', monospace"; g.fillText(nf(u, casas(u)), W - P.r + 6, ly + 4);
+    set("mkPx", brl(u, casas(u)));
+    const ab = vis[0].o, ch = u / ab - 1; set("mkChg", pct(ch) + " no gráfico", ch >= 0 ? "up" : "down");
+  }
+
+  $("mkSym").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.dataset.s === mkSym) return;
+    mkSym = b.dataset.s; document.querySelectorAll("#mkSym button").forEach(x => x.setAttribute("aria-pressed", x === b)); carregarVelas(); });
+  $("mkTf").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.dataset.tf === mkTf) return;
+    mkTf = b.dataset.tf; document.querySelectorAll("#mkTf button").forEach(x => x.setAttribute("aria-pressed", x === b)); carregarVelas(); });
+  let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(desenhar, 120); });
+  carregarVelas();
 
   setInterval(() => { const b = brasilia(); $("clock").textContent = `${pad(b.getUTCHours())}:${pad(b.getUTCMinutes())}:${pad(b.getUTCSeconds())}`; }, 1000);
   setInterval(() => { if (estado) render(); }, 15000);
