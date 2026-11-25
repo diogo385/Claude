@@ -384,15 +384,29 @@ def ler_comandos(est):
 
 
 def atualizar_trava(est, v_total, agora):
-    """Guarda o patrimônio das últimas 24 h e liga a trava se caiu 7% ou mais do máximo do período."""
+    """Guarda o patrimônio das últimas 24 h (com o capital depositado naquele momento)
+    e liga a trava se caiu 7% ou mais do máximo do período. Aportes não contam como ganho."""
+    cap = est.get("capital_total", CAPITAL)
     hist = [x for x in est.get("valores_24h", []) if (agora - datetime.fromisoformat(x[0])).total_seconds() <= 24 * 3600]
-    maximo = max([x[1] for x in hist] + [v_total])
-    hist.append([agora.isoformat(), round(v_total, 2)])
+    # valor antigo ajustado pelos aportes feitos depois dele (registros antigos sem capital ficam de fora)
+    maximo = max([x[1] + (cap - x[2]) for x in hist if len(x) > 2] + [v_total])
+    hist.append([agora.isoformat(), round(v_total, 2), round(cap, 2)])
     est["valores_24h"] = hist[-120:]
     antes = est.get("trava_queda", False)
     est["trava_queda"] = v_total <= maximo * (1 - TRAVA_QUEDA_24H)
     est["queda_24h"] = round(1 - v_total / maximo, 4)
     return antes != est["trava_queda"]
+
+
+def resultado_24h(est, v_total):
+    """Ganho das últimas 24 h descontando aportes. Sem registro confiável, usa o resultado desde o início."""
+    cap = est.get("capital_total", CAPITAL)
+    hist = [x for x in est.get("valores_24h", []) if len(x) > 2]
+    if not hist:
+        return v_total - cap, cap
+    _, v0, c0 = hist[0]
+    base = v0 + (cap - c0)
+    return v_total - base, base
 
 
 # ---------- execução ----------
@@ -608,10 +622,9 @@ def main():
                      f"Sem robô: {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))}\n"
                      f"Operações hoje: principal {est['ops_dia']['n']} · satélite {est.get('satelite', {}).get('ops_dia', {}).get('n', 0)}")
         elif cmd == "/hoje":
-            hist = est.get("valores_24h", [])
-            ref = hist[0][1] if hist else v_tot
+            ganho, base = resultado_24h(est, v_tot)
             telegram(f"{ROTULO} · 📅 Últimas 24 h\n"
-                     f"Patrimônio: {brl(ref)} → {brl(v_tot)} ({'+' if v_tot >= ref else '−'}{brl(abs(v_tot - ref))}, {pct(v_tot / ref - 1)})\n"
+                     f"Resultado: {'+' if ganho >= 0 else '−'}{brl(abs(ganho))} ({pct(ganho / base)}) · patrimônio {brl(v_tot)} (aportes não contam como ganho)\n"
                      f"Queda máxima no período: {num(est.get('queda_24h', 0)*100, 1)}% · operações desde o último resumo: {est.get('ops_periodo', 0)}")
         elif cmd in ("/ajuda", "/help"):
             telegram(f"{ROTULO} · Comandos\n/status — situação agora\n/hoje — resultado das últimas 24 h\n"

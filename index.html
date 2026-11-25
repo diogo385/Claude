@@ -132,7 +132,7 @@ h1 span { color: var(--amber); }
 .pnl .barra i { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
 .pnl .barra::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line-hi); }
 .pnl-tot { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-bottom: 10px; font-size: 12px; color: var(--muted); }
-.perf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.perf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .perf .box h2 { margin-bottom: 8px; }
 .kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 12px; }
 .kv span { color: var(--muted); } .kv b { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -160,23 +160,38 @@ h1 span { color: var(--amber); }
 .cart-top .big { font-family: var(--display); font-size: 1.6rem; font-weight: 700; color: var(--teal); }
 .cart-top .lab { color: var(--muted); font-size: 12px; }
 .cart-rows { display: grid; font-size: 12px; font-variant-numeric: tabular-nums; }
-.crow { display: grid; grid-template-columns: 52px minmax(80px, 1fr) 52px 40px 62px 90px 96px 56px minmax(150px, 1.1fr); gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
-.crow.hd { border-top: 0; padding-top: 0; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.crow { display: grid; grid-template-columns: 50px minmax(70px, 1fr) 50px 40px 80px 84px 80px 54px 90px 90px 52px minmax(120px, 1fr); gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.crow.hd { border-top: 0; padding-top: 0; color: var(--muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.crow.hd > span:nth-child(-n+2) { text-align: left; }
 .crow > span { text-align: right; white-space: nowrap; }
 .crow > b, .crow > .sit { text-align: left; }
+.crow .c-vale { color: var(--fg); font-weight: 600; }
+.crow.hd .c-vale { color: var(--muted); font-weight: 400; }
+.crow .c-apl, .crow .c-pm, .crow .c-px { color: var(--muted); }
 .crow .sit { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.crow .sit.up { color: var(--green); } .crow .sit.warn { color: var(--amber); }
 .crow .track { height: 10px; }
-.cart.resumo .crow { grid-template-columns: 52px minmax(80px, 1fr) 52px 40px 90px; }
+.crow.giro > b { color: var(--teal); }
+.csub { color: var(--teal); font-size: 11px; letter-spacing: .06em; padding: 10px 0 4px; border-top: 1px solid var(--line-hi); }
+.cart-top .lab div { margin-top: 2px; }
+.giro-l { color: var(--muted); }
+.cart.resumo .crow { grid-template-columns: 50px minmax(90px, 1fr) 50px 40px 90px 84px 56px; }
 .cart.resumo .c-det { display: none; }
+@media (max-width: 1180px) {
+  .crow { grid-template-columns: 50px minmax(60px, 1fr) 50px 40px 84px 80px 54px 90px 52px minmax(110px, 1fr); }
+  .crow .c-apl, .crow .c-pm { display: none; }
+}
 @media (max-width: 700px) {
-  .crow, .cart.resumo .crow { grid-template-columns: 50px minmax(0, 1fr) 50px 36px; gap: 4px 8px; }
+  .crow, .cart.resumo .crow { grid-template-columns: 50px minmax(0, 1fr) 50px 44px; gap: 4px 8px; }
   .crow > b { grid-column: 1; grid-row: 1; }
   .crow .c-vale { grid-column: 2; grid-row: 1; }
-  .crow > span:nth-child(3) { grid-column: 3; grid-row: 1; }
-  .crow > span:nth-child(4) { grid-column: 4; grid-row: 1; }
+  .crow .c-peso { grid-column: 3; grid-row: 1; }
+  .crow .c-alvo { grid-column: 4; grid-row: 1; }
   .crow .track { grid-column: 1 / -1; grid-row: 2; }
-  .crow .sit { grid-column: 1 / -1; grid-row: 3; text-align: left; white-space: normal; }
-  .crow .c-dev, .crow .c-px, .crow .c-24 { display: none; }
+  .crow .c-g { grid-column: 1 / 3; grid-row: 3; text-align: left; }
+  .crow .c-gp { grid-column: 3 / -1; grid-row: 3; }
+  .crow .sit { grid-column: 1 / -1; grid-row: 4; text-align: left; white-space: normal; }
+  .crow .c-px, .crow .c-24 { display: none; }
   .crow.hd { display: none; }
   .crow .sit.ok { display: none; }
 }
@@ -228,7 +243,6 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
         <h1><span>Argos Trade</span> Cripto <span class="ver">v0.2 · simulado</span></h1>
         <div class="sub">
           <span><i class="dot" id="runDot"></i><span id="runTxt">carregando</span> · <span class="num" id="clock">--:--:--</span></span>
-          <span class="tag" id="tagAlvo">ATÉ 20 OPERAÇÕES/DIA</span>
         </div>
       </div>
       <div class="kpis">
@@ -260,20 +274,8 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
           <svg class="uw" id="uw" viewBox="0 0 760 56" role="img" aria-label="Queda desde o pico"></svg>
         </section>
 
-        <section class="box">
-          <h2>Ganhos e perdas por cripto <small id="pnlInfo">ao vivo</small></h2>
-          <div class="pnl-tot" id="pnlTot"></div>
-          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Aplicado</th><th>Vale agora</th><th>Ganho / perda</th><th>%</th><th>Preço médio</th><th>Cotação</th><th>24h</th><th></th></tr></thead><tbody id="pnlBody"><tr><td colspan="9" class="empty">carregando…</td></tr></tbody></table></div>
-        </section>
-
-        <div class="perf">
-          <section class="box"><h2>Resultado por período</h2><div class="periodos" id="periodos"></div></section>
-          <section class="box"><h2>O robô está se pagando?</h2><div class="kv" id="pagando"></div><div class="veredito" id="veredito">--</div></section>
-          <section class="box"><h2>🛰️ Giro da satélite</h2><div class="kv" id="giro"></div></section>
-        </div>
-
         <section class="box cart" id="cartPrin">
-          <div class="cart-h"><h2>Carteira principal <small id="cpInfo"></small></h2><div class="seg cart-modo" role="group" aria-label="Informações exibidas"><button type="button" data-m="resumo">Resumo</button><button type="button" data-m="completo">Completo</button></div></div>
+          <div class="cart-h"><h2>Carteira principal <small id="cpInfo"></small> <small id="cartHora"></small></h2><div class="seg cart-modo" role="group" aria-label="Informações exibidas"><button type="button" data-m="resumo">Resumo</button><button type="button" data-m="completo">Completo</button></div></div>
           <div class="cart-top"><span class="big num" id="cpVal">--</span><span class="lab" id="cpLab">--</span></div>
           <div class="cart-rows" id="cpRows"><div class="empty">carregando…</div></div>
         </section>
@@ -283,6 +285,12 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
           <div class="cart-top"><span class="big num" id="csVal">--</span><span class="lab" id="csLab">--</span></div>
           <div class="cart-rows" id="csRows"></div>
         </section>
+
+        <div class="perf">
+          <section class="box"><h2>Resultado por período</h2><div class="periodos" id="periodos"></div></section>
+          <section class="box"><h2>O robô está se pagando?</h2><div class="kv" id="pagando"></div><div class="veredito" id="veredito">--</div></section>
+        </div>
+
 
         <details class="box agents-box">
           <summary>Agentes do robô (detalhes técnicos)</summary>
@@ -299,7 +307,7 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
           </div>
         </details>
     </main>
-    <div class="foot"><span><a href="https://github.com/diogo385/Claude/tree/ccr-62184269-ceu6z3/simulado/arquivo/v1-btc-eth">carteira antiga</a></span><span>só saldo próprio · sem dívida</span></div>
+    <div class="foot"><span>Argos Trade Cripto · simulado</span><span>só saldo próprio · sem dívida</span></div>
   </div>
 </div>
 
@@ -343,7 +351,6 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
       c.append(b, el("span", "num", "--"), el("span", "num", "")); c.id = "chip-" + a; chips.appendChild(c);
     });
     const cx = el("div", "chip"); const bx = el("b", "", "R$"); bx.style.color = "var(--green)"; cx.append(bx, el("span", "num", "--")); cx.id = "chip-reais"; chips.appendChild(cx);
-    set("tagAlvo", "ATÉ 20 OPERAÇÕES/DIA · " + ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
   }
 
   async function carregarRobo() {
@@ -361,7 +368,7 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
       aviso("");
     } catch (e) {
       $("eq").innerHTML = `<text x="380" y="75" text-anchor="middle" class="vazio">sem dados do robô ainda</text>`;
-      $("pnlBody").innerHTML = `<tr><td colspan="9" class="empty">sem dados do robô ainda</td></tr>`;
+      $("cpRows").innerHTML = `<div class="empty">sem dados do robô ainda</div>`;
       aviso("Ainda não encontrei os dados do robô. Se a carteira acabou de ser recomeçada, espere a próxima checagem (até 15 minutos) ou rode o robô manualmente no GitHub.");
     }
     render();
@@ -408,28 +415,48 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
   }));
   aplicarModo();
 
-  // cfg: { ids, moedas, alvo, cart, cores, p, v, base, vp, info, extra, situacao(a, w, alvo) }
+  // cfg: { ids, moedas, alvo, cart, cores, p, v, base, vp, extra, info, pnl, giros, resumoGiro, realizado, situacao(a, dev) }
+  const COLS = [["Moeda", ""], ["Peso vs alvo", ""], ["Peso", ""], ["Alvo", ""], ["Aplicado", "c-det c-apl"], ["Vale agora", "c-vale"],
+    ["Ganho", "c-g"], ["%", "c-gp"], ["P. médio", "c-det c-pm"], ["Cotação", "c-det c-px"], ["24h", "c-det c-24"], ["Situação", "c-det sit"]];
+  const preco = v => brl(v, v < 1 ? 4 : casas(v));
+  const gTxt = g => `${sgn(g)}${brl(Math.abs(g))}`;
   function blocoCarteira(cfg) {
     const { p, cart } = cfg;
     const vc = cart.reais + cfg.moedas.reduce((t, a) => t + (cart[a] || 0) * (p[a] || 0), 0);
     const alvoR = 1 - Object.values(cfg.alvo).reduce((t, x) => t + x, 0);
+    // posições em cripto (custo médio) para ganho/perda
+    const pos = cfg.moedas.map(a => { const x = cfg.pnl[a] || { q: 0, custo: 0 }; const val = x.q * (p[a] || 0); return { a, q: x.q, custo: x.custo, val, g: val - x.custo }; }).filter(x => x.q > 0);
+    const gir = cfg.giros.map(x => { const val = x.qtd * (p[x.ativo] || x.preco); return { a: x.ativo, q: x.qtd, custo: x.custo, val, g: val - x.custo, preco: x.preco }; });
+    const cC = pos.concat(gir).reduce((t, x) => t + x.custo, 0), gC = pos.concat(gir).reduce((t, x) => t + x.g, 0);
+
     set(cfg.ids[0], brl(cfg.v));
     const lab = $(cfg.ids[1]); lab.textContent = "";
     const r = cfg.v / cfg.base - 1;
-    lab.append(el("span", r >= 0 ? "up" : "down", pct(r)), ` sobre ${brl(cfg.base, 0)} aplicados · `,
-      el("span", cfg.v >= cfg.vp ? "up" : "down", sgn(cfg.v - cfg.vp) + brl(Math.abs(cfg.v - cfg.vp))), " vs sem robô · " + cfg.extra);
+    const l1 = el("div"); l1.append("carteira inteira ", el("b", r >= 0 ? "up" : "down", pct(r)), ` sobre ${brl(cfg.base, 0)} depositados · `,
+      el("b", cfg.v >= cfg.vp ? "up" : "down", gTxt(cfg.v - cfg.vp)), " vs sem robô");
+    const l2 = el("div"); l2.append(`só criptos ${brl(cC)} → ${brl(cC + gC)} `, el("b", gC >= 0 ? "up" : "down", `${gTxt(gC)} (${pct(cC ? gC / cC : 0)})`),
+      " · já realizado ", el("b", cfg.realizado >= 0 ? "up" : "down", gTxt(cfg.realizado)), " · " + cfg.extra);
+    lab.append(l1, l2);
+    if (cfg.resumoGiro) { const l3 = el("div", "giro-l"); l3.append(...cfg.resumoGiro); lab.appendChild(l3); }
     set(cfg.ids[2], cfg.info);
+
+    const box = $(cfg.ids[3]); box.textContent = "";
+    const hd = el("div", "crow hd"); COLS.forEach(([t, c]) => hd.appendChild(el("span", c, t))); box.appendChild(hd);
     const linhas = cfg.moedas.concat(["reais"]).map(a => {
       const val = a === "reais" ? cart.reais : (cart[a] || 0) * (p[a] || 0);
-      return { a, val, w: vc ? val / vc : 0, alvo: a === "reais" ? alvoR : cfg.alvo[a] };
+      return { a, val, w: vc ? val / vc : 0, alvo: a === "reais" ? alvoR : cfg.alvo[a], ps: pos.find(x => x.a === a) };
     });
     const escala = Math.max(0.4, ...linhas.map(l => l.w + 0.05));  // mesma escala nos dois blocos
-    const box = $(cfg.ids[3]); box.textContent = "";
-    const hd = el("div", "crow hd");
-    ["Moeda", "Peso vs alvo", "Peso", "Alvo", "Desvio", "Vale agora", "Cotação", "24h", "Situação"].forEach((t, i) =>
-      hd.appendChild(el("span", ["", "", "", "", "c-det c-dev", "c-vale", "c-det c-px", "c-det c-24", "c-det sit"][i], t)));
-    hd.children[0].style.textAlign = "left"; hd.children[1].style.textAlign = "left";
-    box.appendChild(hd);
+    const celulasGanho = (row, x, a) => {
+      row.appendChild(el("span", "c-det c-apl", x ? brl(x.custo) : "--"));
+      row.appendChild(el("span", "c-vale", brl(x ? x.val : 0)));
+      row.appendChild(el("span", "c-g" + (x ? (x.g >= 0 ? " up" : " down") : ""), x ? gTxt(x.g) : "--"));
+      row.appendChild(el("span", "c-gp" + (x ? (x.g >= 0 ? " up" : " down") : ""), x && x.custo ? pct(x.g / x.custo) : "--"));
+      row.appendChild(el("span", "c-det c-pm", x && x.q ? preco(x.custo / x.q) : "--"));
+      row.appendChild(el("span", "c-det c-px", a !== "reais" && p[a] ? preco(p[a]) : "--"));
+      const v24 = a !== "reais" && px ? px24[a] : undefined;
+      row.appendChild(el("span", "c-det c-24" + (v24 === undefined ? "" : v24 >= 0 ? " up" : " down"), v24 === undefined ? "--" : pct(v24)));
+    };
     linhas.forEach(l => {
       const row = el("div", "crow"), dev = l.w - l.alvo;
       row.appendChild(el("b", "", l.a === "reais" ? "Reais" : l.a.toUpperCase()));
@@ -438,36 +465,65 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
       const f = el("div", "fill"); f.style.setProperty("--c", l.a === "reais" ? "#3df59a" : (cfg.cores[l.a] || "#d9f2ea")); f.style.width = Math.min(100, l.w / escala * 100) + "%";
       const mk = el("div", "mark"); mk.style.left = (l.alvo / escala * 100) + "%";
       tr.append(f, mk); row.appendChild(tr);
-      row.appendChild(el("span", "", nf(l.w * 100, 1) + "%"));
-      row.appendChild(el("span", "", Math.round(l.alvo * 100) + "%"));
-      row.appendChild(el("span", "c-det c-dev" + (Math.abs(dev) >= GATILHO ? " warn" : ""), sgn(dev) + nf(Math.abs(dev) * 100, 1) + " pt"));
-      row.appendChild(el("span", "c-vale", brl(l.val)));
-      row.appendChild(el("span", "c-det c-px", l.a === "reais" ? "--" : p[l.a] ? brl(p[l.a], p[l.a] < 1 ? 4 : casas(p[l.a])) : "--"));
-      const v24 = l.a !== "reais" && px ? px24[l.a] : undefined;
-      row.appendChild(el("span", "c-det c-24" + (v24 === undefined ? "" : v24 >= 0 ? " up" : " down"), v24 === undefined ? "--" : pct(v24)));
+      row.appendChild(el("span", "c-peso", nf(l.w * 100, 1) + "%"));
+      row.appendChild(el("span", "c-alvo", Math.round(l.alvo * 100) + "%"));
+      if (l.a === "reais") { celulasGanho(row, null, "reais"); row.children[5].textContent = brl(l.val); }
+      else celulasGanho(row, l.ps || { custo: 0, val: l.val, g: 0, q: 0 }, l.a);
       const [txt, cls] = cfg.situacao(l.a, dev);
       const st = el("span", "c-det sit" + (cls ? " " + cls : ""), txt); st.title = txt; row.appendChild(st);
       box.appendChild(row);
     });
+    if (gir.length) {
+      box.appendChild(el("div", "csub", "🔄 Giros abertos · compras da reserva do giro, vendem sozinhas com +1,5%"));
+      gir.forEach(x => {
+        const row = el("div", "crow giro");
+        row.appendChild(el("b", "", x.a.toUpperCase()));
+        // barra: caminho até a venda (+1,5%)
+        const tr = el("div", "track"), prog = Math.max(0, Math.min(1, (x.val / x.custo - 1) / 0.015));
+        const f = el("div", "fill"); f.style.setProperty("--c", "#2ee6c8"); f.style.width = (prog * 100) + "%";
+        const mk = el("div", "mark"); mk.style.left = "calc(100% - 2px)"; tr.append(f, mk); row.appendChild(tr);
+        row.appendChild(el("span", "c-peso", "--")); row.appendChild(el("span", "c-alvo", "+1,5%"));
+        celulasGanho(row, x, x.a);
+        const alvoPx = x.preco * 1.015;
+        const st = el("span", "c-det sit", `vende em ${preco(alvoPx)}`); st.title = st.textContent; row.appendChild(st);
+        box.appendChild(row);
+      });
+    }
   }
 
   // situação de rebalanceamento: igual nas duas carteiras
   const sitRebal = dev => Math.abs(dev) < GATILHO ? ["no alvo", "ok"] : dev > 0 ? ["acima → vende na checagem", "warn"] : ["abaixo → compra na checagem", "warn"];
 
-  function renderSat(p) {
+  function resumoGiros(p) {
+    const giros = opsSat.filter(o => o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO");
+    const entradas = {}, dur = []; let lucro = 0, vendas = 0;
+    giros.forEach(o => {
+      if (o.tipo === "OPORTUNIDADE") entradas[o.ativo] = o.data_hora;
+      else { vendas++; lucro += (+o.valor_reais - +o.taxa) - 25; if (entradas[o.ativo]) { dur.push((new Date(o.data_hora.replace(" ", "T")) - new Date(entradas[o.ativo].replace(" ", "T"))) / 36e5); delete entradas[o.ativo]; } }
+    });
+    const med = dur.length ? dur.reduce((t, x) => t + x, 0) / dur.length : null;
+    const abertas = (sat.posicoes || []).length;
+    const partes = [`🔄 giros: ${vendas} ${vendas === 1 ? "concluído" : "concluídos"} · lucro `, el("b", lucro >= 0 ? "up" : "down", gTxt(lucro)),
+      ` · ${abertas} de 2 abertos` + (med !== null ? ` · tempo médio ${med >= 24 ? nf(med / 24, 1) + " dias" : nf(med, 1) + " h"}` : "")];
+    if (estado.trava_queda) partes.push(" · ", el("b", "warn", "trava de queda LIGADA (compras pausadas)"));
+    return partes;
+  }
+
+  function renderSat(p, pp) {
     const box = $("satBox"); if (!sat) { box.hidden = true; return; }
     box.hidden = false;
     const abertas = sat.posicoes || [];
     blocoCarteira({
       ids: ["csVal", "csLab", "csInfo", "csRows"], moedas: satAtivos, alvo: sat.alvo, cart: sat.carteira, cores: CORES_SAT, p,
       v: totalSat(p), base: sat.aporte + (sat.parada_reserva || 0), vp: totalSatPar(p),
+      pnl: pp.st, giros: abertas, realizado: pp.realS + pp.realOp, resumoGiro: resumoGiros(p),
       extra: `reserva do giro ${brl((sat.reserva || {}).saldo || 0)}`,
-      info: `${sat.rebalanceamentos} rebalanceamentos · ${abertas.length} de 2 giros abertos`,
+      info: `${sat.rebalanceamentos} rebalanceamentos`,
       situacao: (a, dev) => {
         if (a === "reais") return sitRebal(0);
         const pos = abertas.find(x => x.ativo === a);
-        if (pos) { const g = (p[a] || pos.preco) / pos.preco - 1; return [`giro aberto ${pct(g)}`, g >= 0 ? "up" : "down"]; }
-        const r = sitRebal(dev); if (r[1]) return r;
+        const r = sitRebal(dev); if (r[1] === "warn") return r;
+        if (pos) return ["giro aberto ↓", "up"];
         const sn = sat.sinais && sat.sinais[a];
         if (sn && sn.status && sn.status !== "normal") return [`${STATUS[sn.status] || sn.status}` + (sn.queda !== undefined ? ` · −${nf(sn.queda * 100, 0)}% do topo` : ""), sn.status === "caindo" ? "warn" : sn.status.startsWith("sinal") || sn.status === "oportunidade" ? "up" : ""];
         return r;
@@ -475,11 +531,12 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
     });
   }
 
-  function renderPrincipal(p) {
+  function renderPrincipal(p, pp) {
     const res = estado.reserva || { saldo: 0, usados: [] };
     blocoCarteira({
       ids: ["cpVal", "cpLab", "cpInfo", "cpRows"], moedas: ativos, alvo: estado.alvo, cart: estado.carteira, cores: CORES, p,
       v: valor(estado.carteira, p) + res.saldo, base: (estado.investido || CAPITAL) + (estado.parada_reserva || 0), vp: valor(estado.parada, p) + (estado.parada_reserva || 0),
+      pnl: pp.pr, giros: [], realizado: pp.realP,
       extra: `reserva para quedas ${brl(res.saldo)}`,
       info: `${estado.rebalanceamentos || 0} rebalanceamentos · ${(res.usados || []).length} de 4 degraus da reserva usados`,
       situacao: (a, dev) => sitRebal(a === "reais" ? 0 : dev)
@@ -505,7 +562,7 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
     set("kVal", brl(v)); set("kOps", String(nTotal));
     set("sOps", String(nTotal)); set("sOpsS", `principal ${nPrinc} · satélite ${nSatReb} · giros ${nGiros}`);
     set("kRet", pct(v / capTot - 1), v >= capTot ? "up" : "down");
-    const ini = new Date(estado.inicio); set("kRetLab", `desde ${pad(ini.getDate())}/${pad(ini.getMonth() + 1)}`);
+    set("kRetLab", `desde ${estado.inicio.slice(8, 10)}/${estado.inicio.slice(5, 7)}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
     const vivo = horasDesde < 3;
     $("runDot").className = "dot" + (vivo ? "" : " off");
@@ -561,7 +618,6 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
     const lk2 = el("a", "", "ver execuções"); lk2.href = lk.href; lk2.target = "_blank"; lk2.rel = "noopener"; ss.appendChild(lk2);
     set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${nTotal} ${nTotal === 1 ? "operação" : "operações"}`);
 
-    renderPrincipal(p);
 
     const todasOps = ops.map(o => Object.assign({ ond: "principal" }, o))
       .concat(opsSat.filter(o => !(o.tipo === "COMPRA" && +o.peso_antes === 0)).map(o => Object.assign({ ond: o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO" ? "giro" : "satélite" }, o)))
@@ -597,8 +653,10 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
     set("aRes", `${brl(res.saldo, 0)} disponível · ${res.usados.length} de 4 degraus · queda ${nf(queda * 100, 1)}%`);
     set("aResSt", res.saldo <= 0 ? "EMPTY" : "ARMED");
 
-    renderSat(p);
-    renderPnl(p);
+    const pp = posicoes();
+    renderPrincipal(p, pp);
+    renderSat(p, pp);
+    set("cartHora", px ? `ao vivo · ${new Date(pxHora).toLocaleTimeString("pt-BR")}` : "últimos preços do robô");
     renderPerf(v, vp);
     grafico(v, vp);
   }
@@ -615,9 +673,10 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
       d.appendChild(el("b", ganho >= 0 ? "up" : "down", `${sgn(ganho)}${brl(Math.abs(ganho))}`));
       d.appendChild(el("i", ganho >= 0 ? "up" : "down", base > 0 ? pct(ganho / base) : "--")); per.appendChild(d);
     };
-    const v24 = (estado.valores_24h || [])[0];
-    if (v24) { const q = v24[0].slice(0, 16).replace("T", " "); const dep = totalDep - depositadoAte(q); bloco("24 horas", v - v24[1] - dep, v24[1] + dep); }
-    else bloco("24 horas", 0, 0);
+    // 24 h: só registros que guardam o capital daquele momento; sem eles, vale o resultado desde o início
+    const v24 = (estado.valores_24h || []).find(x => x.length > 2);
+    if (v24) { const base24 = v24[1] + (totalDep - v24[2]); bloco("24 horas", v - base24, base24); }
+    else bloco("24 horas", v - totalDep, totalDep);
     // 7 e 30 dias só aparecem quando já existe histórico tão antigo; antes disso, "desde o início" responde
     [[7, "7 dias"], [30, "30 dias"]].forEach(([n, rot]) => {
       const limite = new Date(Date.now() - 3 * 3600e3 - n * 864e5).toISOString().slice(0, 10);
@@ -641,27 +700,6 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
     $("veredito").textContent = nOps < 10 ? `Ainda cedo: ${nOps} operações até agora. Precisa de algumas semanas para concluir.`
       : liquido >= 0 ? "✅ Sim: o robô ganha mais do que gasta em taxas." : bruto > 0 ? "⚠️ O robô ganha, mas as taxas estão comendo o ganho." : "❌ Não: o robô está pior que deixar tudo parado.";
 
-    // giro da satélite
-    const g = $("giro"); g.textContent = "";
-    const giros = opsSat.filter(o => o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO");
-    const entradas = {}, duracoes = []; let lucro = 0, vendas = 0;
-    giros.forEach(o => {
-      const a = o.ativo;
-      if (o.tipo === "OPORTUNIDADE") entradas[a] = o.data_hora;
-      else { vendas++; lucro += (+o.valor_reais - +o.taxa) - 25; if (entradas[a]) { duracoes.push((new Date(o.data_hora.replace(" ", "T")) - new Date(entradas[a].replace(" ", "T"))) / 36e5); delete entradas[a]; } }
-    });
-    const abertas = sat ? (sat.posicoes || []) : [];
-    const p = px || estado.ultimos_precos || {};
-    const presoAgora = abertas.reduce((t, x) => t + x.qtd * (p[x.ativo] || x.preco), 0), presoCusto = abertas.reduce((t, x) => t + x.custo, 0);
-    const kvs = [["giros concluídos (com lucro)", String(vendas)],
-      ["lucro realizado", `${sgn(lucro)}${brl(Math.abs(lucro))}`, lucro >= 0 ? "up" : "down"],
-      ["lucro médio por giro", vendas ? brl(lucro / vendas) : "--"],
-      ["tempo médio em posição", duracoes.length ? (duracoes.reduce((t, x) => t + x, 0) / duracoes.length >= 24 ? nf(duracoes.reduce((t, x) => t + x, 0) / duracoes.length / 24, 1) + " dias" : nf(duracoes.reduce((t, x) => t + x, 0) / duracoes.length, 1) + " h") : "--"],
-      ["posições abertas", `${abertas.length} de 2`],
-      ["abertas: custo → vale agora", abertas.length ? `${brl(presoCusto)} → ${brl(presoAgora)}` : "--", abertas.length ? (presoAgora >= presoCusto ? "up" : "down") : ""],
-      ["reserva de giro disponível", brl((sat && sat.reserva && sat.reserva.saldo) || 0)]];
-    if (estado.trava_queda) kvs.push(["trava de queda", "LIGADA · compras pausadas", "warn"]);
-    kvs.forEach(([k, val, cls]) => g.append(el("span", "", k), el("b", cls || "", val)));
   }
 
   // desenha no tamanho real (1 unidade = 1 px): altura fixa e letras sempre do mesmo tamanho
@@ -741,61 +779,6 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
     const realOp = opsSat.filter(o => o.tipo === "LUCRO").reduce((t, o) => t + (+o.valor_reais - +o.taxa) - 25, 0);
     return { pr, st, realP, realS, realOp };
   }
-
-  function renderPnl(p) {
-    if (!estado) return;
-    const { pr, st, realP, realS, realOp } = posicoes();
-    const grupos = [["Carteira principal", ativos.map(a => ({ a, q: pr[a].q, custo: pr[a].custo }))]];
-    if (sat) {
-      grupos.push(["🛰️ Satélite", satAtivos.map(a => ({ a, q: st[a].q, custo: st[a].custo }))]);
-      const abertas = (sat.posicoes || []).map(x => ({ a: x.ativo, q: x.qtd, custo: x.custo, op: true }));
-      if (abertas.length) grupos.push(["🔄 Giros abertos", abertas]);
-    }
-    const tb = $("pnlBody"); tb.textContent = "";
-    let totG = 0, totC = 0, melhor = null, pior = null;
-    const linhas = grupos.map(([nome, itens]) => {
-      const rows = itens.filter(x => x.q > 0).map(x => {
-        const agora = p[x.a] || 0, valorAt = x.q * agora, g = valorAt - x.custo, pc = x.custo ? g / x.custo : 0;
-        return Object.assign(x, { agora, valorAt, g, pc, medio: x.custo / x.q });
-      }).sort((u, v) => v.g - u.g);
-      const gG = rows.reduce((t, x) => t + x.g, 0), cG = rows.reduce((t, x) => t + x.custo, 0);
-      totG += gG; totC += cG;
-      rows.forEach(x => { if (!melhor || x.pc > melhor.pc) melhor = x; if (!pior || x.pc < pior.pc) pior = x; });
-      return { nome, rows, gG, cG };
-    });
-    const escala = Math.max(0.01, ...linhas.flatMap(l => l.rows.map(x => Math.abs(x.pc))));
-    linhas.forEach(({ nome, rows, gG, cG }) => {
-      if (!rows.length) return;
-      const tr = el("tr", "grp"), td = el("td", "", nome); td.colSpan = 9;
-      const sp = el("span", gG >= 0 ? "up" : "down", `aplicado ${brl(cG)} → vale ${brl(cG + gG)} · ${sgn(gG)}${brl(Math.abs(gG))} (${pct(cG ? gG / cG : 0)})`); td.appendChild(sp); tr.appendChild(td); tb.appendChild(tr);
-      rows.forEach(x => {
-        const r = el("tr"), cor = x.g >= 0 ? "up" : "down";
-        r.appendChild(el("td", "", `${SIMB[x.a] || "●"} ${x.a.toUpperCase()}`));
-        r.appendChild(el("td", "", brl(x.custo)));
-        const va = el("td", "", brl(x.valorAt)); va.style.color = "var(--fg)"; va.style.fontWeight = "600"; r.appendChild(va);
-        r.appendChild(el("td", cor, `${sgn(x.g)}${brl(Math.abs(x.g))}`));
-        r.appendChild(el("td", cor, pct(x.pc)));
-        const pm = el("td", "", brl(x.medio, x.medio < 1 ? 4 : casas(x.medio))); pm.style.color = "var(--muted)"; r.appendChild(pm);
-        const ct = el("td", "", brl(x.agora, x.agora < 1 ? 4 : casas(x.agora))); ct.style.color = "var(--muted)"; r.appendChild(ct);
-        const v24 = px24[x.a];
-        r.appendChild(el("td", v24 === undefined ? "" : v24 >= 0 ? "up" : "down", v24 === undefined ? "--" : pct(v24)));
-        const tdb = el("td"), b = el("span", "barra"), i = el("i"), w = Math.min(50, Math.abs(x.pc) / escala * 50);
-        i.style.left = x.pc >= 0 ? "50%" : (50 - w) + "%"; i.style.width = w + "%"; i.style.background = x.pc >= 0 ? "var(--green)" : "var(--red)";
-        b.appendChild(i); tdb.appendChild(b); r.appendChild(tdb);
-        tb.appendChild(r);
-      });
-    });
-    const tot = $("pnlTot"); tot.textContent = "";
-    const item = (rot, v, extra) => { const d = el("div", "", rot); const b = el("b", v >= 0 ? "up" : "down", `${sgn(v)}${brl(Math.abs(v))}` + (extra || "")); d.appendChild(b); tot.appendChild(d); };
-    const ap = el("div", "", "aplicado em cripto"); ap.appendChild(el("b", "", brl(totC))); tot.appendChild(ap);
-    const va = el("div", "", "vale agora"); va.appendChild(el("b", "", brl(totC + totG))); tot.appendChild(va);
-    item("em aberto", totG, ` (${pct(totC ? totG / totC : 0)})`);
-    item("já realizado", realP + realS + realOp);
-    if (melhor) { const d = el("div", "", `melhor: ${melhor.a.toUpperCase()} `); d.appendChild(el("b", melhor.pc >= 0 ? "up" : "down", pct(melhor.pc))); tot.appendChild(d); }
-    if (pior) { const d = el("div", "", `pior: ${pior.a.toUpperCase()} `); d.appendChild(el("b", pior.pc >= 0 ? "up" : "down", pct(pior.pc))); tot.appendChild(d); }
-    set("pnlInfo", px ? `ao vivo · ${new Date(pxHora).toLocaleTimeString("pt-BR")}` : "último preço do robô");
-  }
-
 
   setInterval(() => { const b = brasilia(); $("clock").textContent = `${pad(b.getUTCHours())}:${pad(b.getUTCMinutes())}:${pad(b.getUTCSeconds())}`; }, 1000);
   setInterval(() => { if (estado) render(); }, 15000);
