@@ -186,7 +186,7 @@ h1 span { color: var(--amber); }
         <section class="box">
           <h2>Ganhos e perdas por cripto <small id="pnlInfo">ao vivo</small></h2>
           <div class="pnl-tot" id="pnlTot"></div>
-          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Aplicado</th><th>Vale agora</th><th>Ganho / perda</th><th>%</th><th>Preço médio</th><th>Cotação</th><th></th></tr></thead><tbody id="pnlBody"></tbody></table></div>
+          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Aplicado</th><th>Vale agora</th><th>Ganho / perda</th><th>%</th><th>Preço médio</th><th>Cotação</th><th>24h</th><th></th></tr></thead><tbody id="pnlBody"></tbody></table></div>
         </section>
 
         <div class="two">
@@ -573,7 +573,7 @@ h1 span { color: var(--amber); }
     const escala = Math.max(0.01, ...linhas.flatMap(l => l.rows.map(x => Math.abs(x.pc))));
     linhas.forEach(({ nome, rows, gG, cG }) => {
       if (!rows.length) return;
-      const tr = el("tr", "grp"), td = el("td", "", nome); td.colSpan = 8;
+      const tr = el("tr", "grp"), td = el("td", "", nome); td.colSpan = 9;
       const sp = el("span", gG >= 0 ? "up" : "down", `aplicado ${brl(cG)} → vale ${brl(cG + gG)} · ${sgn(gG)}${brl(Math.abs(gG))} (${pct(cG ? gG / cG : 0)})`); td.appendChild(sp); tr.appendChild(td); tb.appendChild(tr);
       rows.forEach(x => {
         const r = el("tr"), cor = x.g >= 0 ? "up" : "down";
@@ -584,6 +584,8 @@ h1 span { color: var(--amber); }
         r.appendChild(el("td", cor, pct(x.pc)));
         const pm = el("td", "", brl(x.medio, x.medio < 1 ? 4 : casas(x.medio))); pm.style.color = "var(--muted)"; r.appendChild(pm);
         const ct = el("td", "", brl(x.agora, x.agora < 1 ? 4 : casas(x.agora))); ct.style.color = "var(--muted)"; r.appendChild(ct);
+        const v24 = px24[x.a];
+        r.appendChild(el("td", v24 === undefined ? "" : v24 >= 0 ? "up" : "down", v24 === undefined ? "--" : pct(v24)));
         const tdb = el("td"), b = el("span", "barra"), i = el("i"), w = Math.min(50, Math.abs(x.pc) / escala * 50);
         i.style.left = x.pc >= 0 ? "50%" : (50 - w) + "%"; i.style.width = w + "%"; i.style.background = x.pc >= 0 ? "var(--green)" : "var(--red)";
         b.appendChild(i); tdb.appendChild(b); r.appendChild(tdb);
