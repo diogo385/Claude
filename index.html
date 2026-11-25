@@ -146,7 +146,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="extrato.html?v=7">Extrato</a><a class="btn ghost" href="regras.html?v=6">Regras</a><span class="mode">simulado</span></span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="extrato.html?v=8">Extrato</a><a class="btn ghost" href="regras.html?v=8">Regras</a><span class="mode">simulado</span></span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -345,15 +345,21 @@ h1 span { color: var(--amber); }
   const valorSat = (c, p) => c.reais + satAtivos.reduce((s, a) => s + (c[a] || 0) * (p[a] || 0), 0);
   const CORES_SAT = { ltc: "#a7b4c8", doge: "#d9b26a", ada: "#5fb4ff", avax: "#ff5d6c", near: "#3df59a" };
 
+  const posSat = p => sat ? (sat.posicoes || []).reduce((t, x) => t + x.qtd * (p[x.ativo] || x.preco), 0) : 0;
+  const totalSat = p => sat ? valorSat(sat.carteira, p) + posSat(p) + ((sat.reserva || {}).saldo || 0) : 0;
+  const totalSatPar = p => sat ? valorSat(sat.parada, p) + (sat.parada_reserva || 0) : 0;
+  const STATUS = { "normal": "normal", "caindo": "caindo", "recuperando (prazo)": "recuperando", "oportunidade": "OPORTUNIDADE", "comprou": "comprou", "sem dados": "--" };
+
   function renderSat(p) {
     const box = $("satBox"); if (!sat) { box.hidden = true; return; }
     box.hidden = false;
-    const c = sat.carteira, v = valorSat(c, p), vp = valorSat(sat.parada, p);
+    const c = sat.carteira, v = totalSat(p), vp = totalSatPar(p), base = sat.aporte + (sat.parada_reserva || 0);
     set("satVal", brl(v));
-    set("satLab", `${pct(v / sat.aporte - 1)} sobre ${brl(sat.aporte, 0)} · ${sgn(v - vp)}${brl(Math.abs(v - vp))} vs parada`);
+    set("satLab", `${pct(v / base - 1)} sobre ${brl(base, 0)} · ${sgn(v - vp)}${brl(Math.abs(v - vp))} vs parada · reserva ${brl((sat.reserva || {}).saldo || 0, 0)}`);
     const hoje = brasilia().toISOString().slice(0, 10);
     const nHoje = sat.ops_dia && sat.ops_dia.data === hoje ? sat.ops_dia.n : 0;
-    set("satInfo", `${sat.rebalanceamentos} rebalanceamentos · ${nHoje} de 3 hoje`);
+    const abertas = (sat.posicoes || []).length;
+    set("satInfo", `${sat.rebalanceamentos} rebalanceamentos · ${abertas} ${abertas === 1 ? "oportunidade aberta" : "oportunidades abertas"}`);
     const al = $("satAlloc");
     if (!al.children.length) satAtivos.concat(["reais"]).forEach(a => {
       const alvo = a === "reais" ? 1 - Object.values(sat.alvo).reduce((t, x) => t + x, 0) : sat.alvo[a];
@@ -366,10 +372,14 @@ h1 span { color: var(--amber); }
       tr.append(f, mk); row.append(top, tr); al.appendChild(row);
     });
     satAtivos.concat(["reais"]).forEach(a => {
-      const w = a === "reais" ? c.reais / v : (c[a] || 0) * (p[a] || 0) / v;
+      const vc = valorSat(c, p);
+      const w = a === "reais" ? c.reais / vc : (c[a] || 0) * (p[a] || 0) / vc;
       const alvo = a === "reais" ? 1 - Object.values(sat.alvo).reduce((t, x) => t + x, 0) : sat.alvo[a];
       const top = $("sal-" + a); if (!top) return;
-      top.children[1].textContent = `${nf(w * 100, 1)}% · alvo ${Math.round(alvo * 100)}%` + (a !== "reais" && p[a] ? ` · ${brl(p[a], p[a] < 1 ? 4 : 2)}` : "");
+      const sn = a !== "reais" && sat.sinais && sat.sinais[a];
+      top.children[1].textContent = `${nf(w * 100, 1)}% · alvo ${Math.round(alvo * 100)}%` + (a !== "reais" && p[a] ? ` · ${brl(p[a], p[a] < 1 ? 4 : 2)}` : "")
+        + (sn && sn.queda !== undefined ? ` · ${STATUS[sn.status] || sn.status} (−${nf(sn.queda * 100, 0)}% do topo)` : "");
+      top.children[1].className = "num" + (sn && (sn.status === "oportunidade" || sn.status === "comprou") ? " up" : sn && sn.status === "caindo" ? " warn" : "");
       $("sfill-" + a).style.width = Math.min(100, w * 100) + "%";
     });
   }
@@ -381,14 +391,14 @@ h1 span { color: var(--amber); }
     const res = estado.reserva || { saldo: 0, usados: [], aportes: [] };
     const capTot = estado.capital_total || CAPITAL;
     const vc = valor(c, p);
-    const vSat = sat ? valorSat(sat.carteira, p) : 0, vSatPar = sat ? valorSat(sat.parada, p) : 0;
+    const vSat = totalSat(p), vSatPar = totalSatPar(p);
     const v = vc + res.saldo + vSat, vp = valor(par, p) + (estado.parada_reserva || 0) + vSatPar;
     const w = {}; ativos.forEach(a => w[a] = c[a] * p[a] / vc); w.reais = c.reais / vc;
     const dias = Math.max(0, Math.floor((Date.now() - new Date(estado.inicio)) / 864e5));
     const ultExec = estado.ultima_execucao ? new Date(estado.ultima_execucao) : null;
     const horasDesde = ultExec ? (Date.now() - ultExec) / 36e5 : 999;
 
-    set("kVal", brl(v)); set("kOps", String(ops.length + opsSat.filter(o => +o.peso_antes > 0).length));
+    set("kVal", brl(v)); set("kOps", String(ops.length + opsSat.filter(o => +o.peso_antes > 0 || o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO").length));
     set("kRet", pct(v / capTot - 1), v >= capTot ? "up" : "down");
     set("kRetLab", `em ${dias} ${dias === 1 ? "dia" : "dias"}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
@@ -520,10 +530,12 @@ h1 span { color: var(--amber); }
       }
       const a = o.ativo.toLowerCase();
       tr.appendChild(el("td", "num", `${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)} ${o.data_hora.slice(11, 16)}`));
-      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" ? "sell" : "buy"), o.tipo)); if (o.sat) td2.appendChild(el("span", "side sat", "SAT")); tr.appendChild(td2);
+      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" || o.tipo === "LUCRO" ? "sell" : "buy"), o.tipo)); if (o.sat) td2.appendChild(el("span", "side sat", "SAT")); tr.appendChild(td2);
       const td3 = el("td"); const q = +o.quantidade;
       td3.append(el("b", "", `${SIMB[a] || "●"} ${o.ativo} · ${nf(q, q < 1 ? 6 : 4)}`),
-        el("div", "why", (o.sat && +o.peso_antes === 0 ? "montagem da satélite" :
+        el("div", "why", (o.tipo === "OPORTUNIDADE" ? "compra de oportunidade com a reserva da satélite · vende com +30%" :
+          o.tipo === "LUCRO" ? "posição de oportunidade vendida com +30% · dinheiro voltou para a reserva da satélite" :
+          o.sat && +o.peso_antes === 0 ? "montagem da satélite" :
           `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da ${o.sat ? "satélite" : "carteira"} (alvo ${Math.round(((o.sat ? sat && sat.alvo[a] : estado.alvo[a]) || 0) * 100)}%)`) +
           ` · preço ${brl(+o.preco, +o.preco < 1 ? 4 : casas(+o.preco))} · taxa ${brl(+o.taxa)}`));
       tr.appendChild(td3);

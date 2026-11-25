@@ -38,6 +38,12 @@ PARES = {a: a.upper() + "BRL" for a in ALVO}
 SAT_APORTE = 250.0
 SAT_ALVO = {"ltc": 0.20, "doge": 0.20, "ada": 0.18, "avax": 0.16, "near": 0.16}  # o resto (10%) fica em reais
 SAT_PARES = {a: a.upper() + "BRL" for a in SAT_ALVO}
+SAT_RESERVA = 100.0      # saldo da satélite, parado, usado só em oportunidades
+OPORT_QUEDA = 0.50       # moeda 50% ou mais abaixo do topo dos últimos 90 dias...
+OPORT_REPIQUE = 0.20     # ...e 20% ou mais acima do fundo dos últimos 14 dias (parou de cair)
+OPORT_VALOR = 25.0       # quanto compra em cada oportunidade
+OPORT_PRAZO = 45         # dias mínimos entre duas compras da mesma moeda
+OPORT_LUCRO = 0.30       # vende a posição de oportunidade com +30%; o dinheiro volta para a reserva
 DESVIO_MIN = 0.01        # 1ª operação do dia: ativo 1 ponto ou mais fora do alvo
 DESVIO_EXTRA = 0.025     # 2ª e 3ª operações do dia: só com 2,5 pontos ou mais (oportunidade muito boa)
 MAX_OPS_DIA = 3          # no máximo 3 operações por dia
@@ -240,6 +246,74 @@ def preparar_satelite(est, px, agora):
              "peso_antes": 0.0, "montagem": True} for a, w in SAT_ALVO.items()]
 
 
+def fechamentos_diarios(par, dias=91):
+    for base in FONTES:
+        try:
+            with urllib.request.urlopen(f"{base}/api/v3/klines?symbol={par}&interval=1d&limit={dias}", timeout=30) as r:
+                return [float(k[4]) for k in json.loads(r.read())]
+        except Exception:
+            continue
+    return None
+
+
+def oportunidades_satelite(est, px, agora):
+    """Reserva da satélite: cria (uma vez), vende posições com lucro e compra nas oportunidades.
+    Devolve (criada, vendas, compras)."""
+    sat = est["satelite"]
+    criada = False
+    if "reserva" not in sat:
+        sat["reserva"] = {"saldo": SAT_RESERVA}
+        sat["posicoes"], sat["ultima_oport"], sat["parada_reserva"] = [], {}, SAT_RESERVA
+        est["capital_total"] = est.get("capital_total", CAPITAL) + SAT_RESERVA
+        criada = True
+    res, vendas, compras = sat["reserva"], [], []
+    # 1) saída: posição de oportunidade com +30% é vendida e o dinheiro volta para a reserva
+    for pos in list(sat["posicoes"]):
+        a = pos["ativo"]
+        if px[a] >= pos["preco"] * (1 + OPORT_LUCRO):
+            bruto = pos["qtd"] * px[a]
+            res["saldo"] += bruto * (1 - CUSTO)
+            sat["posicoes"].remove(pos)
+            vendas.append({"tipo": "LUCRO", "ativo": a, "qtd": pos["qtd"], "reais": bruto, "taxa": bruto * CUSTO,
+                           "peso_antes": 0.0, "ganho": bruto * (1 - CUSTO) - pos["custo"]})
+    # 2) sinais das moedas e entrada nas oportunidades
+    sinais = {}
+    for a, par in SAT_PARES.items():
+        fech = fechamentos_diarios(par)
+        if not fech or len(fech) < 30:
+            sinais[a] = {"status": "sem dados"}
+            continue
+        topo, fundo = max(fech), min(fech[-14:])
+        queda, repique = 1 - px[a] / topo, px[a] / fundo - 1
+        ult = sat["ultima_oport"].get(a)
+        prazo_ok = not ult or (agora - datetime.fromisoformat(ult)).days >= OPORT_PRAZO
+        if queda < OPORT_QUEDA:
+            status = "normal"
+        elif repique < OPORT_REPIQUE:
+            status = "caindo"
+        elif not prazo_ok:
+            status = "recuperando (prazo)"
+        else:
+            status = "oportunidade"
+        if status == "oportunidade" and res["saldo"] >= OPORT_VALOR:
+            qtd = OPORT_VALOR * (1 - CUSTO) / px[a]
+            res["saldo"] -= OPORT_VALOR
+            sat["posicoes"].append({"ativo": a, "qtd": qtd, "preco": px[a], "custo": OPORT_VALOR, "data": agora.isoformat()})
+            sat["ultima_oport"][a] = agora.isoformat()
+            compras.append({"tipo": "OPORTUNIDADE", "ativo": a, "qtd": qtd, "reais": OPORT_VALOR, "taxa": OPORT_VALOR * CUSTO,
+                            "peso_antes": 0.0, "queda": queda, "repique": repique})
+            status = "comprou"
+        sinais[a] = {"status": status, "queda": round(queda, 4), "repique": round(repique, 4)}
+    sat["sinais"] = sinais
+    return criada, vendas, compras
+
+
+def valor_satelite(sat, px):
+    """Carteira satélite + posições de oportunidade + reserva da satélite."""
+    pos = sum(p["qtd"] * px[p["ativo"]] for p in sat.get("posicoes", []))
+    return valor(sat["carteira"], px, SAT_ALVO) + pos + sat.get("reserva", {}).get("saldo", 0.0)
+
+
 def registrar(arquivo, ops, px, agora):
     if not arquivo.exists():
         arquivo.write_text("data_hora;tipo;ativo;quantidade;valor_reais;preco;taxa;peso_antes\n")
@@ -306,6 +380,10 @@ def main():
         sat["rebalanceamentos"] += len(sat_feitas)
         sat["taxas"] += sum(f["taxa"] for f in sat_feitas)
         est["ops_periodo"] = est.get("ops_periodo", 0) + len(sat_feitas)
+    sat_res_criada, sat_vendas_op, sat_compras_op = False, [], []
+    if "satelite" in est and not sat_montagem:
+        sat_res_criada, sat_vendas_op, sat_compras_op = oportunidades_satelite(est, px, agora)
+        est["ops_periodo"] += len(sat_vendas_op) + len(sat_compras_op)
     est["ops_dia"]["n"] += len(feitas)
     est["rebalanceamentos"] = est.get("rebalanceamentos", 0) + len(feitas)
     est["operacoes"] += len(feitas)
@@ -321,7 +399,8 @@ def main():
     v_sat = v_sat_par = 0.0
     if "satelite" in est:
         sat = est["satelite"]
-        v_sat, v_sat_par = valor(sat["carteira"], px, SAT_ALVO), valor(sat["parada"], px, SAT_ALVO)
+        v_sat = valor_satelite(sat, px)
+        v_sat_par = valor(sat["parada"], px, SAT_ALVO) + sat.get("parada_reserva", 0.0)
         sat["pico"] = max(sat.get("pico", SAT_APORTE), v_sat)
     v_tot, v_par_tot = v + reserva + v_sat, v_parada + est["parada_reserva"] + v_sat_par
     est["ultima_execucao"] = agora.isoformat()
@@ -335,7 +414,7 @@ def main():
         for op in feitas:
             w.writerow([agora.strftime("%Y-%m-%d %H:%M"), op["tipo"], op["ativo"].upper(), f"{op['qtd']:.8f}",
                         f"{op['reais']:.2f}", f"{px[op['ativo']]:.6f}", f"{op['taxa']:.4f}", f"{op['peso_antes']:.4f}"])
-    registrar(OPERACOES_SAT, sat_montagem + sat_feitas, px, agora)
+    registrar(OPERACOES_SAT, sat_montagem + sat_feitas + sat_vendas_op + sat_compras_op, px, agora)
     quando = agora.strftime("%Y-%m-%d %H:%M")
     movs = []
     if novo:
@@ -352,6 +431,12 @@ def main():
         movs.append({"data_hora": quando, "conta": "Satélite", "tipo": "DEPÓSITO", "descricao": "Aporte da carteira satélite", "valor": SAT_APORTE, "taxa": 0})
         movs += [mov_operacao(op, px, "Satélite", agora, True) for op in sat_montagem]
     movs += [mov_operacao(op, px, "Satélite", agora) for op in sat_feitas]
+    if sat_res_criada:
+        movs.append({"data_hora": quando, "conta": "Satélite", "tipo": "DEPÓSITO", "descricao": "Reserva da satélite (para oportunidades)", "valor": SAT_RESERVA, "taxa": 0})
+    for op in sat_vendas_op:
+        m = mov_operacao(dict(op, tipo="VENDA"), px, "Satélite", agora); m["descricao"] += f" (lucro de oportunidade, {brl(op['ganho'])})"; movs.append(m)
+    for op in sat_compras_op:
+        m = mov_operacao(dict(op, tipo="COMPRA"), px, "Satélite", agora); m["descricao"] += " (oportunidade, com a reserva da satélite)"; movs.append(m)
     lancar(movs)
     if not HISTORICO.exists():
         HISTORICO.write_text("data;patrimonio;carteira_parada;operacoes_no_dia\n")
@@ -393,6 +478,23 @@ def main():
                      f"{qtd_txt(o['qtd'])} {a.upper()} por {brl(o['reais'])} ({preco(px[a])}/{a.upper()})\n"
                      f"Motivo: montagem da satélite (alvo {SAT_ALVO[a]*100:.0f}%)\n"
                      f"Taxa: {brl(o['taxa'])}")
+    if sat_res_criada:
+        telegram(f"{ROTULO} · {SAT} · 💰 Reserva da satélite criada\n"
+                 f"{brl(SAT_RESERVA)} parados, destinados à satélite. Uso só em oportunidade: moeda {OPORT_QUEDA*100:.0f}% ou mais abaixo do topo de 90 dias "
+                 f"e já {OPORT_REPIQUE*100:.0f}% acima do fundo de 14 dias. Compra de {brl(OPORT_VALOR)}, venda com +{OPORT_LUCRO*100:.0f}%.\n"
+                 f"Patrimônio total agora: {brl(v_tot)}")
+    for op in sat_compras_op:
+        a = op["ativo"]
+        telegram(f"{ROTULO} · {SAT} · 🎯 OPORTUNIDADE · 🟢 COMPRA\n"
+                 f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
+                 f"Motivo: {a.upper()} está {num(op['queda']*100, 0)}% abaixo do topo de 90 dias e subiu {num(op['repique']*100, 0)}% desde o fundo de 14 dias.\n"
+                 f"Venda programada em {preco(px[a] * (1 + OPORT_LUCRO))} (+{OPORT_LUCRO*100:.0f}%). Reserva da satélite: {brl(est['satelite']['reserva']['saldo'])}")
+    for op in sat_vendas_op:
+        a = op["ativo"]
+        telegram(f"{ROTULO} · {SAT} · 💰 LUCRO · 🔴 VENDA\n"
+                 f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
+                 f"Posição de oportunidade atingiu +{OPORT_LUCRO*100:.0f}%. Ganho: {brl(op['ganho'])}.\n"
+                 f"O dinheiro voltou para a reserva da satélite: {brl(est['satelite']['reserva']['saldo'])}")
     for i, op in enumerate(sat_feitas, start=1):
         a = op["ativo"]; n = est["satelite"]["ops_dia"]["n"] - len(sat_feitas) + i
         emoji = "🟢" if op["tipo"] == "COMPRA" else "🔴"
@@ -420,7 +522,7 @@ def main():
     resumo = (f"{ROTULO} · ☀️ Resumo da manhã · {agora:%d/%m}\n"
               f"Patrimônio total: {brl(v_tot)} ({pct(v_tot / est['capital_total'] - 1)} desde o início, {dias} {'dia' if dias == 1 else 'dias'})\n"
               f"Carteira: {brl(v)} · Reserva: {brl(reserva)} ({len(est['reserva']['usados'])} de {len(DEGRAUS)} degraus usados)\n"
-              + (f"Satélite: {brl(v_sat)} ({pct(v_sat / SAT_APORTE - 1)} sobre {brl(SAT_APORTE)}) · parada: {brl(v_sat_par)}\n" if "satelite" in est else "") +
+              + (f"Satélite: {brl(v_sat)} ({pct(v_sat / (SAT_APORTE + est['satelite'].get('parada_reserva', 0)) - 1)}) · reserva dela: {brl(est['satelite'].get('reserva', {}).get('saldo', 0))} · oportunidades abertas: {len(est['satelite'].get('posicoes', []))}\n" if "satelite" in est else "") +
               f"Sem robô (tudo parado): {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))} de diferença\n"
               f"Operações nas últimas 24 h: {ops_24h} · rebalanceamentos: {est['rebalanceamentos']} · taxas: {brl(est['taxas'])}\n"
               f"Divisão: {texto_pesos(pesos(c, px))}")

@@ -71,6 +71,7 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
 .mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--fg); }
 .note { color: var(--dim); font-size: 11px; margin: 4px 0 0; }
 .warn { color: var(--amber); }
+table.mini td { padding: 5px 6px; } table.mini th { padding: 4px 6px; }
 @media (max-width: 560px) { .res { grid-template-columns: 1fr; } .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
@@ -101,6 +102,15 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
         <p class="note" id="rNota">--</p>
       </div>
     </div>
+  </section>
+
+  <section class="box" id="satResBox" hidden>
+    <h2>Reserva da satélite · oportunidades</h2>
+    <div class="res">
+      <div><div class="big num" id="sSaldo" style="color: var(--teal)">--</div><div class="lab" id="sLab">--</div></div>
+      <div class="scroll"><table class="mini"><thead><tr><th>Moeda</th><th>Status</th><th class="r">Do topo 90d</th><th class="r">Do fundo 14d</th><th class="r">Posição aberta</th></tr></thead><tbody id="sSinais"></tbody></table></div>
+    </div>
+    <p class="note">Compra R$ 25 quando a moeda está 50% ou mais abaixo do topo de 90 dias e já subiu 20% do fundo de 14 dias. Vende com +30% e devolve à reserva.</p>
   </section>
 
   <section class="box">
@@ -157,10 +167,12 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
       const p = estado.ultimos_precos || {};
       const cripto = (c, alvo) => Object.keys(alvo).reduce((t, a) => t + (c[a] || 0) * (p[a] || 0), 0);
       const sat = estado.satelite;
-      const vc = cripto(estado.carteira, estado.alvo) + (sat ? cripto(sat.carteira, sat.alvo) : 0);
+      const posSat = sat ? (sat.posicoes || []).reduce((t, x) => t + x.qtd * (p[x.ativo] || x.preco), 0) : 0;
+      const vc = cripto(estado.carteira, estado.alvo) + (sat ? cripto(sat.carteira, sat.alvo) + posSat : 0);
       $("tCripto").textContent = brl(vc);
       const partes = [`principal ${brl(estado.carteira.reais)}`, `reserva ${brl((estado.reserva || {}).saldo || 0)}`];
       if (sat) partes.push(`satélite ${brl(sat.carteira.reais)}`);
+      if (sat && sat.reserva) partes.push(`reserva satélite ${brl(sat.reserva.saldo)}`);
       $("tSaldoS").textContent = partes.join(" · ");
     }
   }
@@ -180,6 +192,26 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
     $("rFill").style.width = Math.min(100, queda * 100) + "%";
     const prox = degraus.find(d => !res.usados.includes(d));
     $("rNota").textContent = res.saldo <= 0 ? "reserva toda aplicada" : prox ? `próximo degrau em −${prox * 100}% · faltam ${nf(Math.max(0, prox - queda) * 100, 1)} pt · pelo último preço do robô` : "";
+  }
+
+  function reservaSat(estado) {
+    const sat = estado && estado.satelite; if (!sat || !sat.reserva) return;
+    $("satResBox").hidden = false;
+    const p = estado.ultimos_precos || {}, pos = sat.posicoes || [];
+    $("sSaldo").textContent = brl(sat.reserva.saldo);
+    $("sLab").textContent = `disponível · ${pos.length} ${pos.length === 1 ? "posição aberta" : "posições abertas"}`;
+    const tb = $("sSinais"); tb.textContent = "";
+    const ROT = { "normal": "normal", "caindo": "caindo", "recuperando (prazo)": "recuperando (aguarda prazo)", "oportunidade": "OPORTUNIDADE", "comprou": "comprou", "sem dados": "--" };
+    Object.keys(sat.alvo).forEach(a => {
+      const sn = (sat.sinais || {})[a] || {}, tr = el("tr");
+      tr.appendChild(el("td", "", a.toUpperCase()));
+      tr.appendChild(el("td", sn.status === "oportunidade" || sn.status === "comprou" ? "up" : sn.status === "caindo" ? "warn" : "", ROT[sn.status] || "aguardando robô"));
+      tr.appendChild(el("td", "r num", sn.queda !== undefined ? "−" + nf(sn.queda * 100, 0) + "%" : "--"));
+      tr.appendChild(el("td", "r num", sn.repique !== undefined ? "+" + nf(sn.repique * 100, 0) + "%" : "--"));
+      const ps = pos.filter(x => x.ativo === a);
+      tr.appendChild(el("td", "r num", ps.length ? ps.map(x => `entrou a ${brl(x.preco)} · vende a ${brl(x.preco * 1.3)} (${nf(((p[a] || x.preco) / x.preco - 1) * 100, 1)}%)`).join(" | ") : "—"));
+      tb.appendChild(tr);
+    });
   }
 
   function tabela() {
@@ -216,7 +248,7 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
     let estado = null;
     try { movs = csv(await baixar("extrato.csv")); } catch (e) { movs = []; }
     try { estado = JSON.parse(await baixar("estado.json")); } catch (e) { /* sem estado: só o extrato */ }
-    resumo(estado); reserva(estado); tabela();
+    resumo(estado); reserva(estado); reservaSat(estado); tabela();
   }
   carregar(); setInterval(carregar, 5 * 60000);
 })();
