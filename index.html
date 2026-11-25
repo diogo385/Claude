@@ -135,7 +135,7 @@ h1 span { color: var(--amber); }
         <h1><span>Argo Trade</span> Cripto <span class="ver">v0.1 · simulado</span></h1>
         <div class="sub">
           <span><i class="dot" id="runDot"></i><span id="runTxt">carregando</span> · <span class="num" id="clock">--:--:--</span></span>
-          <span class="tag">REBALANCEAMENTO DIÁRIO · ALVO 50/15/35</span>
+          <span class="tag">ATÉ 1 OPERAÇÃO/DIA · ALVO 50/15/35</span>
           <span>Binance · BTC <b class="num" id="hBtc">--</b> · ETH <b class="num" id="hEth">--</b></span>
         </div>
       </div>
@@ -162,7 +162,7 @@ h1 span { color: var(--amber); }
 
       <main class="main">
         <section class="box">
-          <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>ciclo diário · 21:00</small></h2>
+          <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>checa a cada 4 h · até 1 operação por dia</small></h2>
           <div class="chips">
             <div class="chip"><b style="color: var(--amber)">₿ BTC</b><span class="num" id="cBtc">--</span><span class="num" id="cBtcC">--</span></div>
             <div class="chip"><b style="color: var(--violet)">Ξ ETH</b><span class="num" id="cEth">--</span><span class="num" id="cEthC">--</span></div>
@@ -192,10 +192,10 @@ h1 span { color: var(--amber); }
             <text x="680" y="140" text-anchor="middle" class="t">EXECUTOR</text>
             <text x="680" y="156" text-anchor="middle" id="fExe">--</text>
             <rect x="345" y="8" width="80" height="20" rx="4" fill="#0a1714" stroke="#24493f"/>
-            <text x="385" y="22" text-anchor="middle">gatilho 2 pt</text>
+            <text x="385" y="22" text-anchor="middle">gatilho 1,5 pt</text>
           </svg>
           <div class="tiles">
-            <div class="tile"><div class="lab">Próximo ciclo</div><div class="v num" id="tNext">--</div><div class="s">todo dia às 21:00 (Brasília)</div></div>
+            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">21h · 1h · 5h · 9h · 13h · 17h</div></div>
             <div class="tile"><div class="lab">Maior desvio agora</div><div class="v num" id="tDev">--</div><div class="s" id="tDevS">--</div></div>
             <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
             <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
@@ -210,7 +210,7 @@ h1 span { color: var(--amber); }
             <div class="seg" id="mkTf"><button type="button" data-tf="1m" aria-pressed="false">1m</button><button type="button" data-tf="15m" aria-pressed="true">15m</button><button type="button" data-tf="1h" aria-pressed="false">1h</button><button type="button" data-tf="4h" aria-pressed="false">4h</button><button type="button" data-tf="1d" aria-pressed="false">1d</button></div>
           </div>
           <canvas id="candles" aria-label="Gráfico de velas ao vivo"></canvas>
-          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> se fosse 21h agora (desvio de 2 pontos na carteira simulada).</p>
+          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1,5 ponto na carteira simulada), se ainda não operou hoje.</p>
         </section>
 
         <div class="two">
@@ -218,13 +218,13 @@ h1 span { color: var(--amber); }
             <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
             <div class="alloc">
               <div class="row"><div class="top"><b>BTC</b><span class="num" id="pBtc">--</span></div>
-                <div class="track"><div class="band" style="left:48%;width:4%"></div><div class="fill" id="fBtc" style="--c: var(--amber); width:0"></div><div class="mark" style="left:50%"></div></div></div>
+                <div class="track"><div class="band" style="left:48.5%;width:3%"></div><div class="fill" id="fBtc" style="--c: var(--amber); width:0"></div><div class="mark" style="left:50%"></div></div></div>
               <div class="row"><div class="top"><b>ETH</b><span class="num" id="pEth">--</span></div>
-                <div class="track"><div class="band" style="left:13%;width:4%"></div><div class="fill" id="fEth" style="--c: var(--violet); width:0"></div><div class="mark" style="left:15%"></div></div></div>
+                <div class="track"><div class="band" style="left:13.5%;width:3%"></div><div class="fill" id="fEth" style="--c: var(--violet); width:0"></div><div class="mark" style="left:15%"></div></div></div>
               <div class="row"><div class="top"><b>Reais</b><span class="num" id="pBrl">--</span></div>
                 <div class="track"><div class="fill" id="fBrl" style="--c: var(--green); width:0"></div><div class="mark" style="left:35%"></div></div></div>
             </div>
-            <p class="note">Calculado com os preços de agora. O robô só age às 21h, se um ativo estiver 2 pontos ou mais fora do alvo.</p>
+            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e faz no máximo 1 operação por dia, no ativo que estiver 1,5 ponto ou mais fora do alvo.</p>
           </section>
           <section class="box">
             <h2>$ tail -f argo.log <small>última execução</small></h2>
@@ -243,14 +243,14 @@ h1 span { color: var(--amber); }
         </section>
       </main>
     </div>
-    <div class="foot"><span>Dados do robô atualizados todo dia ~21h · preços ao vivo a cada 30 s · <a href="painel-ativos.html">mercado ao vivo →</a></span><span>só saldo próprio · sem margem · sem saque</span></div>
+    <div class="foot"><span>Dados do robô atualizados a cada 4 h · preços ao vivo a cada 30 s · <a href="painel-ativos.html">mercado ao vivo →</a></span><span>só saldo próprio · sem margem · sem saque</span></div>
   </div>
 </div>
 
 <script>
 (function () {
   "use strict";
-  const ALVO = { btc: 0.50, eth: 0.15 }, GATILHO = 0.02, CAPITAL = 1000;
+  const ALVO = { btc: 0.50, eth: 0.15 }, GATILHO = 0.015, CAPITAL = 1000;
   const FONTES = ["https://data-api.binance.vision", "https://api.binance.com"];
   const $ = id => document.getElementById(id);
   const set = (id, t, cls) => { const e = $(id); e.textContent = t; if (cls !== undefined) e.className = e.className.replace(/\b(up|down|warn)\b/g, "").trim() + (cls ? " " + cls : ""); };
@@ -321,7 +321,7 @@ h1 span { color: var(--amber); }
     set("kRet", pct(v / CAPITAL - 1), v >= CAPITAL ? "up" : "down");
     set("kRetLab", `desde o início · ${dias} ${dias === 1 ? "dia" : "dias"}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
-    const vivo = horasDesde < 26;
+    const vivo = horasDesde < 9;
     $("runDot").className = "dot" + (vivo ? "" : " off");
     set("runTxt", vivo ? "rodando" : "sem execução há mais de 1 dia");
     if (px) { set("hBtc", brl(p.btc, 0)); set("hEth", brl(p.eth, 0)); }
@@ -333,15 +333,17 @@ h1 span { color: var(--amber); }
     // desvios e fluxo
     const dB = w.btc - ALVO.btc, dE = w.eth - ALVO.eth;
     const maior = Math.abs(dB) >= Math.abs(dE) ? ["BTC", dB] : ["ETH", dE];
-    const agiria = Math.abs(dB) >= GATILHO || Math.abs(dE) >= GATILHO;
+    const hojeBR = brasilia().toISOString().slice(0, 10);
+    const usouHoje = estado.ops_dia && estado.ops_dia.data === hojeBR && estado.ops_dia.n >= 1;
+    const agiria = !usouHoje && (Math.abs(dB) >= GATILHO || Math.abs(dE) >= GATILHO);
     const pt = x => sgn(x) + nf(Math.abs(x) * 100, 1) + " pt";
     set("fCol", px ? "preços ok" : "último preço salvo");
     set("fEst", "desvio " + nf(Math.abs(maior[1]) * 100, 1) + " pt");
-    set("fPor", agiria ? "ordem seria aprovada" : "nada a aprovar");
-    set("fExe", agiria ? "age às 21h" : "sem ordem");
+    set("fPor", usouHoje ? "limite do dia usado" : agiria ? "ordem seria aprovada" : "nada a aprovar");
+    set("fExe", agiria ? "age na próxima checagem" : "sem ordem");
     $("wExe").setAttribute("stroke", agiria ? "#3df59a" : "#4f7067");
     set("tDev", nf(Math.abs(maior[1]) * 100, 1) + " pt", Math.abs(maior[1]) >= GATILHO ? "warn" : "");
-    set("tDevS", `${maior[0]} · gatilho em 2 pt`);
+    set("tDevS", `${maior[0]} · gatilho em 1,5 pt`);
     set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital · inclui a montagem");
 
     // agentes
@@ -352,13 +354,13 @@ h1 span { color: var(--amber); }
     const travasOk = c.reais >= 0 && c.btc >= 0 && c.eth >= 0;
     set("aPor", travasOk ? "saldo ok · sem dívida · sem margem" : "TRAVA: saldo negativo");
     set("aPorSt", travasOk ? "ARMED" : "STOP");
-    const b = brasilia(); const prox = new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate(), 21, 0, 0));
-    if (b >= prox) prox.setUTCDate(prox.getUTCDate() + 1);
+    const b = brasilia(); const prox = new Date(b); prox.setUTCMinutes(0, 0, 0);
+    do { prox.setUTCHours(prox.getUTCHours() + 1); } while ((prox.getUTCHours() + 3) % 4 !== 0);
     const falta = prox - b, h = Math.floor(falta / 36e5), m = Math.floor(falta % 36e5 / 6e4);
     set("tNext", `${h}h ${pad(m)}min`);
-    set("aExe", `nenhuma ordem aberta · próximo ciclo em ${h}h ${pad(m)}min`);
-    set("aTel", ultExec ? "último resumo " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
-    set("aVida", vivo ? `última execução há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem execução há mais de 26 h");
+    set("aExe", `${usouHoje ? "operação do dia já feita" : "pronto para operar"} · próxima checagem em ${h}h ${pad(m)}min`);
+    set("aTel", ultExec ? "última checagem " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
+    set("aVida", vivo ? `última execução há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem execução há mais de 9 h");
     set("aVidaSt", vivo ? "OK" : "ATRASO");
     set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
 
@@ -371,7 +373,7 @@ h1 span { color: var(--amber); }
       const o = ops[ops.length - 1];
       set("tLast", brl(+o.valor_reais), o.tipo === "VENDA" ? "up" : "");
       set("tLastS", `${o.tipo === "VENDA" ? "venda" : "compra"} de ${o.ativo} · ${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)}`);
-    } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem desvio de 2 pt"); }
+    } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem desvio de 1,5 pt"); }
 
     // log da última execução
     const tail = $("tail"); tail.textContent = "";
@@ -379,7 +381,7 @@ h1 span { color: var(--amber); }
     const opsHoje = ultimo ? +ultimo.operacoes_no_dia : 0;
     const linhas = [
       ["info", "coletor", ultimo ? `BTC ${brl(+ultimo.preco_btc, 0)} · ETH ${brl(+ultimo.preco_eth, 0)}` : "--"],
-      ["info", "estratégia", opsHoje ? `${opsHoje} ativo(s) fora da faixa de 2 pt` : "tudo dentro da faixa de 2 pt"],
+      ["info", "estratégia", opsHoje ? `${opsHoje} operação(ões) no dia` : "tudo dentro da faixa de 1,5 pt"],
       ["ok", "porteiro", opsHoje ? `${opsHoje} ordem(ns) aprovada(s) · travas ok` : "nada a aprovar · travas ok"],
       ["ok", "executor", opsHoje ? `${opsHoje} operação(ões) simulada(s)` : "sem ordem"],
       ["w", "telegram", "resumo enviado"],
@@ -421,7 +423,7 @@ h1 span { color: var(--amber); }
     set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
     if (!ops.length) {
       const d = document.createElement("div"); d.className = "empty";
-      d.textContent = "Nenhum rebalanceamento ainda (a montagem inicial da carteira, com 1 compra de BTC e 1 de ETH, não entra aqui). O robô só opera quando BTC ou ETH ficam 2 pontos ou mais fora do alvo. Nos testes, isso deu cerca de 2 operações por mês.";
+      d.textContent = "Nenhum rebalanceamento ainda (a montagem inicial da carteira, com 1 compra de BTC e 1 de ETH, não entra aqui). O robô faz no máximo 1 operação por dia, quando BTC ou ETH ficam 1,5 ponto ou mais fora do alvo. Nos testes, isso deu cerca de 3 a 4 operações por mês.";
       box.appendChild(d); return;
     }
     const t = document.createElement("table"); t.className = "log"; const tb = document.createElement("tbody");
