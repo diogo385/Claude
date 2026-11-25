@@ -527,7 +527,8 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
       v: valor(estado.carteira, p) + res.saldo, base: (estado.investido || CAPITAL) + (estado.parada_reserva || 0), vp: valor(estado.parada, p) + (estado.parada_reserva || 0),
       pnl: pp.pr, giros: [], realizado: pp.realP,
       extra: `reserva para quedas ${brl(res.saldo)}`,
-      info: `${estado.rebalanceamentos || 0} rebalanceamentos · ${(res.usados || []).length} de 4 degraus da reserva usados`,
+      info: `${estado.rebalanceamentos || 0} rebalanceamentos · ${(res.usados || []).length} de 4 degraus da reserva usados` + (estado.tendencia ? " · tendência: " +
+        Object.keys(estado.alvo_alta || {}).map(a => `${a.toUpperCase()} ${estado.tendencia[a] && estado.tendencia[a].alta ? "📈 alta (alvo " + Math.round(estado.alvo[a] * 100) + "%)" : "normal"}`).join(" · ") : ""),
       situacao: (a, dev) => sitRebal(a === "reais" ? 0 : dev)
     });
   }
@@ -743,7 +744,8 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
   function posicoes() {
     // carteira principal: montagem = carteira parada (nunca muda) ao custo de CAPITAL × alvo
     const pr = {}; let realP = 0;
-    ativos.forEach(a => pr[a] = { q: estado.parada[a] || 0, custo: CAPITAL * estado.alvo[a] });
+    const alvoBase = estado.alvo_base || estado.alvo;  // a montagem foi feita com o alvo padrão
+    ativos.forEach(a => pr[a] = { q: estado.parada[a] || 0, custo: CAPITAL * alvoBase[a] });
     ops.forEach(o => {
       const a = o.ativo.toLowerCase(), x = pr[a]; if (!x) return;
       const q = +o.quantidade, v = +o.valor_reais, t = +o.taxa;

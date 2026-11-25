@@ -1,6 +1,6 @@
 # Argos Trade Cripto · Plano
 
-Versão 2.3 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
+Versão 2.4 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 
 > Na mitologia grega, Argos é o gigante de cem olhos que nunca dormia: um vigia que não descansa.
 
@@ -70,6 +70,14 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 - **Máximo de 20 operações por dia em cada carteira** (teste simulado), com contadores separados.
 - **Custo simulado:** 0,1% de taxa + 0,05% de diferença de preço por operação.
 
+### 5.1.1 Concentração na alta (Bitcoin e Ethereum)
+- **Alta confirmada:** a moeda fechou o dia acima da média dos últimos 200 dias, com 3% de folga para ligar e para desligar. O robô confere uma vez por dia, com os fechamentos diários da Binance. Bitcoin e Ethereum têm sinais separados.
+- **Com a alta confirmada, o alvo sobe:** Bitcoin de 35% para **45%** e Ethereum de 15% para **20%**. O dinheiro vem dos reais, que caem de 30% para até 15%. As outras moedas não mudam.
+- **Quando a alta acaba** (fechamento 3% abaixo da média), o alvo volta ao padrão e o rebalanceamento vende o excesso.
+- O robô avisa no Telegram quando o sinal liga ou desliga, e o `/status` mostra a tendência. O monitor mostra a tendência no bloco da carteira principal.
+- Sem dados confiáveis da Binance, o sinal anterior é mantido.
+- Backtest (2021–2026): +98% contra +91% da regra fixa, com queda máxima de −68% contra −65%. Versões mais concentradas ("quase tudo" em BTC/ETH) renderam menos. Não é garantia.
+
 ### 5.2 Reserva para quedas da principal (R$ 500)
 - Entram **R$ 125** quando a carteira principal cai **20%, 30%, 40% e 50%** desde o pico.
 - A queda é medida pela **cota da carteira**, sem contar os aportes.
@@ -123,7 +131,7 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 |---|---|---|
 | **Monitor** | diogo385.github.io/Claude | Patrimônio total, status do robô, resultado acumulado, carteira principal e satélite (com ganhos e perdas por cripto) e desempenho |
 | **Histórico** | botão no monitor | Todas as operações agrupadas por dia, com filtros (principal, satélite, giros, reserva) |
-| **Mercado ao vivo** | botão 📈 no monitor | Gráfico de velas das 6 moedas da principal, livro de ofertas, negociações e linhas de gatilho do robô |
+| **Mercado ao vivo** | botão 📈 no monitor | Gráfico de linha ou velas das 11 moedas, com períodos de 24h a todo o histórico, livro de ofertas, negociações e linhas de gatilho do robô |
 | **Extrato** | botão no monitor | Toda entrada e saída de dinheiro com o saldo em reais, as duas reservas e os sinais da satélite |
 | **Regras** | botão no monitor | Todas as regras num lugar só e o que faz cada agente do robô |
 
@@ -292,3 +300,5 @@ PLANO.md              este documento
 | 25/11 | Carteiras principal e satélite no mesmo formato, com filtro Resumo/Completo. Gráfico do resultado mais baixo |
 | 25/11 | Ganhos e perdas por cripto passam para dentro das carteiras; giro resumido dentro da satélite; carteiras logo abaixo do gráfico. Resultado de 24 h (monitor e /hoje) não conta mais aportes como ganho |
 | 25/11 | Rodapé e link da carteira antiga saem do monitor; agentes do robô passam para a página de Regras |
+| 25/11 | Histórico e extrato no padrão do monitor. Mercado ao vivo com períodos de 24h a todo o histórico e gráfico de linha ou velas. Todas as páginas na paleta azul do mercado ao vivo |
+| 25/11 | Concentração moderada na alta: com a alta confirmada (média de 200 dias), o alvo de BTC vai a 45% e o de ETH a 20%. Testadas e descartadas: freio de venda, concentração forte e "quase tudo" |

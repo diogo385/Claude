@@ -35,6 +35,10 @@ VERSAO = 2
 CAPITAL = 1000.0
 ALVO = {"btc": 0.35, "eth": 0.15, "sol": 0.08, "xrp": 0.05, "bnb": 0.04, "link": 0.03}  # o resto (30%) fica em reais
 PARES = {a: a.upper() + "BRL" for a in ALVO}
+# Concentração moderada: com a alta confirmada, o alvo de BTC e ETH sobe e a parte em reais diminui.
+ALVO_ALTA = {"btc": 0.45, "eth": 0.20}
+TEND_MEDIA_DIAS = 200    # alta confirmada = fechamento diário acima da média de 200 dias...
+TEND_FOLGA = 0.03        # ...com 3% de folga para ligar e para desligar (evita vai-e-vem)
 SAT_APORTE = 250.0
 SAT_ALVO = {"ltc": 0.20, "doge": 0.20, "ada": 0.18, "avax": 0.16, "near": 0.16}  # o resto (10%) fica em reais
 SAT_PARES = {a: a.upper() + "BRL" for a in SAT_ALVO}
@@ -192,6 +196,68 @@ def texto_pesos(p, alvo=ALVO):
 
 def qtd_txt(q):
     return num(q, 6 if q < 1 else 4 if q < 100 else 2)
+
+
+# ---------- tendência de alta (concentração moderada em BTC e ETH) ----------
+def fechamentos_diarios(par, dias=1000):
+    """Fechamentos diários já encerrados (a vela de hoje, ainda aberta, fica de fora)."""
+    for base in FONTES:
+        try:
+            with urllib.request.urlopen(f"{base}/api/v3/klines?symbol={par}&interval=1d&limit={dias}", timeout=30) as r:
+                return [float(k[4]) for k in json.loads(r.read())][:-1]
+        except Exception:
+            continue
+    return None
+
+
+def tendencia_alta(fech):
+    """Percorre os fechamentos: liga a alta acima da média + folga, desliga abaixo da média − folga.
+    Devolve (em alta?, último fechamento, média)."""
+    alta, janela, soma, media = False, [], 0.0, 0.0
+    for p in fech:
+        janela.append(p)
+        soma += p
+        if len(janela) > TEND_MEDIA_DIAS:
+            soma -= janela.pop(0)
+        media = soma / len(janela)
+        if len(janela) >= 60:
+            if p > media * (1 + TEND_FOLGA):
+                alta = True
+            elif p < media * (1 - TEND_FOLGA):
+                alta = False
+    return alta, (fech[-1] if fech else 0.0), media
+
+
+def atualizar_tendencia(est, hoje):
+    """Uma vez por dia, recalcula a tendência de BTC e ETH. Devolve as mudanças [(ativo, em alta?)];
+    na primeira vez devolve a situação de todos. Sem dados, mantém a situação anterior."""
+    tend = est.get("tendencia")
+    if tend and tend.get("data") == hoje:
+        return []
+    primeira = tend is None
+    novo_t = dict(tend or {})
+    mudancas = []
+    for a in ALVO_ALTA:
+        fech = fechamentos_diarios(PARES[a])
+        if not fech or len(fech) < 60:
+            return []  # sem dados confiáveis: nada muda, tenta de novo na próxima checagem
+        alta, ultimo, media = tendencia_alta(fech)
+        antes = (tend or {}).get(a, {}).get("alta")
+        novo_t[a] = {"alta": alta, "fechamento": ultimo, "media": round(media, 6)}
+        if primeira or antes != alta:
+            mudancas.append((a, alta))
+    novo_t["data"] = hoje
+    est["tendencia"] = novo_t
+    return mudancas
+
+
+def alvo_atual(est):
+    """Alvo em vigor: o padrão, com BTC e ETH maiores enquanto a alta de cada um estiver confirmada."""
+    alvo = dict(ALVO)
+    for a, w in ALVO_ALTA.items():
+        if est.get("tendencia", {}).get(a, {}).get("alta"):
+            alvo[a] = w
+    return alvo
 
 
 # ---------- reserva de oportunidade ----------
@@ -418,6 +484,10 @@ def main():
     est = estado_inicial(px, agora) if novo else json.loads(ESTADO.read_text())
     c = est["carteira"]
     migrou = preparar_reserva(est, novo)
+    # tendência de alta de BTC e ETH: define o alvo em vigor (o padrão fica guardado em alvo_base)
+    tend_mudou = atualizar_tendencia(est, hoje)
+    alvo = alvo_atual(est)
+    est["alvo"], est["alvo_base"], est["alvo_alta"] = alvo, ALVO, ALVO_ALTA
     # comandos do dono pelo Telegram (/pausar, /retomar, /status, /hoje, /ajuda)
     cmds = [] if novo else ler_comandos(est)
     pausa_mudou = False
@@ -439,7 +509,7 @@ def main():
     checar_carteiras = novo or not ult_cart or (agora - datetime.fromisoformat(ult_cart)).total_seconds() >= INTERVALO_CARTEIRAS * 3600
     if checar_carteiras and not pausado:
         est["ultima_checagem_carteiras"] = agora.isoformat()
-    feitas = [] if novo or pausado or limite <= 0 or not checar_carteiras else rebalancear(c, px, limite, est["ops_dia"]["n"])
+    feitas = [] if novo or pausado or limite <= 0 or not checar_carteiras else rebalancear(c, px, limite, est["ops_dia"]["n"], alvo)
     est["gatilho"], est["gatilho_extra"], est["max_ops_dia"] = DESVIO_MIN, DESVIO_EXTRA, MAX_OPS_DIA
     # carteira satélite: aporte (uma vez) e rebalanceamento com as mesmas regras, contador próprio
     sat_montagem = [] if novo else preparar_satelite(est, px, agora)
@@ -522,7 +592,7 @@ def main():
         est["ops_periodo"] = 0
     # grava no repositório só quando algo aconteceu ou ~1 vez por hora (limita commits e atualizações do site)
     ult_salv = est.get("ultimo_salvamento")
-    salvar = (novo or bool(movs) or resumo_agora or bool(cmds) or trava_mudou or not ult_salv
+    salvar = (novo or bool(movs) or resumo_agora or bool(cmds) or trava_mudou or bool(tend_mudou) or not ult_salv
               or (agora - datetime.fromisoformat(ult_salv)).total_seconds() >= SALVAR_A_CADA * 60)
     if salvar:
         est["ultimo_salvamento"] = agora.isoformat()
@@ -594,6 +664,15 @@ def main():
                  f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
                  f"Motivo: {a.upper()} estava em {num(op['peso_antes']*100, 1)}% da satélite (alvo {SAT_ALVO[a]*100:.0f}%)\n"
                  f"Taxa: {brl(op['taxa'])} · operação {n} de até {MAX_OPS_DIA} hoje na satélite")
+    if tend_mudou:
+        linhas = []
+        for a, alta in tend_mudou:
+            t = est["tendencia"][a]
+            linhas.append(f"{'📈' if alta else '➖'} {a.upper()}: {'ALTA CONFIRMADA' if alta else 'sem alta confirmada'} · "
+                          f"alvo {alvo[a]*100:.0f}% (padrão {ALVO[a]*100:.0f}%, na alta {ALVO_ALTA[a]*100:.0f}%)\n"
+                          f"   fechou a {preco(t['fechamento'])} · média de {TEND_MEDIA_DIAS} dias {preco(t['media'])}")
+        telegram(f"{ROTULO} · 🧭 Tendência de alta\n" + "\n".join(linhas) +
+                 f"\nReais no alvo: {(1 - sum(alvo.values()))*100:.0f}%. Os ajustes são feitos sozinhos, com aviso a cada operação.")
     n_antes = est["ops_dia"]["n"] - len(feitas)
     for i, op in enumerate(feitas, start=1):
         a = op["ativo"]
@@ -605,7 +684,8 @@ def main():
         emoji = "🟢" if op["tipo"] == "COMPRA" else "🔴"
         telegram(f"{ROTULO} · {emoji} {op['tipo']}\n"
                  f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
-                 f"Motivo: {a.upper()} estava em {num(op['peso_antes']*100, 1)}% da carteira (alvo {ALVO[a]*100:.0f}%)\n"
+                 f"Motivo: {a.upper()} estava em {num(op['peso_antes']*100, 1)}% da carteira (alvo {alvo[a]*100:.0f}%"
+                 f"{', alta confirmada' if alvo[a] != ALVO[a] else ''})\n"
                  f"Taxa: {brl(op['taxa'])}\n"
                  f"{rodape}")
     for cmd in cmds:
@@ -619,6 +699,7 @@ def main():
                      f"Situação: {'⏸️ PAUSADO' if pausado else '▶️ operando'}{' · 🛑 trava de queda ligada' if est.get('trava_queda') else ''}\n"
                      f"Patrimônio total: {brl(v_tot)} ({pct(v_tot / est['capital_total'] - 1)} desde o início)\n"
                      f"Carteira: {brl(v)} · Reserva: {brl(reserva)}\n{sat_txt}"
+                     f"Tendência: " + " · ".join(f"{a.upper()} {'📈 alta' if alvo[a] != ALVO[a] else 'normal'} (alvo {alvo[a]*100:.0f}%)" for a in ALVO_ALTA) + "\n"
                      f"Sem robô: {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))}\n"
                      f"Operações hoje: principal {est['ops_dia']['n']} · satélite {est.get('satelite', {}).get('ops_dia', {}).get('n', 0)}")
         elif cmd == "/hoje":

@@ -39,3 +39,31 @@ python simulador.py <pasta>/velas_1h.csv resultado
 python comparacao.py <pasta>/velas_1h.csv
 python grafico.py resultado
 ```
+
+---
+
+# Concentração em BTC e ETH na alta · 25/11/2026
+
+Pergunta: vale aumentar o alvo de Bitcoin e Ethereum quando a alta está confirmada, para não vender durante a subida?
+
+Dados: velas de 1 hora das 6 moedas da carteira principal, de 18/06/2021 a 25/11/2026. Capital R$ 1.000, custo de 0,15% por operação, gatilho de 1 ponto, até 20 operações por dia, checagem a cada 4 horas.
+Sinal de alta: fechamento diário acima da média de N dias, com 3% de folga para ligar e desligar. Vale a partir do dia seguinte.
+
+| Regra | Total (média 200d) | Pior queda | 2023 | 2024 | 2025 | Total (média 100d) | Validação 2024–26 (200d / 100d) |
+|---|---|---|---|---|---|---|---|
+| Sem robô | +38% | −71% | +81% | +115% | −21% | +38% | +27% / +27% |
+| Regra fixa (BTC 35 / ETH 15) | +91% | −65% | +98% | +107% | −11% | +91% | +43% / +43% |
+| Freio de venda na alta (só vende com 5 pts) | +84% | −66% | +104% | +102% | −13% | +91% | +40% / +43% |
+| **Moderada (BTC 45 / ETH 20 na alta)** | **+98%** | −68% | +111% | +122% | −14% | +121% | +50% / +58% |
+| Forte (BTC 55 / ETH 25 na alta) | +107% | −69% | +120% | +132% | −16% | +123% | +51% / +65% |
+| Quase tudo (BTC 65 / ETH 30 na alta) | +69% | −70% | +94% | +125% | −14% | +104% | +49% / +55% |
+
+Conclusões:
+1. Concentrar com moderação ganhou da regra fixa nos dois sinais e na validação, com queda máxima um pouco maior.
+2. "Quase tudo" rendeu menos que a moderada: o sinal troca muitas vezes (24 no BTC, 18 no ETH com 200 dias) e cada troca errada custa caro.
+3. O freio de venda não trouxe ganho.
+4. O tamanho do ganho depende do sinal (200 ou 100 dias). É um único caminho histórico e o teste não inclui a reserva para quedas.
+
+Decisão: o robô simulado adotou a **moderada com média de 200 dias**.
+
+Reproduzir: `python tendencia.py <pasta>`
