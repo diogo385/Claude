@@ -11,7 +11,7 @@
 /* Terminal do Argos Trade Cripto com dados reais do robô simulado (simulado/*) e preços ao vivo da Binance. */
 :root {
   --bg: #06100e; --panel: #0a1714; --panel-2: #0d1f1b; --line: #173029; --line-hi: #24493f;
-  --fg: #d9f2ea; --muted: #7fa398; --dim: #4f7067;
+  --fg: #d9f2ea; --muted: #7fa398; --dim: #6f938a;
   --green: #3df59a; --teal: #2ee6c8; --amber: #ffb547; --red: #ff5d6c; --violet: #a78bfa; --blue: #5fb4ff;
   --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -57,7 +57,7 @@ h1 span { color: var(--amber); }
 .agent { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
 .ic { grid-row: span 2; width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: var(--c); color: #06100e; font-weight: 700; }
 .agent .nm { font-weight: 700; font-size: 12px; letter-spacing: .04em; color: var(--c); }
-.agent .st { font-size: 10px; font-weight: 600; border: 1px solid var(--c); color: var(--c); border-radius: 4px; padding: 0 6px; justify-self: end; }
+.agent .st { font-size: 11px; font-weight: 600; border: 1px solid var(--c); color: var(--c); border-radius: 4px; padding: 0 6px; justify-self: end; }
 .agent .ds { grid-column: 2 / 4; color: var(--muted); font-size: 11px; }
 .agent .ds b { color: var(--fg); font-weight: 500; }
 
@@ -75,7 +75,7 @@ h1 span { color: var(--amber); }
 @keyframes flow { to { stroke-dashoffset: -20; } }
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .tile { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--panel); }
-.tile .lab { color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.tile .lab { color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 .tile .v { font-family: var(--display); font-size: 1.35rem; font-weight: 700; margin-top: 2px; }
 .tile .s { color: var(--dim); font-size: 11px; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
@@ -93,11 +93,11 @@ h1 span { color: var(--amber); }
 .tail time { color: var(--dim); margin-right: 8px; }
 .tail .ok { color: var(--green); } .tail .w { color: var(--amber); } .tail .info { color: var(--teal); }
 .eq { width: 100%; height: auto; display: block; }
-.eq text { font-family: var(--mono); fill: var(--dim); font-size: 10px; }
+.eq text { font-family: var(--mono); fill: var(--dim); font-size: 11px; }
 .log { width: 100%; border-collapse: collapse; font-size: 12px; }
 .log td { padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
 .log tr:first-child td { background: rgba(255,181,71,.06); }
-.side { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 6px; }
+.side { font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 6px; }
 .side.buy { color: var(--violet); border: 1px solid var(--violet); }
 .side.sell { color: var(--green); border: 1px solid var(--green); }
 .log .why { color: var(--muted); font-size: 11px; }
@@ -123,7 +123,7 @@ h1 span { color: var(--amber); }
 .dd { grid-column: 1 / -1; }
 .dd .track { height: 10px; }
 .pnl { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
-.pnl th { text-align: right; color: var(--muted); font-weight: 500; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--line-hi); white-space: nowrap; }
+.pnl th { text-align: right; color: var(--muted); font-weight: 500; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--line-hi); white-space: nowrap; }
 .pnl th:first-child, .pnl td:first-child { text-align: left; }
 .pnl td { text-align: right; padding: 7px 6px; border-top: 1px solid var(--line); white-space: nowrap; }
 .pnl tr.grp td { background: var(--panel); color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
@@ -140,13 +140,33 @@ h1 span { color: var(--amber); }
 .veredito { margin-top: 8px; font-size: 12px; padding: 6px 8px; border-radius: 6px; background: var(--panel); }
 .periodos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .periodos div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
-.periodos span { display: block; color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.periodos span { display: block; color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 .periodos b { font-family: var(--display); font-size: 1.15rem; }
 .periodos i { display: block; font-style: normal; font-size: 11px; }
 .uw { width: 100%; height: auto; display: block; margin-top: 6px; }
-.uw text { font-family: var(--mono); fill: var(--dim); font-size: 10px; }
+.uw text { font-family: var(--mono); fill: var(--dim); font-size: 11px; }
 .saude-link { color: var(--teal); }
 @media (max-width: 900px) { .perf { grid-template-columns: 1fr; } }
+.status-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.status-strip .tile .v { font-size: 1.15rem; }
+.status-strip .tile .s a { color: var(--teal); }
+.sat-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 12px; }
+.sat-top .big { font-family: var(--display); font-size: 1.6rem; font-weight: 700; color: var(--teal); }
+.sat-top .lab { color: var(--muted); font-size: 12px; }
+details.agents-box > summary { cursor: pointer; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; list-style: none; }
+details.agents-box > summary::before { content: "▸ "; color: var(--teal); }
+details.agents-box[open] > summary::before { content: "▾ "; }
+details.agents-box[open] > summary { margin-bottom: 10px; }
+.vazio { fill: var(--muted); font-size: 13px; }
+@media (max-width: 900px) { .status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .pnl th:nth-child(2), .pnl td:nth-child(2), .pnl th:nth-child(6), .pnl td:nth-child(6),
+  .pnl th:nth-child(7), .pnl td:nth-child(7), .pnl th:nth-child(8), .pnl td:nth-child(8),
+  .pnl th:nth-child(9), .pnl td:nth-child(9) { display: none; }
+  .pnl td, .pnl th { padding-inline: 4px; }
+  .pnl tr.grp td { white-space: normal; }
+  .pnl tr.grp td span { float: none; display: block; margin-top: 2px; }
+}
 .pnl-tot b { font-family: var(--display); font-size: 1.25rem; margin-left: 6px; }
 .side.sat { color: var(--teal); border: 1px solid var(--teal); margin-left: 4px; }
 .side.aporte { color: var(--amber); border: 1px solid var(--amber); }
@@ -172,7 +192,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=13">📈 Mercado ao vivo</a><a class="btn ghost" href="historico.html?v=13">Histórico</a><a class="btn ghost" href="extrato.html?v=13">Extrato</a><a class="btn ghost" href="regras.html?v=13">Regras</a><span class="mode">simulado</span></span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=13">📈 Mercado ao vivo</a><a class="btn ghost" href="historico.html?v=13">Histórico</a><a class="btn ghost" href="extrato.html?v=13">Extrato</a><a class="btn ghost" href="regras.html?v=13">Regras</a></span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -186,23 +206,37 @@ h1 span { color: var(--amber); }
       </div>
       <div class="kpis">
         <div><div class="big num" id="kVal">--</div><div class="lab">patrimônio total</div></div>
-        <div><div class="big num" id="kOps">--</div><div class="lab">rebalanceamentos</div></div>
+        <div><div class="big num" id="kOps">--</div><div class="lab">operações do robô</div></div>
         <div><div class="big num" id="kRet">--</div><div class="lab" id="kRetLab">desde o início</div></div>
         <div><div class="big num" id="kVs">--</div><div class="lab">vs sem robô</div></div>
       </div>
     </header>
 
     <main class="main">
+        <section class="box" aria-label="Status do robô">
+          <h2>Status do robô</h2>
+          <div class="tiles status-strip">
+            <div class="tile"><div class="lab">Situação</div><div class="v" id="sSit">--</div><div class="s" id="sSitS">--</div></div>
+            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">a cada 15 min · resumo às 7h</div></div>
+            <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
+            <div class="tile"><div class="lab">Operações do robô</div><div class="v num" id="sOps">--</div><div class="s" id="sOpsS">--</div></div>
+            <div class="tile"><div class="lab">Maior desvio (principal)</div><div class="v num" id="tDev">--</div><div class="s" id="tDevS">--</div></div>
+            <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
+            <div class="tile"><div class="lab">Reserva para quedas</div><div class="v num" id="sRes">--</div><div class="s" id="sResS">--</div></div>
+            <div class="tile"><div class="lab">Saúde</div><div class="v num" id="sSaude">--</div><div class="s" id="sSaudeS">--</div></div>
+          </div>
+        </section>
+
         <section class="box">
-          <h2>Evolução do patrimônio</h2>
-          <svg class="eq" id="eq" viewBox="0 0 760 220" role="img" aria-label="Curva de patrimônio do robô simulado"></svg>
+          <h2>Resultado acumulado <small>patrimônio menos o que foi depositado · aportes marcados</small></h2>
+          <svg class="eq" id="eq" viewBox="0 0 760 220" role="img" aria-label="Resultado acumulado do robô e sem robô, descontando aportes"><text x="380" y="110" text-anchor="middle" class="vazio">carregando…</text></svg>
           <svg class="uw" id="uw" viewBox="0 0 760 90" role="img" aria-label="Queda desde o pico"></svg>
         </section>
 
         <section class="box">
           <h2>Ganhos e perdas por cripto <small id="pnlInfo">ao vivo</small></h2>
           <div class="pnl-tot" id="pnlTot"></div>
-          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Aplicado</th><th>Vale agora</th><th>Ganho / perda</th><th>%</th><th>Preço médio</th><th>Cotação</th><th>24h</th><th></th></tr></thead><tbody id="pnlBody"></tbody></table></div>
+          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Aplicado</th><th>Vale agora</th><th>Ganho / perda</th><th>%</th><th>Preço médio</th><th>Cotação</th><th>24h</th><th></th></tr></thead><tbody id="pnlBody"><tr><td colspan="9" class="empty">carregando…</td></tr></tbody></table></div>
         </section>
 
         <div class="perf">
@@ -211,64 +245,19 @@ h1 span { color: var(--amber); }
           <section class="box"><h2>🛰️ Giro da satélite</h2><div class="kv" id="giro"></div></section>
         </div>
 
-        <div class="two">
-          <section class="box">
-            <h2>Carteira principal vs alvo</h2>
-            <div class="alloc" id="alloc"></div>
-          </section>
-          <section class="box">
-            <h2>$ tail -f argos.log</h2>
-            <ul class="tail" id="tail"><li>carregando…</li></ul>
-          </section>
-        </div>
+        <section class="box">
+          <h2>Carteira principal vs alvo</h2>
+          <div class="alloc" id="alloc"></div>
+        </section>
 
         <section class="box" id="satBox" hidden>
           <h2>🛰️ Carteira satélite <small id="satInfo"></small></h2>
-          <div class="res">
-            <div><div class="big num" id="satVal" style="color: var(--teal)">--</div><div class="lab" id="satLab">--</div></div>
-            <div class="alloc" id="satAlloc"></div>
-          </div>
+          <div class="sat-top"><span class="big num" id="satVal">--</span><span class="lab" id="satLab">--</span></div>
+          <div class="alloc" id="satAlloc"></div>
         </section>
 
-        <section class="box">
-          <h2>Fluxo de decisão</h2>
-          <div class="chips" id="chips"></div>
-          <svg class="flow" viewBox="0 0 760 170" role="img" aria-label="Fluxo de decisão do robô">
-            <defs><radialGradient id="gC" cx=".35" cy=".3"><stop offset="0" stop-color="#12352c"/><stop offset="1" stop-color="#071512"/></radialGradient></defs>
-            <path class="wire" d="M110 80 H250" stroke="#2ee6c8" stroke-width="2" fill="none"/>
-            <path class="wire" d="M330 80 H440" stroke="#5fb4ff" stroke-width="2" fill="none"/>
-            <path class="wire" id="wExe" d="M530 80 H640" stroke="#4f7067" stroke-width="2" fill="none"/>
-            <circle cx="70" cy="80" r="38" fill="url(#gC)" stroke="#2ee6c8" stroke-width="2"/>
-            <text x="70" y="85" text-anchor="middle" class="t" style="fill:#2ee6c8">◉</text>
-            <text x="70" y="140" text-anchor="middle" class="t">COLETOR</text>
-            <text x="70" y="156" text-anchor="middle" id="fCol">--</text>
-            <circle cx="290" cy="80" r="46" fill="url(#gC)" stroke="#5fb4ff" stroke-width="2.5"/>
-            <circle cx="290" cy="80" r="56" fill="none" stroke="#5fb4ff" stroke-opacity=".25"/>
-            <text x="290" y="77" text-anchor="middle" class="t" style="fill:#5fb4ff" id="fEstT">--</text>
-            <text x="290" y="93" text-anchor="middle" id="fEst">--</text>
-            <text x="290" y="152" text-anchor="middle" class="t">ESTRATÉGIA</text>
-            <circle cx="485" cy="80" r="40" fill="url(#gC)" stroke="#a78bfa" stroke-width="2"/>
-            <text x="485" y="86" text-anchor="middle" class="t" style="fill:#a78bfa;font-size:18px">⛨</text>
-            <text x="485" y="140" text-anchor="middle" class="t">PORTEIRO</text>
-            <text x="485" y="156" text-anchor="middle" id="fPor">--</text>
-            <circle cx="680" cy="80" r="38" fill="url(#gC)" stroke="#3df59a" stroke-width="2" stroke-dasharray="4 4"/>
-            <circle cx="680" cy="80" r="12" fill="none" stroke="#3df59a"/>
-            <path d="M680 62 V98 M662 80 H698" stroke="#3df59a"/>
-            <text x="680" y="140" text-anchor="middle" class="t">EXECUTOR</text>
-            <text x="680" y="156" text-anchor="middle" id="fExe">--</text>
-            <rect x="345" y="8" width="80" height="20" rx="4" fill="#0a1714" stroke="#24493f"/>
-            <text x="385" y="22" text-anchor="middle">gatilho 1 pt</text>
-          </svg>
-          <div class="tiles">
-            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">a cada 15 min · resumo às 7h</div></div>
-            <div class="tile"><div class="lab">Maior desvio agora</div><div class="v num" id="tDev">--</div><div class="s" id="tDevS">--</div></div>
-            <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
-            <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
-          </div>
-        </section>
-
-        <section class="box agents-box" aria-label="Agentes">
-          <h2>Agentes</h2>
+        <details class="box agents-box">
+          <summary>Agentes do robô (detalhes técnicos)</summary>
           <div class="agents">
         <div class="agent" style="--c: var(--teal)"><span class="ic">◉</span><span class="nm">COLETOR</span><span class="st" id="aColSt">LIVE</span><span class="ds" id="aCol">--</span></div>
         <div class="agent" style="--c: var(--blue)"><span class="ic">≈</span><span class="nm">ESTRATÉGIA</span><span class="st" id="aEstSt">CHECK</span><span class="ds" id="aEst">--</span></div>
@@ -280,7 +269,7 @@ h1 span { color: var(--amber); }
         <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
         <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer</span></div>
           </div>
-        </section>
+        </details>
     </main>
     <div class="foot"><span><a href="https://github.com/diogo385/Claude/tree/ccr-62184269-ceu6z3/simulado/arquivo/v1-btc-eth">carteira antiga</a></span><span>só saldo próprio · sem dívida</span></div>
   </div>
@@ -295,7 +284,7 @@ h1 span { color: var(--amber); }
   const CORES = { btc: "#ffb547", eth: "#a78bfa", sol: "#2ee6c8", xrp: "#5fb4ff", bnb: "#f5d547", link: "#7c9cff", doge: "#d9b26a" };
   const SIMB = { btc: "₿", eth: "Ξ" };
   const $ = id => document.getElementById(id);
-  const set = (id, t, cls) => { const e = $(id); e.textContent = t; if (cls !== undefined) e.className = e.className.replace(/\b(up|down|warn)\b/g, "").trim() + (cls ? " " + cls : ""); };
+  const set = (id, t, cls) => { const e = $(id); if (!e) return; e.textContent = t; if (cls !== undefined) e.className = e.className.replace(/\b(up|down|warn)\b/g, "").trim() + (cls ? " " + cls : ""); };
   const nf = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
   const casas = v => v >= 1000 ? 0 : v >= 10 ? 2 : 4;
   const brl = (v, d) => "R$ " + nf(v, d === undefined ? 2 : d);
@@ -320,7 +309,7 @@ h1 span { color: var(--amber); }
   }
 
   function montarEstrutura() {
-    const chips = $("chips"); chips.textContent = "";
+    const chips = $("chips") || el("div"); chips.textContent = "";
     ativos.forEach(a => {
       const c = el("div", "chip"); const b = el("b", "", `${SIMB[a] || "●"} ${a.toUpperCase()}`); b.style.color = CORES[a] || "#d9f2ea";
       c.append(b, el("span", "num", "--"), el("span", "num", "")); c.id = "chip-" + a; chips.appendChild(c);
@@ -354,6 +343,8 @@ h1 span { color: var(--amber); }
       if (mudou) montarEstrutura();
       aviso("");
     } catch (e) {
+      $("eq").innerHTML = `<text x="380" y="110" text-anchor="middle" class="vazio">sem dados do robô ainda</text>`;
+      $("pnlBody").innerHTML = `<tr><td colspan="9" class="empty">sem dados do robô ainda</td></tr>`;
       aviso("Ainda não encontrei os dados do robô. Se a carteira acabou de ser recomeçada, espere a próxima checagem (até 15 minutos) ou rode o robô manualmente no GitHub.");
     }
     render();
@@ -434,9 +425,12 @@ h1 span { color: var(--amber); }
     const ultExec = estado.ultima_execucao ? new Date(estado.ultima_execucao) : null;
     const horasDesde = ultExec ? (Date.now() - ultExec) / 36e5 : 999;
 
-    set("kVal", brl(v)); set("kOps", String(ops.length + opsSat.filter(o => +o.peso_antes > 0 || o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO").length));
+    const nPrinc = ops.length, nSatReb = opsSat.filter(o => +o.peso_antes > 0).length, nGiros = opsSat.filter(o => o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO").length;
+    const nTotal = nPrinc + nSatReb + nGiros;
+    set("kVal", brl(v)); set("kOps", String(nTotal));
+    set("sOps", String(nTotal)); set("sOpsS", `principal ${nPrinc} · satélite ${nSatReb} · giros ${nGiros}`);
     set("kRet", pct(v / capTot - 1), v >= capTot ? "up" : "down");
-    set("kRetLab", `em ${dias} ${dias === 1 ? "dia" : "dias"}`);
+    const ini = new Date(estado.inicio); set("kRetLab", `desde ${pad(ini.getDate())}/${pad(ini.getMonth() + 1)}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
     const vivo = horasDesde < 3;
     $("runDot").className = "dot" + (vivo ? "" : " off");
@@ -464,7 +458,6 @@ h1 span { color: var(--amber); }
     set("fEst", "maior desvio");
     set("fPor", usouHoje ? "limite do dia usado" : agiria ? "ordem seria aprovada" : "nada a aprovar");
     set("fExe", agiria ? "age na próxima checagem" : "sem ordem");
-    $("wExe").setAttribute("stroke", agiria ? "#3df59a" : "#4f7067");
     set("tDev", nf(Math.abs(dev[maior]) * 100, 1) + " pt", Math.abs(dev[maior]) >= GATILHO ? "warn" : "");
     set("tDevS", `${maior.toUpperCase()} · gatilho ${nf(gAgora * 100, 1)} pt`);
     set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital");
@@ -488,7 +481,10 @@ h1 span { color: var(--amber); }
     $("aVida").append(vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"} · ${falhas} ${falhas === 1 ? "falha" : "falhas"} em 24 h · ` : "sem checagem há mais de 3 h · ");
     const lk = el("a", "saude-link", "execuções"); lk.href = "https://github.com/diogo385/Claude/actions/workflows/robo-simulado.yml"; lk.target = "_blank"; lk.rel = "noopener"; $("aVida").appendChild(lk);
     set("aVidaSt", !vivo ? "ATRASO" : falhas ? "FALHAS" : "OK");
-    set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
+    set("sSaude", falhas ? `${falhas} ${falhas === 1 ? "falha" : "falhas"}` : "sem falhas", falhas ? "warn" : "up");
+    const ss = $("sSaudeS"); ss.textContent = "nas últimas 24 h · ";
+    const lk2 = el("a", "", "ver execuções"); lk2.href = lk.href; lk2.target = "_blank"; lk2.rel = "noopener"; ss.appendChild(lk2);
+    set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${nTotal} ${nTotal === 1 ? "operação" : "operações"}`);
 
     ativos.concat(["reais"]).forEach(a => {
       const alvo = a === "reais" ? 1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0) : estado.alvo[a];
@@ -497,13 +493,21 @@ h1 span { color: var(--amber); }
       $("fill-" + a).style.width = Math.min(100, w[a] * 100) + "%";
     });
 
-    if (ops.length) {
-      const o = ops[ops.length - 1];
-      set("tLast", brl(+o.valor_reais), o.tipo === "VENDA" ? "up" : "");
-      set("tLastS", `${o.tipo === "VENDA" ? "venda" : "compra"} de ${o.ativo} · ${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)}`);
-    } else { set("tLast", "nenhuma"); set("tLastS", ""); }
+    const todasOps = ops.map(o => Object.assign({ ond: "principal" }, o))
+      .concat(opsSat.filter(o => !(o.tipo === "COMPRA" && +o.peso_antes === 0)).map(o => Object.assign({ ond: o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO" ? "giro" : "satélite" }, o)))
+      .sort((x, y) => x.data_hora < y.data_hora ? -1 : 1);
+    if (todasOps.length) {
+      const o = todasOps[todasOps.length - 1];
+      const venda = o.tipo === "VENDA" || o.tipo === "LUCRO";
+      set("tLast", `${venda ? "venda" : "compra"} ${o.ativo}`, venda ? "up" : "");
+      set("tLastS", `${brl(+o.valor_reais)} · ${o.ond} · ${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)} ${o.data_hora.slice(11, 16)}`);
+    } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem operações"); }
+    // situação, reserva e saúde
+    set("sSit", estado.pausado ? "PAUSADO" : estado.trava_queda ? "trava de queda" : vivo ? "operando" : "ATRASO", estado.pausado || estado.trava_queda || !vivo ? "warn" : "up");
+    set("sSitS", estado.pausado ? "mande /retomar no Telegram" : estado.trava_queda ? "compras de giro pausadas" : `última checagem ${ultExec ? ultExec.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "--"}`);
+    set("sRes", brl(res.saldo, 0)); set("sResS", `${res.usados.length} de 4 degraus usados`);
 
-    const tail = $("tail"); tail.textContent = "";
+    const tail = $("tail") || el("ul"); tail.textContent = "";
     const hora = ultExec ? `${pad(ultExec.getHours())}:${pad(ultExec.getMinutes())}` : "--:--";
     const ep = estado.ultimos_precos || {};
     const nHoje = estado.ops_dia && estado.ops_dia.data === hojeBR ? estado.ops_dia.n : 0;
@@ -544,12 +548,13 @@ h1 span { color: var(--amber); }
     const v24 = (estado.valores_24h || [])[0];
     if (v24) { const q = v24[0].slice(0, 16).replace("T", " "); const dep = totalDep - depositadoAte(q); bloco("24 horas", v - v24[1] - dep, v24[1] + dep); }
     else bloco("24 horas", 0, 0);
+    // 7 e 30 dias só aparecem quando já existe histórico tão antigo; antes disso, "desde o início" responde
     [[7, "7 dias"], [30, "30 dias"]].forEach(([n, rot]) => {
       const limite = new Date(Date.now() - 3 * 3600e3 - n * 864e5).toISOString().slice(0, 10);
-      const linha = hist.filter(h => h.data <= limite).pop() || hist[0];
-      if (!linha) return bloco(rot, 0, 0);
+      const linha = hist.filter(h => h.data <= limite).pop();
+      if (!linha) return;
       const capBase = +linha.capital || depositadoAte(linha.data + " 23:59"), base = +linha.patrimonio, dep = totalDep - capBase;
-      bloco(rot + (linha === hist[0] && linha.data > limite ? " (desde o início)" : ""), v - base - dep, base + dep);
+      bloco(rot, v - base - dep, base + dep);
     });
     bloco("desde o início", v - totalDep, totalDep);
 
@@ -606,24 +611,29 @@ h1 span { color: var(--amber); }
 
   function grafico(vAgora, vpAgora) {
     quedaPico(vAgora);
-    const pts = hist.map(r => ({ d: r.data, a: +r.patrimonio, p: +r.carteira_parada }));
-    pts.push({ d: "agora", a: vAgora, p: vpAgora });
+    const capDe = r => +r.capital || depositadoAte(r.data + " 23:59");
+    const pts = hist.map(r => ({ d: r.data, a: +r.patrimonio - capDe(r), p: +r.carteira_parada - capDe(r), cap: capDe(r) }));
+    const capAgora = depositadoAte("9999");
+    pts.push({ d: "agora", a: vAgora - capAgora, p: vpAgora - capAgora, cap: capAgora });
     const N = pts.length, W = 760, H = 220, L = 50, R = 12, T = 12, B = 22;
-    const base = (estado && estado.capital_total) || CAPITAL;
-    const vals = pts.flatMap(x => [x.a, x.p]).concat([base]);
-    let lo = Math.min(...vals), hi = Math.max(...vals); const fol = Math.max(5, (hi - lo) * .15); lo -= fol; hi += fol;
+    const base = 0;
+    const vals = pts.flatMap(x => [x.a, x.p]).concat([0]);
+    let lo = Math.min(...vals), hi = Math.max(...vals); const fol = Math.max(3, (hi - lo) * .2); lo -= fol; hi += fol;
     const x = i => N === 1 ? (L + W - R) / 2 : L + (W - L - R) * i / (N - 1), y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
     let o = "";
-    for (let k = 0; k <= 3; k++) { const v = lo + (hi - lo) * k / 3; o += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#173029" stroke-dasharray="2 4"/><text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${Math.round(v)}</text>`; }
+    for (let k = 0; k <= 3; k++) { const v = lo + (hi - lo) * k / 3; o += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#173029" stroke-dasharray="2 4"/><text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${Math.round(v) === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(Math.round(v))}</text>`; }
+    // aportes: onde o capital depositado aumentou
+    pts.forEach((q, i) => { if (i && q.cap > pts[i - 1].cap + 0.5) { const xx = (x(i - 1) + x(i)) / 2;
+      o += `<line x1="${xx}" x2="${xx}" y1="${T}" y2="${H - B}" stroke="#ffb547" stroke-opacity=".5" stroke-dasharray="3 3"/><text x="${xx + 4}" y="${T + 10}" style="fill:#ffb547">aporte +R$ ${Math.round(q.cap - pts[i - 1].cap)}</text>`; } });
     o += `<line x1="${L}" x2="${W - R}" y1="${y(base)}" y2="${y(base)}" stroke="#24493f"/>`;
     const passo = Math.max(1, Math.ceil(N / 6));
     pts.forEach((q, i) => { if (i % passo === 0 || i === N - 1) { const rot = q.d === "agora" ? "agora" : `${q.d.slice(8, 10)}/${q.d.slice(5, 7)}`; o += `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === N - 1 ? "end" : i === 0 ? "start" : "middle"}">${rot}</text>`; } });
     const path = k => pts.map((q, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(q[k]).toFixed(1)}`).join("");
-    if (N > 1) o += `<path d="${path("a")}L${x(N - 1)},${H - B}L${x(0)},${H - B}Z" fill="#3df59a" fill-opacity=".08"/>`;
+    if (N > 1) o += `<path d="${path("a")}L${x(N - 1)},${y(0)}L${x(0)},${y(0)}Z" fill="#3df59a" fill-opacity=".08"/>`;
     o += `<path d="${path("p")}" fill="none" stroke="#ffb547" stroke-width="1.5" stroke-dasharray="4 3"/>`;
     o += `<path d="${path("a")}" fill="none" stroke="#3df59a" stroke-width="2.2"/>`;
     o += `<circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="4" fill="#3df59a"/><circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="9" fill="none" stroke="#3df59a" stroke-opacity=".4"/>`;
-    o += `<text x="${L + 8}" y="${H - B - 22}" style="fill:#3df59a">— robô</text><text x="${L + 8}" y="${H - B - 8}" style="fill:#ffb547">- - sem robô</text>`;
+    o += `<text x="${L + 8}" y="${H - B - 22}" style="fill:#3df59a">— robô: ${pts[N - 1].a >= 0 ? "+" : "−"}R$ ${Math.abs(pts[N - 1].a).toFixed(2).replace(".", ",")}</text><text x="${L + 8}" y="${H - B - 8}" style="fill:#ffb547">- - sem robô: ${pts[N - 1].p >= 0 ? "+" : "−"}R$ ${Math.abs(pts[N - 1].p).toFixed(2).replace(".", ",")}</text>`;
     $("eq").innerHTML = o;
   }
 
