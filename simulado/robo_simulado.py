@@ -1,4 +1,4 @@
-"""Argo Trade Cripto · robô de rebalanceamento em MODO SIMULADO (carteira diversificada).
+"""Argos Trade Cripto · robô de rebalanceamento em MODO SIMULADO (carteira diversificada).
 
 - Usa preços reais e públicos da Binance (sem conta, sem chave).
 - Opera um dinheiro de mentira: R$ 1.000 iniciais.
@@ -39,7 +39,7 @@ CUSTO = TAXA + DESLIZE
 ORDEM_MIN = 20.0         # ignora ajustes menores que R$ 20
 FONTES = ["https://data-api.binance.vision", "https://api.binance.com"]
 BRASILIA = timezone(timedelta(hours=-3))
-ROTULO = "🧪 Argo Trade Cripto · SIMULADO"
+ROTULO = "🧪 Argos Trade Cripto · SIMULADO"
 
 
 # ---------- utilidades ----------

@@ -1,4 +1,4 @@
-# Argo Trade Cripto
+# Argos Trade Cripto
 
 Sistema autônomo de rebalanceamento de carteira cripto, só no mercado à vista e só com saldo próprio, sem nenhuma forma de dívida.
 
@@ -9,4 +9,4 @@ Sistema autônomo de rebalanceamento de carteira cripto, só no mercado à vista
 | `simulado/` | Robô em modo simulado (carteira de mentira), rodando todo dia às 21h e avisando no Telegram |
 | `painel-ativos.html` | Painel de mercado ao vivo (abrir no navegador do computador) |
 
-Parte da família **Argo Trade**. Um sistema para a B3 está planejado.
+Parte da família **Argos Trade** (na mitologia grega, Argos é o gigante de cem olhos que nunca dormia). Um sistema para a B3 está planejado.

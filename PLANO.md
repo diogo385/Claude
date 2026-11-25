@@ -1,4 +1,4 @@
-# Argo Trade Cripto · Plano
+# Argos Trade Cripto · Plano
 
 Versão 1.1 · 25/11/2026 · funcionamento 100% autônomo, com notificações no Telegram
 
