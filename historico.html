@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argos Trade Cripto · Histórico</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+/* Histórico de operações do robô simulado: principal, satélite, oportunidades e reserva */
+:root {
+  --bg: #06100e; --panel: #0a1714; --panel-2: #0d1f1b; --line: #173029; --line-hi: #24493f;
+  --fg: #d9f2ea; --muted: #7fa398; --dim: #4f7067;
+  --green: #3df59a; --teal: #2ee6c8; --amber: #ffb547; --red: #ff5d6c; --violet: #a78bfa;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--mono); font-size: 13px; line-height: 1.45;
+  background-image: radial-gradient(900px 420px at 50% -10%, rgba(61, 245, 154, .08), transparent 70%); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 14px; }
+.num { font-variant-numeric: tabular-nums; }
+.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand img { width: 48px; height: 48px; border-radius: 50%; }
+h1 { font-family: var(--display); font-size: clamp(1.3rem, 3vw, 1.8rem); margin: 0; }
+h1 span { color: var(--amber); }
+.links { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--teal); text-decoration: none; border: 1px solid var(--teal); border-radius: 6px; padding: 6px 12px; background: rgba(46,230,200,.06); }
+.btn.ghost { color: var(--muted); border-color: var(--line-hi); background: none; }
+.btn:hover { box-shadow: 0 0 14px rgba(46,230,200,.3); }
+.btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.box { border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); padding: 12px; min-width: 0; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.seg button { font: inherit; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 5px 10px; cursor: pointer; border: 1px solid var(--line-hi); background: var(--panel); color: var(--muted); }
+.seg button[aria-pressed="true"] { color: var(--teal); border-color: var(--teal); }
+.seg button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.count { color: var(--dim); font-size: 11px; }
+.scroll { overflow-x: auto; }
+.log { width: 100%; border-collapse: collapse; font-size: 12px; }
+.log td { padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+.log tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; letter-spacing: .08em; padding: 5px 6px; }
+.side { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.side.buy { color: var(--violet); border: 1px solid var(--violet); }
+.side.sell { color: var(--green); border: 1px solid var(--green); }
+.side.sat { color: var(--teal); border: 1px solid var(--teal); margin-left: 4px; }
+.side.aporte { color: var(--amber); border: 1px solid var(--amber); }
+.why { color: var(--muted); font-size: 11px; }
+.r { text-align: right; white-space: nowrap; }
+.warn { color: var(--amber); }
+.empty { color: var(--muted); padding: 10px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><img src="assets/simbolo-argos.png" alt=""><h1><span>Argos Trade</span> Cripto · Histórico</h1></div>
+    <div class="links"><a class="btn" href="./">← Monitor</a><a class="btn ghost" href="extrato.html">Extrato</a></div>
+  </header>
+
+  <section class="box">
+    <div class="bar">
+      <div class="seg" id="filtro">
+        <button type="button" data-f="" aria-pressed="true">Tudo</button>
+        <button type="button" data-f="principal" aria-pressed="false">Principal</button>
+        <button type="button" data-f="satelite" aria-pressed="false">Satélite</button>
+        <button type="button" data-f="oport" aria-pressed="false">Oportunidades</button>
+        <button type="button" data-f="reserva" aria-pressed="false">Reserva</button>
+      </div>
+      <span class="count" id="count">--</span>
+    </div>
+    <div class="scroll" id="logBox"><div class="empty">carregando…</div></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const nf = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const casas = v => v >= 1000 ? 0 : v >= 10 ? 2 : 4;
+  const brl = (v, d) => "R$ " + nf(v, d === undefined ? 2 : d);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+  const SIMB = { btc: "₿", eth: "Ξ" };
+  let estado = null, ops = [], opsSat = [], filtro = "";
+
+  async function baixar(arq) {
+    const r = await fetch(`simulado/${arq}?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(arq);
+    return r.text();
+  }
+  function csv(txt) {
+    const linhas = txt.trim().split(/\r?\n/); const cab = linhas.shift().split(";");
+    return linhas.filter(Boolean).map(l => { const v = l.split(";"); const o = {}; cab.forEach((c, i) => o[c] = v[i]); return o; });
+  }
+
+  function grupo(o) {
+    if (o.tipo === "APORTE") return "reserva";
+    if (o.tipo === "OPORTUNIDADE" || o.tipo === "LUCRO") return "oport";
+    return o.sat ? "satelite" : "principal";
+  }
+
+  function render() {
+    const box = $("logBox"); box.textContent = "";
+    const sat = estado && estado.satelite;
+    const aps = ((estado && estado.reserva && estado.reserva.aportes) || []).map(a => ({ data_hora: a.data_hora, tipo: "APORTE", ap: a }));
+    const sats = opsSat.map(o => Object.assign({ sat: true }, o));
+    const todas = ops.concat(aps, sats).sort((x, y) => x.data_hora < y.data_hora ? -1 : x.data_hora > y.data_hora ? 1 : (x.tipo === "APORTE" ? -1 : 1));
+    const linhas = todas.filter(o => !filtro || grupo(o) === filtro);
+    $("count").textContent = `${linhas.length} ${linhas.length === 1 ? "registro" : "registros"}`;
+    if (!linhas.length) { box.appendChild(el("div", "empty", "Nenhuma operação ainda.")); return; }
+    const t = el("table", "log"), tb = el("tbody");
+    let dia = null;
+    linhas.slice().reverse().forEach(o => {
+      const d = o.data_hora.slice(0, 10);
+      if (d !== dia) { dia = d; const tr = el("tr", "dia"), td = el("td", "", `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`); td.colSpan = 4; tr.appendChild(td); tb.appendChild(tr); }
+      const tr = el("tr");
+      tr.appendChild(el("td", "num", o.data_hora.slice(11, 16)));
+      if (o.tipo === "APORTE") {
+        const t2 = el("td"); t2.appendChild(el("span", "side aporte", "APORTE")); tr.appendChild(t2);
+        const t3 = el("td"); t3.append(el("b", "", "$ Reserva → carteira principal"), el("div", "why", `degrau de ${Math.round(o.ap.degrau * 100)}% · a carteira estava ${nf(o.ap.queda * 100, 1)}% abaixo do pico`)); tr.appendChild(t3);
+        tr.appendChild(el("td", "r num warn", brl(o.ap.valor))); tb.appendChild(tr); return;
+      }
+      const a = o.ativo.toLowerCase();
+      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" || o.tipo === "LUCRO" ? "sell" : "buy"), o.tipo)); if (o.sat) td2.appendChild(el("span", "side sat", "SAT")); tr.appendChild(td2);
+      const td3 = el("td"); const q = +o.quantidade;
+      td3.append(el("b", "", `${SIMB[a] || "●"} ${o.ativo} · ${nf(q, q < 1 ? 6 : 4)}`),
+        el("div", "why", (o.tipo === "OPORTUNIDADE" ? "compra de oportunidade com a reserva da satélite · vende com +1,5%" :
+          o.tipo === "LUCRO" ? "posição de oportunidade vendida com +1,5% · dinheiro voltou para a reserva da satélite" :
+          o.sat && +o.peso_antes === 0 ? "montagem da satélite" :
+          `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da ${o.sat ? "satélite" : "carteira"} (alvo ${Math.round(((o.sat ? sat && sat.alvo[a] : estado && estado.alvo[a]) || 0) * 100)}%)`) +
+          ` · preço ${brl(+o.preco, +o.preco < 1 ? 4 : casas(+o.preco))} · taxa ${brl(+o.taxa)}`));
+      tr.appendChild(td3);
+      tr.appendChild(el("td", "r num", brl(+o.valor_reais)));
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); box.appendChild(t);
+  }
+
+  $("filtro").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    filtro = b.dataset.f; document.querySelectorAll("#filtro button").forEach(x => x.setAttribute("aria-pressed", x === b)); render();
+  });
+
+  async function carregar() {
+    try { estado = JSON.parse(await baixar("estado.json")); } catch (e) { estado = null; }
+    try { ops = csv(await baixar("operacoes.csv")); } catch (e) { ops = []; }
+    try { opsSat = csv(await baixar("operacoes_satelite.csv")); } catch (e) { opsSat = []; }
+    render();
+  }
+  carregar(); setInterval(carregar, 5 * 60000);
+})();
+</script>
+</body>
+</html>
