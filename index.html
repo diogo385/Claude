@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argo Trade Cripto · Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+/* Terminal do Argo Trade Cripto com dados reais do robô simulado (simulado/*) e preços ao vivo da Binance. */
+:root {
+  --bg: #06100e; --panel: #0a1714; --panel-2: #0d1f1b; --line: #173029; --line-hi: #24493f;
+  --fg: #d9f2ea; --muted: #7fa398; --dim: #4f7067;
+  --green: #3df59a; --teal: #2ee6c8; --amber: #ffb547; --red: #ff5d6c; --violet: #a78bfa; --blue: #5fb4ff;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--mono); font-size: 13px; line-height: 1.45;
+  background-image: radial-gradient(900px 420px at 50% -10%, rgba(61, 245, 154, .08), transparent 70%); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 16px 16px 40px; }
+.frame { border: 1px solid var(--line-hi); border-radius: 14px; background: var(--panel); overflow: hidden; }
+.bar { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.mode { border: 1px solid var(--amber); color: var(--amber); border-radius: 4px; padding: 1px 8px; }
+.num { font-variant-numeric: tabular-nums; }
+.up { color: var(--green); } .down { color: var(--red); } .warn { color: var(--amber); }
+.msg { margin: 12px; padding: 10px 12px; border: 1px dashed var(--amber); color: var(--amber); border-radius: 8px; }
+
+.head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 18px; border-bottom: 1px solid var(--line); }
+.logo { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #12352c, #071512); border: 1px solid var(--line-hi); box-shadow: 0 0 24px rgba(46,230,200,.2); }
+h1 { font-family: var(--display); font-size: clamp(1.4rem, 3.2vw, 2rem); margin: 0; line-height: 1.1; }
+h1 span { color: var(--amber); }
+.ver { font-family: var(--mono); font-size: 11px; color: var(--amber); border: 1px solid var(--amber); border-radius: 4px; padding: 1px 6px; vertical-align: middle; margin-left: 8px; }
+.sub { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 8px; color: var(--muted); font-size: 12px; }
+.sub b { color: var(--fg); font-weight: 500; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); margin-right: 6px; animation: pulse 1.6s ease-in-out infinite; }
+.dot.off { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+@keyframes pulse { 50% { opacity: .35; } }
+.tag { border: 1px solid var(--green); color: var(--green); border-radius: 4px; padding: 1px 8px; font-size: 11px; }
+.kpis { display: grid; grid-template-columns: repeat(2, auto); gap: 6px 26px; text-align: right; }
+.kpis .big { font-family: var(--display); font-size: 1.7rem; font-weight: 700; line-height: 1; }
+.kpis .lab { color: var(--muted); font-size: 11px; }
+
+.body { display: grid; grid-template-columns: 250px minmax(0, 1fr); }
+.agents { border-right: 1px solid var(--line); padding: 12px; display: grid; gap: 8px; align-content: start; }
+.sec { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin: 2px 2px 4px; }
+.sec b { color: var(--green); font-weight: 500; letter-spacing: 0; text-transform: none; }
+.agent { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+.ic { grid-row: span 2; width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: var(--c); color: #06100e; font-weight: 700; }
+.agent .nm { font-weight: 700; font-size: 12px; letter-spacing: .04em; color: var(--c); }
+.agent .st { font-size: 10px; font-weight: 600; border: 1px solid var(--c); color: var(--c); border-radius: 4px; padding: 0 6px; justify-self: end; }
+.agent .ds { grid-column: 2 / 4; color: var(--muted); font-size: 11px; }
+.agent .ds b { color: var(--fg); font-weight: 500; }
+
+.main { padding: 12px; display: grid; gap: 12px; min-width: 0; }
+.box { border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); padding: 12px; min-width: 0; }
+.box h2 { margin: 0 0 10px; display: flex; justify-content: space-between; gap: 8px; font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.box h2 small { letter-spacing: 0; text-transform: none; color: var(--dim); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.chip { display: flex; gap: 10px; align-items: center; border: 1px solid var(--line-hi); border-radius: 8px; padding: 6px 10px; background: var(--panel); }
+.chip b { font-size: 12px; } .chip span { color: var(--muted); font-size: 11px; }
+.flow { width: 100%; height: auto; display: block; }
+.flow text { font-family: var(--mono); fill: var(--muted); font-size: 11px; }
+.flow .t { fill: var(--fg); font-weight: 700; font-size: 12px; }
+.flow .wire { stroke-dasharray: 5 5; animation: flow 1.2s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -20; } }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tile { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--panel); }
+.tile .lab { color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.tile .v { font-family: var(--display); font-size: 1.35rem; font-weight: 700; margin-top: 2px; }
+.tile .s { color: var(--dim); font-size: 11px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.alloc { display: grid; gap: 12px; }
+.alloc .row { display: grid; gap: 4px; }
+.alloc .top { display: flex; justify-content: space-between; font-size: 12px; }
+.alloc .top span { color: var(--muted); }
+.track { position: relative; height: 12px; border-radius: 3px; background: var(--panel); border: 1px solid var(--line); }
+.band { position: absolute; top: 0; bottom: 0; background: rgba(61,245,154,.12); border-inline: 1px dashed rgba(61,245,154,.5); }
+.fill { position: absolute; top: 2px; bottom: 2px; left: 2px; border-radius: 2px; background: var(--c); box-shadow: 0 0 10px var(--c); max-width: calc(100% - 4px); }
+.mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--fg); }
+.note { color: var(--dim); font-size: 11px; margin: 10px 0 0; }
+.tail { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 11.5px; }
+.tail li { color: var(--muted); }
+.tail time { color: var(--dim); margin-right: 8px; }
+.tail .ok { color: var(--green); } .tail .w { color: var(--amber); } .tail .info { color: var(--teal); }
+.eq { width: 100%; height: auto; display: block; }
+.eq text { font-family: var(--mono); fill: var(--dim); font-size: 10px; }
+.log { width: 100%; border-collapse: collapse; font-size: 12px; }
+.log td { padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+.log tr:first-child td { background: rgba(255,181,71,.06); }
+.side { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 6px; }
+.side.buy { color: var(--violet); border: 1px solid var(--violet); }
+.side.sell { color: var(--green); border: 1px solid var(--green); }
+.log .why { color: var(--muted); font-size: 11px; }
+.log .r { text-align: right; white-space: nowrap; }
+.empty { color: var(--muted); padding: 10px 0; }
+.scroll { overflow-x: auto; }
+.foot { color: var(--dim); font-size: 11px; padding: 10px 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.foot a { color: var(--teal); }
+@media (max-width: 900px) {
+  .body { grid-template-columns: 1fr; }
+  .agents { border-right: 0; border-bottom: 1px solid var(--line); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .agents .sec { grid-column: 1 / -1; }
+  .two { grid-template-columns: 1fr; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .head { grid-template-columns: auto minmax(0, 1fr); }
+  .kpis { grid-column: 1 / -1; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) { .dot, .flow .wire { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="frame">
+    <div class="bar"><span>Argo Trade Cripto · terminal · BTC/BRL e ETH/BRL · dados do robô simulado + preços ao vivo</span><span class="mode">simulado · dinheiro de mentira</span></div>
+    <div class="msg" id="msg" hidden></div>
+
+    <header class="head">
+      <div class="logo" aria-hidden="true">
+        <svg width="38" height="38" viewBox="0 0 40 40" fill="none"><path d="M20 4 L20 25" stroke="#d9f2ea" stroke-width="2"/><path d="M20 6 L31 22 L20 22 Z" fill="#2ee6c8"/><path d="M19 9 L11 22 L19 22 Z" fill="#3df59a" opacity=".7"/><path d="M6 26 H34 L29 33 H11 Z" fill="#ffb547"/></svg>
+      </div>
+      <div>
+        <h1><span>Argo Trade</span> Cripto <span class="ver">v0.1 · simulado</span></h1>
+        <div class="sub">
+          <span><i class="dot" id="runDot"></i><span id="runTxt">carregando</span> · <span class="num" id="clock">--:--:--</span></span>
+          <span class="tag">REBALANCEAMENTO DIÁRIO · ALVO 50/15/35</span>
+          <span>Binance · BTC <b class="num" id="hBtc">--</b> · ETH <b class="num" id="hEth">--</b></span>
+        </div>
+      </div>
+      <div class="kpis">
+        <div><div class="big num" id="kVal">--</div><div class="lab">patrimônio agora (de mentira)</div></div>
+        <div><div class="big num" id="kOps">--</div><div class="lab">operações</div></div>
+        <div><div class="big num" id="kRet">--</div><div class="lab" id="kRetLab">desde o início</div></div>
+        <div><div class="big num" id="kVs">--</div><div class="lab">vs carteira parada</div></div>
+      </div>
+    </header>
+
+    <div class="body">
+      <aside class="agents" aria-label="Agentes">
+        <div class="sec">Agentes <b>8</b></div>
+        <div class="agent" style="--c: var(--teal)"><span class="ic">◉</span><span class="nm">COLETOR</span><span class="st" id="aColSt">LIVE</span><span class="ds" id="aCol">--</span></div>
+        <div class="agent" style="--c: var(--blue)"><span class="ic">≈</span><span class="nm">ESTRATÉGIA</span><span class="st" id="aEstSt">CHECK</span><span class="ds" id="aEst">--</span></div>
+        <div class="agent" style="--c: var(--violet)"><span class="ic">⛨</span><span class="nm">PORTEIRO DE RISCO</span><span class="st" id="aPorSt">ARMED</span><span class="ds" id="aPor">--</span></div>
+        <div class="agent" style="--c: var(--green)"><span class="ic">⇄</span><span class="nm">EXECUTOR</span><span class="st">FLAT</span><span class="ds" id="aExe">--</span></div>
+        <div class="agent" style="--c: var(--amber)"><span class="ic">✈</span><span class="nm">TELEGRAM</span><span class="st">ACTIVE</span><span class="ds" id="aTel">--</span></div>
+        <div class="agent" style="--c: var(--red)"><span class="ic">♥</span><span class="nm">SINAL DE VIDA</span><span class="st" id="aVidaSt">OK</span><span class="ds" id="aVida">--</span></div>
+        <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
+        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer · lê o resumo no Telegram</span></div>
+      </aside>
+
+      <main class="main">
+        <section class="box">
+          <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>ciclo diário · 21:00</small></h2>
+          <div class="chips">
+            <div class="chip"><b style="color: var(--amber)">₿ BTC</b><span class="num" id="cBtc">--</span><span class="num" id="cBtcC">--</span></div>
+            <div class="chip"><b style="color: var(--violet)">Ξ ETH</b><span class="num" id="cEth">--</span><span class="num" id="cEthC">--</span></div>
+            <div class="chip"><b style="color: var(--green)">R$</b><span class="num" id="cBrl">--</span></div>
+          </div>
+          <svg class="flow" viewBox="0 0 760 170" role="img" aria-label="Fluxo de decisão do robô">
+            <defs><radialGradient id="gC" cx=".35" cy=".3"><stop offset="0" stop-color="#12352c"/><stop offset="1" stop-color="#071512"/></radialGradient></defs>
+            <path class="wire" d="M110 80 H250" stroke="#2ee6c8" stroke-width="2" fill="none"/>
+            <path class="wire" d="M330 80 H440" stroke="#5fb4ff" stroke-width="2" fill="none"/>
+            <path class="wire" id="wExe" d="M530 80 H640" stroke="#4f7067" stroke-width="2" fill="none"/>
+            <circle cx="70" cy="80" r="38" fill="url(#gC)" stroke="#2ee6c8" stroke-width="2"/>
+            <text x="70" y="85" text-anchor="middle" class="t" style="fill:#2ee6c8">◉</text>
+            <text x="70" y="140" text-anchor="middle" class="t">COLETOR</text>
+            <text x="70" y="156" text-anchor="middle" id="fCol">--</text>
+            <circle cx="290" cy="80" r="46" fill="url(#gC)" stroke="#5fb4ff" stroke-width="2.5"/>
+            <circle cx="290" cy="80" r="56" fill="none" stroke="#5fb4ff" stroke-opacity=".25"/>
+            <text x="290" y="77" text-anchor="middle" class="t" style="fill:#5fb4ff">50/15/35</text>
+            <text x="290" y="93" text-anchor="middle" id="fEst">--</text>
+            <text x="290" y="152" text-anchor="middle" class="t">ESTRATÉGIA</text>
+            <circle cx="485" cy="80" r="40" fill="url(#gC)" stroke="#a78bfa" stroke-width="2"/>
+            <text x="485" y="86" text-anchor="middle" class="t" style="fill:#a78bfa;font-size:18px">⛨</text>
+            <text x="485" y="140" text-anchor="middle" class="t">PORTEIRO</text>
+            <text x="485" y="156" text-anchor="middle" id="fPor">--</text>
+            <circle cx="680" cy="80" r="38" fill="url(#gC)" stroke="#3df59a" stroke-width="2" stroke-dasharray="4 4"/>
+            <circle cx="680" cy="80" r="12" fill="none" stroke="#3df59a"/>
+            <path d="M680 62 V98 M662 80 H698" stroke="#3df59a"/>
+            <text x="680" y="140" text-anchor="middle" class="t">EXECUTOR</text>
+            <text x="680" y="156" text-anchor="middle" id="fExe">--</text>
+            <rect x="345" y="8" width="80" height="20" rx="4" fill="#0a1714" stroke="#24493f"/>
+            <text x="385" y="22" text-anchor="middle">gatilho 2 pt</text>
+          </svg>
+          <div class="tiles">
+            <div class="tile"><div class="lab">Próximo ciclo</div><div class="v num" id="tNext">--</div><div class="s">todo dia às 21:00 (Brasília)</div></div>
+            <div class="tile"><div class="lab">Maior desvio agora</div><div class="v num" id="tDev">--</div><div class="s" id="tDevS">--</div></div>
+            <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
+            <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
+          </div>
+        </section>
+
+        <div class="two">
+          <section class="box">
+            <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
+            <div class="alloc">
+              <div class="row"><div class="top"><b>BTC</b><span class="num" id="pBtc">--</span></div>
+                <div class="track"><div class="band" style="left:48%;width:4%"></div><div class="fill" id="fBtc" style="--c: var(--amber); width:0"></div><div class="mark" style="left:50%"></div></div></div>
+              <div class="row"><div class="top"><b>ETH</b><span class="num" id="pEth">--</span></div>
+                <div class="track"><div class="band" style="left:13%;width:4%"></div><div class="fill" id="fEth" style="--c: var(--violet); width:0"></div><div class="mark" style="left:15%"></div></div></div>
+              <div class="row"><div class="top"><b>Reais</b><span class="num" id="pBrl">--</span></div>
+                <div class="track"><div class="fill" id="fBrl" style="--c: var(--green); width:0"></div><div class="mark" style="left:35%"></div></div></div>
+            </div>
+            <p class="note">Calculado com os preços de agora. O robô só age às 21h, se um ativo estiver 2 pontos ou mais fora do alvo.</p>
+          </section>
+          <section class="box">
+            <h2>$ tail -f argo.log <small>última execução</small></h2>
+            <ul class="tail" id="tail"><li>carregando…</li></ul>
+          </section>
+        </div>
+
+        <section class="box">
+          <h2>Patrimônio <small>robô vs carteira parada · início R$ 1.000 · último ponto = agora</small></h2>
+          <svg class="eq" id="eq" viewBox="0 0 760 150" role="img" aria-label="Curva de patrimônio do robô simulado"></svg>
+        </section>
+
+        <section class="box">
+          <h2>Diário de operações <small id="logCount">--</small></h2>
+          <div class="scroll" id="logBox"><div class="empty">carregando…</div></div>
+        </section>
+      </main>
+    </div>
+    <div class="foot"><span>Dados do robô atualizados todo dia ~21h · preços ao vivo a cada 30 s · <a href="painel-ativos.html">mercado ao vivo →</a></span><span>só saldo próprio · sem margem · sem saque</span></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const ALVO = { btc: 0.50, eth: 0.15 }, GATILHO = 0.02, CAPITAL = 1000;
+  const FONTES = ["https://data-api.binance.vision", "https://api.binance.com"];
+  const $ = id => document.getElementById(id);
+  const set = (id, t, cls) => { const e = $(id); e.textContent = t; if (cls !== undefined) e.className = e.className.replace(/\b(up|down|warn)\b/g, "").trim() + (cls ? " " + cls : ""); };
+  const nf = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const brl = (v, d = 2) => "R$ " + nf(v, d);
+  const sgn = v => (v > -0.00005 ? "+" : "−");
+  const pct = (v, d = 1) => sgn(v) + nf(Math.abs(v) * 100, d) + "%";
+  const pad = v => String(v).padStart(2, "0");
+  const brasilia = () => new Date(Date.now() - 3 * 3600e3); // horário de Brasília (UTC−3) lido com getUTC*
+
+  let estado = null, hist = [], ops = [], px = null, px24 = {}, pxHora = 0;
+
+  function aviso(t) { const m = $("msg"); m.textContent = t; m.hidden = !t; }
+
+  function csv(txt) {
+    const linhas = txt.trim().split(/\r?\n/); const cab = linhas.shift().split(";");
+    return linhas.filter(Boolean).map(l => { const v = l.split(";"); const o = {}; cab.forEach((c, i) => o[c] = v[i]); return o; });
+  }
+  async function baixar(arq) {
+    const r = await fetch(`simulado/${arq}?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(arq);
+    return r.text();
+  }
+  async function carregarRobo() {
+    try {
+      estado = JSON.parse(await baixar("estado.json"));
+      hist = csv(await baixar("historico.csv"));
+      try { ops = csv(await baixar("operacoes.csv")); } catch (e) { ops = []; }
+      aviso("");
+    } catch (e) {
+      aviso("Ainda não encontrei os dados do robô. Se ele acabou de ser ligado, espere a primeira execução.");
+    }
+    render();
+  }
+  async function carregarPrecos() {
+    for (const base of FONTES) {
+      try {
+        const q = encodeURIComponent(JSON.stringify(["BTCBRL", "ETHBRL"]));
+        const r = await fetch(`${base}/api/v3/ticker/24hr?symbols=${q}`);
+        if (!r.ok) continue;
+        const d = await r.json(); const m = {};
+        d.forEach(x => { m[x.symbol] = x; });
+        px = { btc: +m.BTCBRL.lastPrice, eth: +m.ETHBRL.lastPrice };
+        px24 = { btc: +m.BTCBRL.priceChangePercent / 100, eth: +m.ETHBRL.priceChangePercent / 100 };
+        pxHora = Date.now();
+        render(); return;
+      } catch (e) { /* tenta a próxima fonte */ }
+    }
+    set("aColSt", "OFF"); set("aCol", "sem conexão com a Binance");
+  }
+
+  function valor(c, p) { return c.reais + c.btc * p.btc + c.eth * p.eth; }
+
+  function render() {
+    if (!estado) return;
+    const c = estado.carteira, par = estado.parada;
+    const ultimo = hist[hist.length - 1];
+    const p = px || (ultimo ? { btc: +ultimo.preco_btc, eth: +ultimo.preco_eth } : null);
+    if (!p) return;
+    const v = valor(c, p), vp = valor(par, p);
+    const w = { btc: c.btc * p.btc / v, eth: c.eth * p.eth / v, reais: c.reais / v };
+    const inicio = new Date(estado.inicio), dias = Math.max(0, Math.floor((Date.now() - inicio) / 864e5));
+    const ultExec = estado.ultima_execucao ? new Date(estado.ultima_execucao) : null;
+    const horasDesde = ultExec ? (Date.now() - ultExec) / 36e5 : 999;
+
+    // cabeçalho
+    set("kVal", brl(v)); set("kOps", String(estado.operacoes));
+    set("kRet", pct(v / CAPITAL - 1), v >= CAPITAL ? "up" : "down");
+    set("kRetLab", `desde o início · ${dias} ${dias === 1 ? "dia" : "dias"}`);
+    set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
+    const vivo = horasDesde < 26;
+    $("runDot").className = "dot" + (vivo ? "" : " off");
+    set("runTxt", vivo ? "rodando" : "sem execução há mais de 1 dia");
+    if (px) { set("hBtc", brl(p.btc, 0)); set("hEth", brl(p.eth, 0)); }
+
+    // chips
+    set("cBtc", brl(p.btc, 0)); set("cEth", brl(p.eth, 0)); set("cBrl", brl(c.reais) + " em caixa");
+    if (px) { set("cBtcC", pct(px24.btc), px24.btc >= 0 ? "up" : "down"); set("cEthC", pct(px24.eth), px24.eth >= 0 ? "up" : "down"); }
+
+    // desvios e fluxo
+    const dB = w.btc - ALVO.btc, dE = w.eth - ALVO.eth;
+    const maior = Math.abs(dB) >= Math.abs(dE) ? ["BTC", dB] : ["ETH", dE];
+    const agiria = Math.abs(dB) >= GATILHO || Math.abs(dE) >= GATILHO;
+    const pt = x => sgn(x) + nf(Math.abs(x) * 100, 1) + " pt";
+    set("fCol", px ? "preços ok" : "último preço salvo");
+    set("fEst", "desvio " + nf(Math.abs(maior[1]) * 100, 1) + " pt");
+    set("fPor", agiria ? "ordem seria aprovada" : "nada a aprovar");
+    set("fExe", agiria ? "age às 21h" : "sem ordem");
+    $("wExe").setAttribute("stroke", agiria ? "#3df59a" : "#4f7067");
+    set("tDev", nf(Math.abs(maior[1]) * 100, 1) + " pt", Math.abs(maior[1]) >= GATILHO ? "warn" : "");
+    set("tDevS", `${maior[0]} · gatilho em 2 pt`);
+    set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital");
+
+    // agentes
+    const seg = px ? Math.round((Date.now() - pxHora) / 1000) : null;
+    set("aCol", px ? `preços ao vivo · há ${seg} s` : "usando o último preço salvo");
+    set("aEst", `desvio BTC ${pt(dB)} · ETH ${pt(dE)}`);
+    set("aEstSt", agiria ? "TRIGGER" : "CHECK");
+    const travasOk = c.reais >= 0 && c.btc >= 0 && c.eth >= 0;
+    set("aPor", travasOk ? "saldo ok · sem dívida · sem margem" : "TRAVA: saldo negativo");
+    set("aPorSt", travasOk ? "ARMED" : "STOP");
+    const b = brasilia(); const prox = new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate(), 21, 0, 0));
+    if (b >= prox) prox.setUTCDate(prox.getUTCDate() + 1);
+    const falta = prox - b, h = Math.floor(falta / 36e5), m = Math.floor(falta % 36e5 / 6e4);
+    set("tNext", `${h}h ${pad(m)}min`);
+    set("aExe", `nenhuma ordem aberta · próximo ciclo em ${h}h ${pad(m)}min`);
+    set("aTel", ultExec ? "último resumo " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
+    set("aVida", vivo ? `última execução há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem execução há mais de 26 h");
+    set("aVidaSt", vivo ? "OK" : "ATRASO");
+    set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
+
+    // carteira
+    set("pBtc", nf(w.btc * 100, 1) + "% · alvo 50%"); set("pEth", nf(w.eth * 100, 1) + "% · alvo 15%"); set("pBrl", nf(w.reais * 100, 1) + "% · alvo 35%");
+    $("fBtc").style.width = (w.btc * 100) + "%"; $("fEth").style.width = (w.eth * 100) + "%"; $("fBrl").style.width = (w.reais * 100) + "%";
+
+    // última operação
+    if (ops.length) {
+      const o = ops[ops.length - 1];
+      set("tLast", brl(+o.valor_reais), o.tipo === "VENDA" ? "up" : "");
+      set("tLastS", `${o.tipo === "VENDA" ? "venda" : "compra"} de ${o.ativo} · ${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)}`);
+    } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem desvio de 2 pt"); }
+
+    // log da última execução
+    const tail = $("tail"); tail.textContent = "";
+    const hora = ultExec ? `${pad(ultExec.getHours())}:${pad(ultExec.getMinutes())}` : "--:--";
+    const opsHoje = ultimo ? +ultimo.operacoes_no_dia : 0;
+    const linhas = [
+      ["info", "coletor", ultimo ? `BTC ${brl(+ultimo.preco_btc, 0)} · ETH ${brl(+ultimo.preco_eth, 0)}` : "--"],
+      ["info", "estratégia", opsHoje ? `${opsHoje} ativo(s) fora da faixa de 2 pt` : "tudo dentro da faixa de 2 pt"],
+      ["ok", "porteiro", opsHoje ? `${opsHoje} ordem(ns) aprovada(s) · travas ok` : "nada a aprovar · travas ok"],
+      ["ok", "executor", opsHoje ? `${opsHoje} operação(ões) simulada(s)` : "sem ordem"],
+      ["w", "telegram", "resumo enviado"],
+      ["ok", "diário", ultimo ? `patrimônio ${brl(+ultimo.patrimonio)} registrado` : "--"],
+    ];
+    linhas.forEach(([cls, quem, txt]) => {
+      const li = document.createElement("li"), t = document.createElement("time"), s = document.createElement("span");
+      t.textContent = hora; s.className = cls; s.textContent = quem;
+      li.append(t, s, " " + txt); tail.appendChild(li);
+    });
+
+    grafico(v, vp);
+    diario();
+  }
+
+  function grafico(vAgora, vpAgora) {
+    const pts = hist.map(r => ({ d: r.data, a: +r.patrimonio, p: +r.carteira_parada }));
+    pts.push({ d: "agora", a: vAgora, p: vpAgora });
+    const N = pts.length, W = 760, H = 150, L = 50, R = 12, T = 12, B = 22;
+    const vals = pts.flatMap(x => [x.a, x.p]).concat([CAPITAL]);
+    let lo = Math.min(...vals), hi = Math.max(...vals); const pad_ = Math.max(5, (hi - lo) * .15); lo -= pad_; hi += pad_;
+    const x = i => N === 1 ? (L + W - R) / 2 : L + (W - L - R) * i / (N - 1), y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    let o = "";
+    for (let k = 0; k <= 3; k++) { const v = lo + (hi - lo) * k / 3; o += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#173029" stroke-dasharray="2 4"/><text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${Math.round(v)}</text>`; }
+    o += `<line x1="${L}" x2="${W - R}" y1="${y(CAPITAL)}" y2="${y(CAPITAL)}" stroke="#24493f"/>`;
+    const passo = Math.max(1, Math.ceil(N / 6));
+    pts.forEach((p_, i) => { if (i % passo === 0 || i === N - 1) { const rot = p_.d === "agora" ? "agora" : `${p_.d.slice(8, 10)}/${p_.d.slice(5, 7)}`; o += `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === N - 1 ? "end" : i === 0 ? "start" : "middle"}">${rot}</text>`; } });
+    const path = k => pts.map((p_, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p_[k]).toFixed(1)}`).join("");
+    if (N > 1) o += `<path d="${path("a")}L${x(N - 1)},${H - B}L${x(0)},${H - B}Z" fill="#3df59a" fill-opacity=".08"/>`;
+    o += `<path d="${path("p")}" fill="none" stroke="#ffb547" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    o += `<path d="${path("a")}" fill="none" stroke="#3df59a" stroke-width="2.2"/>`;
+    o += `<circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="4" fill="#3df59a"/><circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="9" fill="none" stroke="#3df59a" stroke-opacity=".4"/>`;
+    o += `<text x="${L + 8}" y="${T + 10}" style="fill:#3df59a">— robô</text><text x="${L + 8}" y="${T + 24}" style="fill:#ffb547">- - carteira parada</text>`;
+    $("eq").innerHTML = o;
+  }
+
+  function diario() {
+    const box = $("logBox"); box.textContent = "";
+    set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
+    if (!ops.length) {
+      const d = document.createElement("div"); d.className = "empty";
+      d.textContent = "Nenhuma operação ainda. O robô só opera quando BTC ou ETH ficam 2 pontos ou mais fora do alvo. Nos testes, isso deu cerca de 2 operações por mês.";
+      box.appendChild(d); return;
+    }
+    const t = document.createElement("table"); t.className = "log"; const tb = document.createElement("tbody");
+    ops.slice().reverse().forEach(o => {
+      const tr = document.createElement("tr");
+      const td = (txt, cls) => { const c = document.createElement("td"); if (cls) c.className = cls; if (txt !== undefined) c.textContent = txt; tr.appendChild(c); return c; };
+      td(`${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)} ${o.data_hora.slice(11, 16)}`, "num");
+      const s = document.createElement("span"); s.className = "side " + (o.tipo === "VENDA" ? "sell" : "buy"); s.textContent = o.tipo; td().appendChild(s);
+      const c3 = td(); const b = document.createElement("b"); b.textContent = (o.ativo === "BTC" ? "₿ " : "Ξ ") + o.ativo + " · " + nf(+o.quantidade, 6);
+      const why = document.createElement("div"); why.className = "why";
+      const alvo = o.ativo === "BTC" ? 50 : 15;
+      why.textContent = `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da carteira (alvo ${alvo}%) · preço ${brl(+o.preco, 0)} · taxa ${brl(+o.taxa)}`;
+      c3.append(b, why);
+      td(brl(+o.valor_reais), "r num");
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); box.appendChild(t);
+  }
+
+  setInterval(() => { const b = brasilia(); $("clock").textContent = `${pad(b.getUTCHours())}:${pad(b.getUTCMinutes())}:${pad(b.getUTCSeconds())}`; }, 1000);
+  setInterval(() => { if (estado) render(); }, 15000);
+  setInterval(carregarPrecos, 30000);
+  setInterval(carregarRobo, 5 * 60000);
+  carregarRobo().then(carregarPrecos);
+})();
+</script>
+</body>
+</html>
