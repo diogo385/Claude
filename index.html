@@ -122,6 +122,17 @@ h1 span { color: var(--amber); }
 .step.usado b { color: var(--amber); }
 .dd { grid-column: 1 / -1; }
 .dd .track { height: 10px; }
+.pnl { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.pnl th { text-align: right; color: var(--muted); font-weight: 500; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--line-hi); white-space: nowrap; }
+.pnl th:first-child, .pnl td:first-child { text-align: left; }
+.pnl td { text-align: right; padding: 7px 6px; border-top: 1px solid var(--line); white-space: nowrap; }
+.pnl tr.grp td { background: var(--panel); color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.pnl tr.grp td span { float: right; letter-spacing: 0; text-transform: none; font-weight: 600; }
+.pnl .barra { position: relative; width: 120px; height: 8px; display: inline-block; vertical-align: middle; background: var(--panel); border-radius: 2px; }
+.pnl .barra i { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
+.pnl .barra::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line-hi); }
+.pnl-tot { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-bottom: 10px; font-size: 12px; color: var(--muted); }
+.pnl-tot b { font-family: var(--display); font-size: 1.25rem; margin-left: 6px; }
 .side.sat { color: var(--teal); border: 1px solid var(--teal); margin-left: 4px; }
 .side.aporte { color: var(--amber); border: 1px solid var(--amber); }
 @media (max-width: 560px) { .res { grid-template-columns: 1fr; } .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -173,8 +184,9 @@ h1 span { color: var(--amber); }
         </section>
 
         <section class="box">
-          <h2>Histórico de operações <small id="logCount">--</small></h2>
-          <div class="scroll" id="logBox"><div class="empty">carregando…</div></div>
+          <h2>Ganhos e perdas por cripto <small id="pnlInfo">ao vivo</small></h2>
+          <div class="pnl-tot" id="pnlTot"></div>
+          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Preço médio</th><th>Agora</th><th>Valor</th><th>Ganho / perda</th><th>%</th><th></th></tr></thead><tbody id="pnlBody"></tbody></table></div>
         </section>
 
         <div class="two">
@@ -246,6 +258,11 @@ h1 span { color: var(--amber); }
         <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
         <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer</span></div>
           </div>
+        </section>
+
+        <section class="box">
+          <h2>Histórico de operações <small id="logCount">--</small></h2>
+          <div class="scroll" id="logBox"><div class="empty">carregando…</div></div>
         </section>
     </main>
     <div class="foot"><span><a href="https://github.com/diogo385/Claude/tree/ccr-62184269-ceu6z3/simulado/arquivo/v1-btc-eth">carteira antiga</a></span><span>só saldo próprio · sem dívida</span></div>
@@ -483,6 +500,7 @@ h1 span { color: var(--amber); }
     set("aResSt", res.saldo <= 0 ? "EMPTY" : "ARMED");
 
     renderSat(p);
+    renderPnl(p);
     grafico(v, vp); diario();
   }
 
@@ -506,6 +524,83 @@ h1 span { color: var(--amber); }
     o += `<circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="4" fill="#3df59a"/><circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="9" fill="none" stroke="#3df59a" stroke-opacity=".4"/>`;
     o += `<text x="${L + 8}" y="${H - B - 22}" style="fill:#3df59a">— robô</text><text x="${L + 8}" y="${H - B - 8}" style="fill:#ffb547">- - sem robô</text>`;
     $("eq").innerHTML = o;
+  }
+
+  // ---------- ganhos e perdas por cripto (custo médio) ----------
+  function posicoes() {
+    // carteira principal: montagem = carteira parada (nunca muda) ao custo de CAPITAL × alvo
+    const pr = {}; let realP = 0;
+    ativos.forEach(a => pr[a] = { q: estado.parada[a] || 0, custo: CAPITAL * estado.alvo[a] });
+    ops.forEach(o => {
+      const a = o.ativo.toLowerCase(), x = pr[a]; if (!x) return;
+      const q = +o.quantidade, v = +o.valor_reais, t = +o.taxa;
+      if (o.tipo === "COMPRA") { x.q += q; x.custo += v; }
+      else if (o.tipo === "VENDA" && x.q > 0) { const parte = x.custo * Math.min(1, q / x.q); realP += (v - t) - parte; x.custo -= parte; x.q -= q; }
+    });
+    // satélite: montagem, aportes e rebalanceamentos estão no arquivo dela
+    const st = {}; let realS = 0;
+    satAtivos.forEach(a => st[a] = { q: 0, custo: 0 });
+    opsSat.forEach(o => {
+      const a = o.ativo.toLowerCase(), x = st[a]; if (!x) return;
+      const q = +o.quantidade, v = +o.valor_reais, t = +o.taxa;
+      if (o.tipo === "COMPRA") { x.q += q; x.custo += v; }
+      else if (o.tipo === "VENDA" && x.q > 0) { const parte = x.custo * Math.min(1, q / x.q); realS += (v - t) - parte; x.custo -= parte; x.q -= q; }
+      else if (o.tipo === "LUCRO") realS += 0; // lucro das oportunidades é contado à parte
+    });
+    // usa as quantidades reais do estado (o arquivo pode arredondar)
+    ativos.forEach(a => { if (pr[a].q > 0) pr[a].q = estado.carteira[a]; });
+    if (sat) satAtivos.forEach(a => { if (st[a].q > 0) st[a].q = sat.carteira[a]; });
+    const realOp = opsSat.filter(o => o.tipo === "LUCRO").reduce((t, o) => t + (+o.valor_reais - +o.taxa) - 25, 0);
+    return { pr, st, realP, realS, realOp };
+  }
+
+  function renderPnl(p) {
+    if (!estado) return;
+    const { pr, st, realP, realS, realOp } = posicoes();
+    const grupos = [["Carteira principal", ativos.map(a => ({ a, q: pr[a].q, custo: pr[a].custo }))]];
+    if (sat) {
+      grupos.push(["🛰️ Satélite", satAtivos.map(a => ({ a, q: st[a].q, custo: st[a].custo }))]);
+      const abertas = (sat.posicoes || []).map(x => ({ a: x.ativo, q: x.qtd, custo: x.custo, op: true }));
+      if (abertas.length) grupos.push(["🎯 Oportunidades abertas", abertas]);
+    }
+    const tb = $("pnlBody"); tb.textContent = "";
+    let totG = 0, totC = 0, melhor = null, pior = null;
+    const linhas = grupos.map(([nome, itens]) => {
+      const rows = itens.filter(x => x.q > 0).map(x => {
+        const agora = p[x.a] || 0, valorAt = x.q * agora, g = valorAt - x.custo, pc = x.custo ? g / x.custo : 0;
+        return Object.assign(x, { agora, valorAt, g, pc, medio: x.custo / x.q });
+      }).sort((u, v) => v.g - u.g);
+      const gG = rows.reduce((t, x) => t + x.g, 0), cG = rows.reduce((t, x) => t + x.custo, 0);
+      totG += gG; totC += cG;
+      rows.forEach(x => { if (!melhor || x.pc > melhor.pc) melhor = x; if (!pior || x.pc < pior.pc) pior = x; });
+      return { nome, rows, gG, cG };
+    });
+    const escala = Math.max(0.01, ...linhas.flatMap(l => l.rows.map(x => Math.abs(x.pc))));
+    linhas.forEach(({ nome, rows, gG, cG }) => {
+      if (!rows.length) return;
+      const tr = el("tr", "grp"), td = el("td", "", nome); td.colSpan = 7;
+      const sp = el("span", gG >= 0 ? "up" : "down", `${sgn(gG)}${brl(Math.abs(gG))} (${pct(cG ? gG / cG : 0)})`); td.appendChild(sp); tr.appendChild(td); tb.appendChild(tr);
+      rows.forEach(x => {
+        const r = el("tr"), cor = x.g >= 0 ? "up" : "down";
+        r.appendChild(el("td", "", `${SIMB[x.a] || "●"} ${x.a.toUpperCase()}`));
+        r.appendChild(el("td", "", brl(x.medio, x.medio < 1 ? 4 : casas(x.medio))));
+        r.appendChild(el("td", "", brl(x.agora, x.agora < 1 ? 4 : casas(x.agora))));
+        r.appendChild(el("td", "", brl(x.valorAt)));
+        r.appendChild(el("td", cor, `${sgn(x.g)}${brl(Math.abs(x.g))}`));
+        r.appendChild(el("td", cor, pct(x.pc)));
+        const tdb = el("td"), b = el("span", "barra"), i = el("i"), w = Math.min(50, Math.abs(x.pc) / escala * 50);
+        i.style.left = x.pc >= 0 ? "50%" : (50 - w) + "%"; i.style.width = w + "%"; i.style.background = x.pc >= 0 ? "var(--green)" : "var(--red)";
+        b.appendChild(i); tdb.appendChild(b); r.appendChild(tdb);
+        tb.appendChild(r);
+      });
+    });
+    const tot = $("pnlTot"); tot.textContent = "";
+    const item = (rot, v, extra) => { const d = el("div", "", rot); const b = el("b", v >= 0 ? "up" : "down", `${sgn(v)}${brl(Math.abs(v))}` + (extra || "")); d.appendChild(b); tot.appendChild(d); };
+    item("em aberto", totG, ` (${pct(totC ? totG / totC : 0)})`);
+    item("já realizado", realP + realS + realOp);
+    if (melhor) { const d = el("div", "", `melhor: ${melhor.a.toUpperCase()} `); d.appendChild(el("b", melhor.pc >= 0 ? "up" : "down", pct(melhor.pc))); tot.appendChild(d); }
+    if (pior) { const d = el("div", "", `pior: ${pior.a.toUpperCase()} `); d.appendChild(el("b", pior.pc >= 0 ? "up" : "down", pct(pior.pc))); tot.appendChild(d); }
+    set("pnlInfo", px ? `ao vivo · ${new Date(pxHora).toLocaleTimeString("pt-BR")}` : "último preço do robô");
   }
 
   function diario() {
