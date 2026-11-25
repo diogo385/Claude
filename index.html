@@ -119,12 +119,17 @@ h1 span { color: var(--amber); }
   .kpis { grid-column: 1 / -1; text-align: left; }
 }
 @media (prefers-reduced-motion: reduce) { .dot, .flow .wire { animation: none; } }
+
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.chip span { white-space: nowrap; }
+.chip { justify-content: space-between; }
+.alloc .top b { min-width: 48px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argo Trade Cripto · terminal · BTC/BRL e ETH/BRL · dados do robô simulado + preços ao vivo</span><span class="mode">simulado · dinheiro de mentira</span></div>
+    <div class="bar"><span>Argo Trade Cripto · terminal · carteira diversificada · dados do robô simulado + preços ao vivo</span><span class="mode">simulado · dinheiro de mentira</span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -132,11 +137,10 @@ h1 span { color: var(--amber); }
         <svg width="38" height="38" viewBox="0 0 40 40" fill="none"><path d="M20 4 L20 25" stroke="#d9f2ea" stroke-width="2"/><path d="M20 6 L31 22 L20 22 Z" fill="#2ee6c8"/><path d="M19 9 L11 22 L19 22 Z" fill="#3df59a" opacity=".7"/><path d="M6 26 H34 L29 33 H11 Z" fill="#ffb547"/></svg>
       </div>
       <div>
-        <h1><span>Argo Trade</span> Cripto <span class="ver">v0.1 · simulado</span></h1>
+        <h1><span>Argo Trade</span> Cripto <span class="ver">v0.2 · simulado</span></h1>
         <div class="sub">
           <span><i class="dot" id="runDot"></i><span id="runTxt">carregando</span> · <span class="num" id="clock">--:--:--</span></span>
-          <span class="tag">ATÉ 1 OPERAÇÃO/DIA · ALVO 50/15/35</span>
-          <span>Binance · BTC <b class="num" id="hBtc">--</b> · ETH <b class="num" id="hEth">--</b></span>
+          <span class="tag" id="tagAlvo">ATÉ 1 OPERAÇÃO/DIA</span>
         </div>
       </div>
       <div class="kpis">
@@ -163,11 +167,7 @@ h1 span { color: var(--amber); }
       <main class="main">
         <section class="box">
           <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>checa a cada 4 h · até 1 operação por dia</small></h2>
-          <div class="chips">
-            <div class="chip"><b style="color: var(--amber)">₿ BTC</b><span class="num" id="cBtc">--</span><span class="num" id="cBtcC">--</span></div>
-            <div class="chip"><b style="color: var(--violet)">Ξ ETH</b><span class="num" id="cEth">--</span><span class="num" id="cEthC">--</span></div>
-            <div class="chip"><b style="color: var(--green)">R$</b><span class="num" id="cBrl">--</span></div>
-          </div>
+          <div class="chips" id="chips"></div>
           <svg class="flow" viewBox="0 0 760 170" role="img" aria-label="Fluxo de decisão do robô">
             <defs><radialGradient id="gC" cx=".35" cy=".3"><stop offset="0" stop-color="#12352c"/><stop offset="1" stop-color="#071512"/></radialGradient></defs>
             <path class="wire" d="M110 80 H250" stroke="#2ee6c8" stroke-width="2" fill="none"/>
@@ -179,7 +179,7 @@ h1 span { color: var(--amber); }
             <text x="70" y="156" text-anchor="middle" id="fCol">--</text>
             <circle cx="290" cy="80" r="46" fill="url(#gC)" stroke="#5fb4ff" stroke-width="2.5"/>
             <circle cx="290" cy="80" r="56" fill="none" stroke="#5fb4ff" stroke-opacity=".25"/>
-            <text x="290" y="77" text-anchor="middle" class="t" style="fill:#5fb4ff">50/15/35</text>
+            <text x="290" y="77" text-anchor="middle" class="t" style="fill:#5fb4ff" id="fEstT">--</text>
             <text x="290" y="93" text-anchor="middle" id="fEst">--</text>
             <text x="290" y="152" text-anchor="middle" class="t">ESTRATÉGIA</text>
             <circle cx="485" cy="80" r="40" fill="url(#gC)" stroke="#a78bfa" stroke-width="2"/>
@@ -205,29 +205,22 @@ h1 span { color: var(--amber); }
         <section class="box">
           <h2>Mercado ao vivo <small id="mkInfo">conectando…</small></h2>
           <div class="mk-bar">
-            <div class="seg" id="mkSym"><button type="button" data-s="BTCBRL" aria-pressed="true">₿ BTC</button><button type="button" data-s="ETHBRL" aria-pressed="false">Ξ ETH</button></div>
+            <div class="seg" id="mkSym"></div>
             <div class="mk-px"><span class="big num" id="mkPx">--</span><span class="num" id="mkChg"></span></div>
             <div class="seg" id="mkTf"><button type="button" data-tf="1m" aria-pressed="false">1m</button><button type="button" data-tf="15m" aria-pressed="true">15m</button><button type="button" data-tf="1h" aria-pressed="false">1h</button><button type="button" data-tf="4h" aria-pressed="false">4h</button><button type="button" data-tf="1d" aria-pressed="false">1d</button></div>
           </div>
           <canvas id="candles" aria-label="Gráfico de velas ao vivo"></canvas>
-          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1,5 ponto na carteira simulada), se ainda não operou hoje.</p>
+          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1,5 ponto), considerando os outros preços parados.</p>
         </section>
 
         <div class="two">
           <section class="box">
             <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
-            <div class="alloc">
-              <div class="row"><div class="top"><b>BTC</b><span class="num" id="pBtc">--</span></div>
-                <div class="track"><div class="band" style="left:48.5%;width:3%"></div><div class="fill" id="fBtc" style="--c: var(--amber); width:0"></div><div class="mark" style="left:50%"></div></div></div>
-              <div class="row"><div class="top"><b>ETH</b><span class="num" id="pEth">--</span></div>
-                <div class="track"><div class="band" style="left:13.5%;width:3%"></div><div class="fill" id="fEth" style="--c: var(--violet); width:0"></div><div class="mark" style="left:15%"></div></div></div>
-              <div class="row"><div class="top"><b>Reais</b><span class="num" id="pBrl">--</span></div>
-                <div class="track"><div class="fill" id="fBrl" style="--c: var(--green); width:0"></div><div class="mark" style="left:35%"></div></div></div>
-            </div>
-            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e faz no máximo 1 operação por dia, no ativo que estiver 1,5 ponto ou mais fora do alvo.</p>
+            <div class="alloc" id="alloc"></div>
+            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e faz no máximo 1 operação por dia, no ativo mais fora do alvo (1,5 ponto ou mais).</p>
           </section>
           <section class="box">
-            <h2>$ tail -f argo.log <small>última execução</small></h2>
+            <h2>$ tail -f argo.log <small>última checagem</small></h2>
             <ul class="tail" id="tail"><li>carregando…</li></ul>
           </section>
         </div>
@@ -243,28 +236,32 @@ h1 span { color: var(--amber); }
         </section>
       </main>
     </div>
-    <div class="foot"><span>Dados do robô atualizados a cada 4 h · preços ao vivo a cada 30 s · <a href="painel-ativos.html">mercado ao vivo →</a></span><span>só saldo próprio · sem margem · sem saque</span></div>
+    <div class="foot"><span>Dados do robô atualizados a cada 4 h · preços ao vivo a cada 30 s · <a href="painel-ativos.html">mercado ao vivo →</a> · <a href="https://github.com/diogo385/Claude/tree/ccr-62184269-ceu6z3/simulado/arquivo/v1-btc-eth">carteira antiga (BTC/ETH)</a></span><span>só saldo próprio · sem margem · sem saque</span></div>
   </div>
 </div>
 
 <script>
 (function () {
   "use strict";
-  const ALVO = { btc: 0.50, eth: 0.15 }, GATILHO = 0.015, CAPITAL = 1000;
+  const CAPITAL = 1000;
   const FONTES = ["https://data-api.binance.vision", "https://api.binance.com"];
+  const WS = ["wss://data-stream.binance.vision/ws", "wss://stream.binance.com:9443/ws"];
+  const CORES = { btc: "#ffb547", eth: "#a78bfa", sol: "#2ee6c8", xrp: "#5fb4ff", bnb: "#f5d547", link: "#7c9cff", doge: "#d9b26a" };
+  const SIMB = { btc: "₿", eth: "Ξ" };
   const $ = id => document.getElementById(id);
   const set = (id, t, cls) => { const e = $(id); e.textContent = t; if (cls !== undefined) e.className = e.className.replace(/\b(up|down|warn)\b/g, "").trim() + (cls ? " " + cls : ""); };
   const nf = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
-  const brl = (v, d = 2) => "R$ " + nf(v, d);
+  const casas = v => v >= 1000 ? 0 : v >= 10 ? 2 : 4;
+  const brl = (v, d) => "R$ " + nf(v, d === undefined ? 2 : d);
   const sgn = v => (v > -0.00005 ? "+" : "−");
   const pct = (v, d = 1) => sgn(v) + nf(Math.abs(v) * 100, d) + "%";
   const pad = v => String(v).padStart(2, "0");
-  const brasilia = () => new Date(Date.now() - 3 * 3600e3); // horário de Brasília (UTC−3) lido com getUTC*
+  const brasilia = () => new Date(Date.now() - 3 * 3600e3);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
 
-  let estado = null, hist = [], ops = [], px = null, px24 = {}, pxHora = 0;
+  let estado = null, hist = [], ops = [], px = null, px24 = {}, pxHora = 0, ativos = [], GATILHO = 0.015;
 
   function aviso(t) { const m = $("msg"); m.textContent = t; m.hidden = !t; }
-
   function csv(txt) {
     const linhas = txt.trim().split(/\r?\n/); const cab = linhas.shift().split(";");
     return linhas.filter(Boolean).map(l => { const v = l.split(";"); const o = {}; cab.forEach((c, i) => o[c] = v[i]); return o; });
@@ -274,84 +271,109 @@ h1 span { color: var(--amber); }
     if (!r.ok) throw new Error(arq);
     return r.text();
   }
+
+  function montarEstrutura() {
+    const chips = $("chips"); chips.textContent = "";
+    ativos.forEach(a => {
+      const c = el("div", "chip"); const b = el("b", "", `${SIMB[a] || "●"} ${a.toUpperCase()}`); b.style.color = CORES[a] || "#d9f2ea";
+      c.append(b, el("span", "num", "--"), el("span", "num", "")); c.id = "chip-" + a; chips.appendChild(c);
+    });
+    const cx = el("div", "chip"); const bx = el("b", "", "R$"); bx.style.color = "var(--green)"; cx.append(bx, el("span", "num", "--")); cx.id = "chip-reais"; chips.appendChild(cx);
+    const al = $("alloc"); al.textContent = "";
+    ativos.concat(["reais"]).forEach(a => {
+      const alvo = a === "reais" ? 1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0) : estado.alvo[a];
+      const row = el("div", "row"); const top = el("div", "top");
+      top.append(el("b", "", a === "reais" ? "Reais" : a.toUpperCase()), el("span", "num", "--")); top.id = "al-" + a;
+      const tr = el("div", "track");
+      if (a !== "reais") { const band = el("div", "band"); band.style.left = ((alvo - GATILHO) * 100) + "%"; band.style.width = (GATILHO * 200) + "%"; tr.appendChild(band); }
+      const f = el("div", "fill"); f.style.setProperty("--c", a === "reais" ? "#3df59a" : (CORES[a] || "#d9f2ea")); f.style.width = "0"; f.id = "fill-" + a;
+      const mk = el("div", "mark"); mk.style.left = (alvo * 100) + "%";
+      tr.append(f, mk); row.append(top, tr); al.appendChild(row);
+    });
+    const seg = $("mkSym"); seg.textContent = "";
+    ativos.forEach((a, i) => { const b = el("button", "", `${SIMB[a] || ""} ${a.toUpperCase()}`.trim()); b.type = "button"; b.dataset.a = a; b.setAttribute("aria-pressed", i === 0); seg.appendChild(b); });
+    set("tagAlvo", "ATÉ 1 OPERAÇÃO/DIA · " + ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
+  }
+
   async function carregarRobo() {
     try {
-      estado = JSON.parse(await baixar("estado.json"));
+      const novo = JSON.parse(await baixar("estado.json"));
+      const mudou = !estado || JSON.stringify(novo.alvo) !== JSON.stringify(estado.alvo);
+      estado = novo; ativos = Object.keys(estado.alvo); GATILHO = estado.gatilho || 0.015;
       hist = csv(await baixar("historico.csv"));
       try { ops = csv(await baixar("operacoes.csv")); } catch (e) { ops = []; }
+      if (mudou) { montarEstrutura(); mkAtivo = ativos[0]; carregarVelas(); }
       aviso("");
     } catch (e) {
-      aviso("Ainda não encontrei os dados do robô. Se ele acabou de ser ligado, espere a primeira execução.");
+      aviso("Ainda não encontrei os dados do robô. Se a carteira acabou de ser recomeçada, espere a próxima checagem (até 4 horas) ou rode o robô manualmente no GitHub.");
     }
     render();
   }
+
   async function carregarPrecos() {
+    if (!estado) return;
+    const pares = ativos.map(a => estado.pares[a]);
     for (const base of FONTES) {
       try {
-        const q = encodeURIComponent(JSON.stringify(["BTCBRL", "ETHBRL"]));
-        const r = await fetch(`${base}/api/v3/ticker/24hr?symbols=${q}`);
+        const r = await fetch(`${base}/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(pares))}`);
         if (!r.ok) continue;
-        const d = await r.json(); const m = {};
-        d.forEach(x => { m[x.symbol] = x; });
-        px = { btc: +m.BTCBRL.lastPrice, eth: +m.ETHBRL.lastPrice };
-        px24 = { btc: +m.BTCBRL.priceChangePercent / 100, eth: +m.ETHBRL.priceChangePercent / 100 };
-        pxHora = Date.now();
-        render(); return;
-      } catch (e) { /* tenta a próxima fonte */ }
+        const m = {}; (await r.json()).forEach(x => { m[x.symbol] = x; });
+        px = {}; px24 = {};
+        ativos.forEach(a => { px[a] = +m[estado.pares[a]].lastPrice; px24[a] = +m[estado.pares[a]].priceChangePercent / 100; });
+        pxHora = Date.now(); render(); return;
+      } catch (e) { /* próxima fonte */ }
     }
     set("aColSt", "OFF"); set("aCol", "sem conexão com a Binance");
   }
 
-  function valor(c, p) { return c.reais + c.btc * p.btc + c.eth * p.eth; }
+  const valor = (c, p) => c.reais + ativos.reduce((s, a) => s + (c[a] || 0) * p[a], 0);
 
   function render() {
     if (!estado) return;
     const c = estado.carteira, par = estado.parada;
-    const ultimo = hist[hist.length - 1];
-    const p = px || (ultimo ? { btc: +ultimo.preco_btc, eth: +ultimo.preco_eth } : null);
-    if (!p) return;
+    const p = px || estado.ultimos_precos; if (!p) return;
     const v = valor(c, p), vp = valor(par, p);
-    const w = { btc: c.btc * p.btc / v, eth: c.eth * p.eth / v, reais: c.reais / v };
-    const inicio = new Date(estado.inicio), dias = Math.max(0, Math.floor((Date.now() - inicio) / 864e5));
+    const w = {}; ativos.forEach(a => w[a] = c[a] * p[a] / v); w.reais = c.reais / v;
+    const dias = Math.max(0, Math.floor((Date.now() - new Date(estado.inicio)) / 864e5));
     const ultExec = estado.ultima_execucao ? new Date(estado.ultima_execucao) : null;
     const horasDesde = ultExec ? (Date.now() - ultExec) / 36e5 : 999;
 
-    // cabeçalho
     set("kVal", brl(v)); set("kOps", String(ops.length));
     set("kRet", pct(v / CAPITAL - 1), v >= CAPITAL ? "up" : "down");
     set("kRetLab", `desde o início · ${dias} ${dias === 1 ? "dia" : "dias"}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
     const vivo = horasDesde < 9;
     $("runDot").className = "dot" + (vivo ? "" : " off");
-    set("runTxt", vivo ? "rodando" : "sem execução há mais de 1 dia");
-    if (px) { set("hBtc", brl(p.btc, 0)); set("hEth", brl(p.eth, 0)); }
+    set("runTxt", vivo ? "rodando" : "sem checagem há mais de 9 h");
 
-    // chips
-    set("cBtc", brl(p.btc, 0)); set("cEth", brl(p.eth, 0)); set("cBrl", brl(c.reais) + " em caixa");
-    if (px) { set("cBtcC", pct(px24.btc), px24.btc >= 0 ? "up" : "down"); set("cEthC", pct(px24.eth), px24.eth >= 0 ? "up" : "down"); }
+    ativos.forEach(a => {
+      const ch = $("chip-" + a); if (!ch) return;
+      ch.children[1].textContent = brl(p[a], casas(p[a]));
+      if (px) { ch.children[2].textContent = pct(px24[a]); ch.children[2].className = "num " + (px24[a] >= 0 ? "up" : "down"); }
+    });
+    if ($("chip-reais")) $("chip-reais").children[1].textContent = brl(c.reais) + " em caixa";
 
-    // desvios e fluxo
-    const dB = w.btc - ALVO.btc, dE = w.eth - ALVO.eth;
-    const maior = Math.abs(dB) >= Math.abs(dE) ? ["BTC", dB] : ["ETH", dE];
+    const dev = {}; ativos.forEach(a => dev[a] = w[a] - estado.alvo[a]);
+    const maior = ativos.reduce((m, a) => Math.abs(dev[a]) > Math.abs(dev[m]) ? a : m, ativos[0]);
     const hojeBR = brasilia().toISOString().slice(0, 10);
-    const usouHoje = estado.ops_dia && estado.ops_dia.data === hojeBR && estado.ops_dia.n >= 1;
-    const agiria = !usouHoje && (Math.abs(dB) >= GATILHO || Math.abs(dE) >= GATILHO);
+    const usouHoje = estado.ops_dia && estado.ops_dia.data === hojeBR && estado.ops_dia.n >= (estado.max_ops_dia || 1);
+    const agiria = !usouHoje && Math.abs(dev[maior]) >= GATILHO;
     const pt = x => sgn(x) + nf(Math.abs(x) * 100, 1) + " pt";
     set("fCol", px ? "preços ok" : "último preço salvo");
-    set("fEst", "desvio " + nf(Math.abs(maior[1]) * 100, 1) + " pt");
+    set("fEstT", maior.toUpperCase() + " " + pt(dev[maior]));
+    set("fEst", "maior desvio");
     set("fPor", usouHoje ? "limite do dia usado" : agiria ? "ordem seria aprovada" : "nada a aprovar");
     set("fExe", agiria ? "age na próxima checagem" : "sem ordem");
     $("wExe").setAttribute("stroke", agiria ? "#3df59a" : "#4f7067");
-    set("tDev", nf(Math.abs(maior[1]) * 100, 1) + " pt", Math.abs(maior[1]) >= GATILHO ? "warn" : "");
-    set("tDevS", `${maior[0]} · gatilho em 1,5 pt`);
+    set("tDev", nf(Math.abs(dev[maior]) * 100, 1) + " pt", Math.abs(dev[maior]) >= GATILHO ? "warn" : "");
+    set("tDevS", `${maior.toUpperCase()} · gatilho em 1,5 pt`);
     set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital · inclui a montagem");
 
-    // agentes
     const seg = px ? Math.round((Date.now() - pxHora) / 1000) : null;
-    set("aCol", px ? `preços ao vivo · há ${seg} s` : "usando o último preço salvo");
-    set("aEst", `desvio BTC ${pt(dB)} · ETH ${pt(dE)}`);
+    set("aCol", px ? `${ativos.length} moedas ao vivo · há ${seg} s` : "usando os últimos preços salvos");
+    set("aEst", `maior desvio: ${maior.toUpperCase()} ${pt(dev[maior])}`);
     set("aEstSt", agiria ? "TRIGGER" : "CHECK");
-    const travasOk = c.reais >= 0 && c.btc >= 0 && c.eth >= 0;
+    const travasOk = c.reais >= 0 && ativos.every(a => c[a] >= 0);
     set("aPor", travasOk ? "saldo ok · sem dívida · sem margem" : "TRAVA: saldo negativo");
     set("aPorSt", travasOk ? "ARMED" : "STOP");
     const b = brasilia(); const prox = new Date(b); prox.setUTCMinutes(0, 0, 0);
@@ -360,41 +382,37 @@ h1 span { color: var(--amber); }
     set("tNext", `${h}h ${pad(m)}min`);
     set("aExe", `${usouHoje ? "operação do dia já feita" : "pronto para operar"} · próxima checagem em ${h}h ${pad(m)}min`);
     set("aTel", ultExec ? "última checagem " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
-    set("aVida", vivo ? `última execução há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem execução há mais de 9 h");
+    set("aVida", vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem checagem há mais de 9 h");
     set("aVidaSt", vivo ? "OK" : "ATRASO");
     set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
 
-    // carteira
-    set("pBtc", nf(w.btc * 100, 1) + "% · alvo 50%"); set("pEth", nf(w.eth * 100, 1) + "% · alvo 15%"); set("pBrl", nf(w.reais * 100, 1) + "% · alvo 35%");
-    $("fBtc").style.width = (w.btc * 100) + "%"; $("fEth").style.width = (w.eth * 100) + "%"; $("fBrl").style.width = (w.reais * 100) + "%";
+    ativos.concat(["reais"]).forEach(a => {
+      const alvo = a === "reais" ? 1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0) : estado.alvo[a];
+      const top = $("al-" + a); if (!top) return;
+      top.children[1].textContent = `${nf(w[a] * 100, 1)}% · alvo ${Math.round(alvo * 100)}%`;
+      $("fill-" + a).style.width = Math.min(100, w[a] * 100) + "%";
+    });
 
-    // última operação
     if (ops.length) {
       const o = ops[ops.length - 1];
       set("tLast", brl(+o.valor_reais), o.tipo === "VENDA" ? "up" : "");
       set("tLastS", `${o.tipo === "VENDA" ? "venda" : "compra"} de ${o.ativo} · ${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)}`);
     } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem desvio de 1,5 pt"); }
 
-    // log da última execução
     const tail = $("tail"); tail.textContent = "";
     const hora = ultExec ? `${pad(ultExec.getHours())}:${pad(ultExec.getMinutes())}` : "--:--";
-    const opsHoje = ultimo ? +ultimo.operacoes_no_dia : 0;
-    const linhas = [
-      ["info", "coletor", ultimo ? `BTC ${brl(+ultimo.preco_btc, 0)} · ETH ${brl(+ultimo.preco_eth, 0)}` : "--"],
-      ["info", "estratégia", opsHoje ? `${opsHoje} operação(ões) no dia` : "tudo dentro da faixa de 1,5 pt"],
-      ["ok", "porteiro", opsHoje ? `${opsHoje} ordem(ns) aprovada(s) · travas ok` : "nada a aprovar · travas ok"],
-      ["ok", "executor", opsHoje ? `${opsHoje} operação(ões) simulada(s)` : "sem ordem"],
-      ["w", "telegram", "resumo enviado"],
-      ["ok", "diário", ultimo ? `patrimônio ${brl(+ultimo.patrimonio)} registrado` : "--"],
-    ];
-    linhas.forEach(([cls, quem, txt]) => {
-      const li = document.createElement("li"), t = document.createElement("time"), s = document.createElement("span");
-      t.textContent = hora; s.className = cls; s.textContent = quem;
-      li.append(t, s, " " + txt); tail.appendChild(li);
+    const ep = estado.ultimos_precos || {};
+    const nHoje = estado.ops_dia && estado.ops_dia.data === hojeBR ? estado.ops_dia.n : 0;
+    [["info", "coletor", ativos.slice(0, 3).map(a => `${a.toUpperCase()} ${ep[a] ? brl(ep[a], casas(ep[a])) : "--"}`).join(" · ") + " …"],
+     ["info", "estratégia", `${ativos.length} moedas avaliadas · gatilho 1,5 pt`],
+     ["ok", "porteiro", nHoje ? `${nHoje} ordem aprovada hoje · limite 1/dia` : "nada a aprovar hoje · travas ok"],
+     ["ok", "executor", nHoje ? "operação do dia feita" : "sem ordem"],
+     ["w", "telegram", "avisos em dia"],
+     ["ok", "diário", `estado salvo · ${ops.length} operações registradas`]].forEach(([cls, quem, txt]) => {
+      const li = el("li"), t = el("time", "", hora), s = el("span", cls, quem); li.append(t, s, " " + txt); tail.appendChild(li);
     });
 
-    grafico(v, vp);
-    diario();
+    grafico(v, vp); diario();
   }
 
   function grafico(vAgora, vpAgora) {
@@ -402,14 +420,14 @@ h1 span { color: var(--amber); }
     pts.push({ d: "agora", a: vAgora, p: vpAgora });
     const N = pts.length, W = 760, H = 150, L = 50, R = 12, T = 12, B = 22;
     const vals = pts.flatMap(x => [x.a, x.p]).concat([CAPITAL]);
-    let lo = Math.min(...vals), hi = Math.max(...vals); const pad_ = Math.max(5, (hi - lo) * .15); lo -= pad_; hi += pad_;
+    let lo = Math.min(...vals), hi = Math.max(...vals); const fol = Math.max(5, (hi - lo) * .15); lo -= fol; hi += fol;
     const x = i => N === 1 ? (L + W - R) / 2 : L + (W - L - R) * i / (N - 1), y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
     let o = "";
     for (let k = 0; k <= 3; k++) { const v = lo + (hi - lo) * k / 3; o += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#173029" stroke-dasharray="2 4"/><text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${Math.round(v)}</text>`; }
     o += `<line x1="${L}" x2="${W - R}" y1="${y(CAPITAL)}" y2="${y(CAPITAL)}" stroke="#24493f"/>`;
     const passo = Math.max(1, Math.ceil(N / 6));
-    pts.forEach((p_, i) => { if (i % passo === 0 || i === N - 1) { const rot = p_.d === "agora" ? "agora" : `${p_.d.slice(8, 10)}/${p_.d.slice(5, 7)}`; o += `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === N - 1 ? "end" : i === 0 ? "start" : "middle"}">${rot}</text>`; } });
-    const path = k => pts.map((p_, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p_[k]).toFixed(1)}`).join("");
+    pts.forEach((q, i) => { if (i % passo === 0 || i === N - 1) { const rot = q.d === "agora" ? "agora" : `${q.d.slice(8, 10)}/${q.d.slice(5, 7)}`; o += `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === N - 1 ? "end" : i === 0 ? "start" : "middle"}">${rot}</text>`; } });
+    const path = k => pts.map((q, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(q[k]).toFixed(1)}`).join("");
     if (N > 1) o += `<path d="${path("a")}L${x(N - 1)},${H - B}L${x(0)},${H - B}Z" fill="#3df59a" fill-opacity=".08"/>`;
     o += `<path d="${path("p")}" fill="none" stroke="#ffb547" stroke-width="1.5" stroke-dasharray="4 3"/>`;
     o += `<path d="${path("a")}" fill="none" stroke="#3df59a" stroke-width="2.2"/>`;
@@ -422,37 +440,34 @@ h1 span { color: var(--amber); }
     const box = $("logBox"); box.textContent = "";
     set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
     if (!ops.length) {
-      const d = document.createElement("div"); d.className = "empty";
-      d.textContent = "Nenhum rebalanceamento ainda (a montagem inicial da carteira, com 1 compra de BTC e 1 de ETH, não entra aqui). O robô faz no máximo 1 operação por dia, quando BTC ou ETH ficam 1,5 ponto ou mais fora do alvo. Nos testes, isso deu cerca de 3 a 4 operações por mês.";
-      box.appendChild(d); return;
+      box.appendChild(el("div", "empty", "Nenhum rebalanceamento ainda (a montagem inicial da carteira não entra aqui). O robô faz no máximo 1 operação por dia, no ativo que estiver 1,5 ponto ou mais fora do alvo. Nos testes, isso deu cerca de 3 operações por mês."));
+      return;
     }
-    const t = document.createElement("table"); t.className = "log"; const tb = document.createElement("tbody");
+    const t = el("table", "log"), tb = el("tbody");
     ops.slice().reverse().forEach(o => {
-      const tr = document.createElement("tr");
-      const td = (txt, cls) => { const c = document.createElement("td"); if (cls) c.className = cls; if (txt !== undefined) c.textContent = txt; tr.appendChild(c); return c; };
-      td(`${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)} ${o.data_hora.slice(11, 16)}`, "num");
-      const s = document.createElement("span"); s.className = "side " + (o.tipo === "VENDA" ? "sell" : "buy"); s.textContent = o.tipo; td().appendChild(s);
-      const c3 = td(); const b = document.createElement("b"); b.textContent = (o.ativo === "BTC" ? "₿ " : "Ξ ") + o.ativo + " · " + nf(+o.quantidade, 6);
-      const why = document.createElement("div"); why.className = "why";
-      const alvo = o.ativo === "BTC" ? 50 : 15;
-      why.textContent = `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da carteira (alvo ${alvo}%) · preço ${brl(+o.preco, 0)} · taxa ${brl(+o.taxa)}`;
-      c3.append(b, why);
-      td(brl(+o.valor_reais), "r num");
+      const tr = el("tr"); const a = o.ativo.toLowerCase();
+      tr.appendChild(el("td", "num", `${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)} ${o.data_hora.slice(11, 16)}`));
+      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" ? "sell" : "buy"), o.tipo)); tr.appendChild(td2);
+      const td3 = el("td"); const q = +o.quantidade;
+      td3.append(el("b", "", `${SIMB[a] || "●"} ${o.ativo} · ${nf(q, q < 1 ? 6 : 4)}`),
+        el("div", "why", `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da carteira (alvo ${Math.round((estado.alvo[a] || 0) * 100)}%) · preço ${brl(+o.preco, casas(+o.preco))} · taxa ${brl(+o.taxa)}`));
+      tr.appendChild(td3);
+      tr.appendChild(el("td", "r num", brl(+o.valor_reais)));
       tb.appendChild(tr);
     });
     t.appendChild(tb); box.appendChild(t);
   }
 
   // ---------- gráfico de velas ao vivo ----------
-  const WS = ["wss://data-stream.binance.vision/ws", "wss://stream.binance.com:9443/ws"];
-  let mkSym = "BTCBRL", mkTf = "15m", velas = [], ws = null, wsIdx = 0, wsFalhas = 0, gen = 0, poll = null;
-  const casas = v => v >= 1000 ? 0 : 2;
+  let mkAtivo = null, mkTf = "15m", velas = [], ws = null, wsIdx = 0, wsFalhas = 0, gen = 0, poll = null;
+  const par = () => estado.pares[mkAtivo];
 
   async function carregarVelas() {
-    const g = ++gen; velas = []; desenhar();
+    if (!estado || !mkAtivo) return;
+    const g = ++gen; velas = []; desenhar(); clearInterval(poll);
     for (const base of FONTES) {
       try {
-        const r = await fetch(`${base}/api/v3/klines?symbol=${mkSym}&interval=${mkTf}&limit=120`);
+        const r = await fetch(`${base}/api/v3/klines?symbol=${par()}&interval=${mkTf}&limit=120`);
         if (!r.ok) continue;
         const k = await r.json(); if (g !== gen) return;
         velas = k.map(x => ({ t: x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4] }));
@@ -461,19 +476,17 @@ h1 span { color: var(--amber); }
     }
     set("mkInfo", "sem conexão com a Binance");
   }
-
   function aplicar(b) {
     const u = velas[velas.length - 1]; if (!u) return;
     if (b.t === u.t) velas[velas.length - 1] = b; else if (b.t > u.t) { velas.push(b); if (velas.length > 120) velas.shift(); }
   }
-  function sondar(g) { // plano B: consulta a cada 5 s quando a conexão contínua não funciona
-    clearInterval(poll);
-    set("mkInfo", "ao vivo · atualiza a cada 5 s");
+  function sondar(g) {
+    clearInterval(poll); set("mkInfo", "ao vivo · atualiza a cada 5 s");
     poll = setInterval(async () => {
       if (g !== gen) return clearInterval(poll);
       for (const base of FONTES) {
         try {
-          const r = await fetch(`${base}/api/v3/klines?symbol=${mkSym}&interval=${mkTf}&limit=2`);
+          const r = await fetch(`${base}/api/v3/klines?symbol=${par()}&interval=${mkTf}&limit=2`);
           if (!r.ok) continue;
           (await r.json()).forEach(x => aplicar({ t: x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4] }));
           if (g === gen) desenhar(); return;
@@ -485,30 +498,27 @@ h1 span { color: var(--amber); }
     clearInterval(poll);
     if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} }
     if (wsFalhas >= WS.length) return sondar(g);
-    const sock = new WebSocket(`${WS[wsIdx % WS.length]}/${mkSym.toLowerCase()}@kline_${mkTf}`);
+    const sock = new WebSocket(`${WS[wsIdx % WS.length]}/${par().toLowerCase()}@kline_${mkTf}`);
     ws = sock; let abriu = false;
     sock.onopen = () => { abriu = true; set("mkInfo", "ao vivo · Binance"); };
     sock.onmessage = ev => {
       if (g !== gen) return;
       let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
       if (!m.k || !velas.length) return;
-      aplicar({ t: m.k.t, o: +m.k.o, h: +m.k.h, l: +m.k.l, c: +m.k.c });
-      desenhar();
+      aplicar({ t: m.k.t, o: +m.k.o, h: +m.k.h, l: +m.k.l, c: +m.k.c }); desenhar();
     };
     sock.onclose = () => { if (g !== gen) return; if (!abriu) { wsIdx++; wsFalhas++; } set("mkInfo", "reconectando…"); setTimeout(() => { if (g === gen) conectar(g); }, 3000); };
   }
-
-  function gatilhos() {
-    if (!estado || !velas.length) return null;
-    const a = mkSym === "BTCBRL" ? "btc" : "eth", o = a === "btc" ? "eth" : "btc", c = estado.carteira;
-    const ult = hist[hist.length - 1];
-    const pOutro = px ? px[o] : (ult ? +(o === "btc" ? ult.preco_btc : ult.preco_eth) : 0);
-    const O = c.reais + c[o] * pOutro, q = c[a], t = ALVO[a];
+  function gatilhos(precoAtual) {
+    if (!estado || !mkAtivo) return null;
+    const c = estado.carteira, p = Object.assign({}, px || estado.ultimos_precos || {});
+    p[mkAtivo] = precoAtual;
+    const O = c.reais + ativos.filter(a => a !== mkAtivo).reduce((s, a) => s + c[a] * (p[a] || 0), 0);
+    const q = c[mkAtivo], t = estado.alvo[mkAtivo];
     if (!q || !O) return null;
     const P = w => w * O / ((1 - w) * q);
-    return { vende: P(t + GATILHO), compra: P(t - GATILHO) };
+    return { vende: P(t + GATILHO), compra: P(Math.max(0.001, t - GATILHO)) };
   }
-
   function desenhar() {
     const cv = $("candles"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
     cv.width = W * dpr; cv.height = H * dpr;
@@ -518,7 +528,7 @@ h1 span { color: var(--amber); }
     const P = { l: 6, r: 96, t: 14, b: 22 };
     const vis = velas.slice(-Math.max(30, Math.floor((W - P.l - P.r) / 7)));
     let lo = Math.min(...vis.map(k => k.l)), hi = Math.max(...vis.map(k => k.h));
-    const folga = (hi - lo) * .08 || hi * .002; lo -= folga; hi += folga;
+    const fol = (hi - lo) * .08 || hi * .002; lo -= fol; hi += fol;
     const y = v => P.t + (H - P.t - P.b) * (1 - (v - lo) / (hi - lo)), cw = (W - P.l - P.r) / vis.length;
     g.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
@@ -537,8 +547,8 @@ h1 span { color: var(--amber); }
       const bw = Math.max(1, cw * .62), topo = y(Math.max(k.o, k.c)), alt = Math.max(1, Math.abs(y(k.o) - y(k.c)));
       g.fillRect(x - bw / 2, topo, bw, alt);
     });
-    // gatilhos do robô
-    const gt = gatilhos();
+    const u = vis[vis.length - 1].c;
+    const gt = gatilhos(u);
     if (gt) [["vende", "#ffb547", "venderia"], ["compra", "#3df59a", "compraria"]].forEach(([k, cor, rot]) => {
       const v = gt[k]; g.fillStyle = cor; g.strokeStyle = cor;
       if (v > lo && v < hi) {
@@ -549,21 +559,18 @@ h1 span { color: var(--amber); }
         const acima = v >= hi; g.fillText(`${acima ? "▲" : "▼"} ${rot} em ${brl(v, casas(v))}`, P.l + 6, acima ? P.t + 8 : H - P.b - 6);
       }
     });
-    // preço atual
-    const u = vis[vis.length - 1].c, ly = Math.round(y(u)) + .5;
+    const ly = Math.round(y(u)) + .5;
     g.strokeStyle = "#2ee6c8"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(P.l, ly); g.lineTo(W - P.r, ly); g.stroke(); g.setLineDash([]);
     g.fillStyle = "#2ee6c8"; g.shadowColor = "#2ee6c8"; g.shadowBlur = 10; g.fillRect(W - P.r + 2, ly - 9, P.r - 4, 18); g.shadowBlur = 0;
     g.fillStyle = "#06100e"; g.font = "600 11px 'JetBrains Mono', monospace"; g.fillText(nf(u, casas(u)), W - P.r + 6, ly + 4);
     set("mkPx", brl(u, casas(u)));
-    const ab = vis[0].o, ch = u / ab - 1; set("mkChg", pct(ch) + " no gráfico", ch >= 0 ? "up" : "down");
+    const ch = u / vis[0].o - 1; set("mkChg", pct(ch) + " no gráfico", ch >= 0 ? "up" : "down");
   }
-
-  $("mkSym").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.dataset.s === mkSym) return;
-    mkSym = b.dataset.s; document.querySelectorAll("#mkSym button").forEach(x => x.setAttribute("aria-pressed", x === b)); carregarVelas(); });
+  $("mkSym").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.dataset.a === mkAtivo) return;
+    mkAtivo = b.dataset.a; document.querySelectorAll("#mkSym button").forEach(x => x.setAttribute("aria-pressed", x === b)); carregarVelas(); });
   $("mkTf").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || b.dataset.tf === mkTf) return;
     mkTf = b.dataset.tf; document.querySelectorAll("#mkTf button").forEach(x => x.setAttribute("aria-pressed", x === b)); carregarVelas(); });
   let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(desenhar, 120); });
-  carregarVelas();
 
   setInterval(() => { const b = brasilia(); $("clock").textContent = `${pad(b.getUTCHours())}:${pad(b.getUTCMinutes())}:${pad(b.getUTCSeconds())}`; }, 1000);
   setInterval(() => { if (estado) render(); }, 15000);
