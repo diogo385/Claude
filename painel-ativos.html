@@ -53,6 +53,7 @@ h2 { display: flex; justify-content: space-between; align-items: baseline; gap: 
 h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
 
 /* Lista de ativos */
+.grp-title { grid-column: 1 / -1; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
 .assets { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 10px; }
 .asset { all: unset; box-sizing: border-box; cursor: pointer; position: relative; overflow: hidden; display: grid; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; transition: border-color .15s, box-shadow .15s; }
 .asset:hover { border-color: var(--line-hi); }
@@ -157,7 +158,9 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
   "use strict";
   const ASSETS = [
     { s: "BTCBRL", name: "Bitcoin" }, { s: "ETHBRL", name: "Ethereum" }, { s: "SOLBRL", name: "Solana" },
-    { s: "XRPBRL", name: "XRP" }, { s: "BNBBRL", name: "BNB" }, { s: "LINKBRL", name: "Chainlink" }
+    { s: "XRPBRL", name: "XRP" }, { s: "BNBBRL", name: "BNB" }, { s: "LINKBRL", name: "Chainlink" },
+    { s: "LTCBRL", name: "Litecoin", sat: true }, { s: "DOGEBRL", name: "Dogecoin", sat: true }, { s: "ADABRL", name: "Cardano", sat: true },
+    { s: "AVAXBRL", name: "Avalanche", sat: true }, { s: "NEARBRL", name: "NEAR", sat: true }
   ];
   const REST = ["https://data-api.binance.vision", "https://api.binance.com"];
   const WS = ["wss://data-stream.binance.vision/stream", "wss://stream.binance.com:9443/stream"];
@@ -169,14 +172,21 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
   }
   function gatilhos(sym, preco) {
     if (!robo || !robo.alvo) return null;
-    const a = sym.replace("BRL", "").toLowerCase(); if (!(a in robo.alvo)) return null;
-    const c = robo.carteira, up = robo.ultimos_precos || {};
-    const O = c.reais + Object.keys(robo.alvo).filter(o => o !== a).reduce((t, o) => {
+    const a = sym.replace("BRL", "").toLowerCase();
+    const sat = robo.satelite;
+    const cart = a in robo.alvo ? { c: robo.carteira, alvo: robo.alvo } : sat && sat.alvo && a in sat.alvo ? { c: sat.carteira, alvo: sat.alvo } : null;
+    if (!cart) return null;
+    const c = cart.c, up = robo.ultimos_precos || {};
+    const O = c.reais + Object.keys(cart.alvo).filter(o => o !== a).reduce((t, o) => {
       const vivo = state[o.toUpperCase() + "BRL"]; return t + c[o] * ((vivo && vivo.px) || up[o] || 0); }, 0);
-    const q = c[a], alvo = robo.alvo[a], g = robo.gatilho || 0.01;
+    const q = c[a], alvo = cart.alvo[a];
     if (!q || !O) return null;
+    const g = Math.max(robo.gatilho || 0.01, 10 / (O + q * preco));   // ordem mínima de R$ 10
     const P = w => w * O / ((1 - w) * q);
-    return { vende: P(alvo + g), compra: P(Math.max(0.001, alvo - g)) };
+    const out = { vende: P(alvo + g), compra: P(Math.max(0.001, alvo - g)) };
+    const pos = sat && (sat.posicoes || []).find(x => x.ativo === a);
+    if (pos) out.alvoOp = pos.preco * 1.015;
+    return out;
   }
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
@@ -207,7 +217,11 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
   // Cartões de ativos
   function buildCards() {
     const box = $("assets");
-    ASSETS.forEach(a => {
+    ASSETS.forEach((a, i) => {
+      if (i === 0 || a.sat !== ASSETS[i - 1].sat) {
+        const t = document.createElement("div"); t.className = "grp-title";
+        t.textContent = a.sat ? "🛰️ Carteira satélite" : "Carteira principal"; box.appendChild(t);
+      }
       state[a.s] = { spark: [] };
       const b = document.createElement("button");
       b.type = "button"; b.className = "asset"; b.dataset.s = a.s; b.setAttribute("aria-pressed", a.s === sel);
@@ -310,8 +324,8 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     });
     // gatilhos do robô
     const gt = gatilhos(sel, candles_[candles_.length - 1].c);
-    if (gt) [["vende", css("--amber"), "venderia"], ["compra", css("--good"), "compraria"]].forEach(([k, cor, rot]) => {
-      const v = gt[k]; g.fillStyle = cor; g.strokeStyle = cor; g.font = "11px " + css("--mono");
+    if (gt) [["vende", css("--amber"), "venderia"], ["compra", css("--good"), "compraria"], ["alvoOp", css("--cyan"), "vende a oportunidade"]].forEach(([k, cor, rot]) => {
+      const v = gt[k]; if (v === undefined) return; g.fillStyle = cor; g.strokeStyle = cor; g.font = "11px " + css("--mono");
       const txt = v.toLocaleString("pt-BR", { maximumFractionDigits: dec(v) });
       if (v > min && v < max) {
         const yy = Math.round(y(v)) + .5; g.setLineDash([6, 4]); g.globalAlpha = .8;
