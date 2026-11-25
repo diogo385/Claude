@@ -45,8 +45,8 @@ h1 span { color: var(--amber); }
 .kpis .big { font-family: var(--display); font-size: 1.7rem; font-weight: 700; line-height: 1; }
 .kpis .lab { color: var(--muted); font-size: 11px; }
 
-.body { display: grid; grid-template-columns: 250px minmax(0, 1fr); }
-.agents { border-right: 1px solid var(--line); padding: 12px; display: grid; gap: 8px; align-content: start; }
+.body { display: block; }
+.agents { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .sec { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin: 2px 2px 4px; }
 .sec b { color: var(--green); font-weight: 500; letter-spacing: 0; text-transform: none; }
 .agent { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
@@ -110,9 +110,6 @@ h1 span { color: var(--amber); }
 .foot { color: var(--dim); font-size: 11px; padding: 10px 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .foot a { color: var(--teal); }
 @media (max-width: 900px) {
-  .body { grid-template-columns: 1fr; }
-  .agents { border-right: 0; border-bottom: 1px solid var(--line); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-  .agents .sec { grid-column: 1 / -1; }
   .two { grid-template-columns: 1fr; }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -151,20 +148,39 @@ h1 span { color: var(--amber); }
       </div>
     </header>
 
-    <div class="body">
-      <aside class="agents" aria-label="Agentes">
-        <div class="sec">Agentes <b>8</b></div>
-        <div class="agent" style="--c: var(--teal)"><span class="ic">◉</span><span class="nm">COLETOR</span><span class="st" id="aColSt">LIVE</span><span class="ds" id="aCol">--</span></div>
-        <div class="agent" style="--c: var(--blue)"><span class="ic">≈</span><span class="nm">ESTRATÉGIA</span><span class="st" id="aEstSt">CHECK</span><span class="ds" id="aEst">--</span></div>
-        <div class="agent" style="--c: var(--violet)"><span class="ic">⛨</span><span class="nm">PORTEIRO DE RISCO</span><span class="st" id="aPorSt">ARMED</span><span class="ds" id="aPor">--</span></div>
-        <div class="agent" style="--c: var(--green)"><span class="ic">⇄</span><span class="nm">EXECUTOR</span><span class="st">FLAT</span><span class="ds" id="aExe">--</span></div>
-        <div class="agent" style="--c: var(--amber)"><span class="ic">✈</span><span class="nm">TELEGRAM</span><span class="st">ACTIVE</span><span class="ds" id="aTel">--</span></div>
-        <div class="agent" style="--c: var(--red)"><span class="ic">♥</span><span class="nm">SINAL DE VIDA</span><span class="st" id="aVidaSt">OK</span><span class="ds" id="aVida">--</span></div>
-        <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
-        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer · resumo no Telegram às 7h</span></div>
-      </aside>
+    <main class="main">
+        <section class="box">
+          <h2>Evolução do patrimônio <small>robô vs carteira parada · início R$ 1.000 · último ponto = agora</small></h2>
+          <svg class="eq" id="eq" viewBox="0 0 760 220" role="img" aria-label="Curva de patrimônio do robô simulado"></svg>
+        </section>
 
-      <main class="main">
+        <section class="box">
+          <h2>Histórico de operações <small id="logCount">--</small></h2>
+          <div class="scroll" id="logBox"><div class="empty">carregando…</div></div>
+        </section>
+        <section class="box">
+          <h2>Mercado ao vivo <small id="mkInfo">conectando…</small></h2>
+          <div class="mk-bar">
+            <div class="seg" id="mkSym"></div>
+            <div class="mk-px"><span class="big num" id="mkPx">--</span><span class="num" id="mkChg"></span></div>
+            <div class="seg" id="mkTf"><button type="button" data-tf="1m" aria-pressed="false">1m</button><button type="button" data-tf="15m" aria-pressed="true">15m</button><button type="button" data-tf="1h" aria-pressed="false">1h</button><button type="button" data-tf="4h" aria-pressed="false">4h</button><button type="button" data-tf="1d" aria-pressed="false">1d</button></div>
+          </div>
+          <canvas id="candles" aria-label="Gráfico de velas ao vivo"></canvas>
+          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1,5 ponto), considerando os outros preços parados.</p>
+        </section>
+
+        <div class="two">
+          <section class="box">
+            <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
+            <div class="alloc" id="alloc"></div>
+            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e opera o ativo mais fora do alvo: 1ª operação do dia com 1,5 ponto; 2ª e 3ª só com 2,5 pontos ou mais.</p>
+          </section>
+          <section class="box">
+            <h2>$ tail -f argos.log <small>última checagem</small></h2>
+            <ul class="tail" id="tail"><li>carregando…</li></ul>
+          </section>
+        </div>
+
         <section class="box">
           <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>checa a cada 4 h · até 3 operações por dia</small></h2>
           <div class="chips" id="chips"></div>
@@ -202,40 +218,20 @@ h1 span { color: var(--amber); }
           </div>
         </section>
 
-        <section class="box">
-          <h2>Mercado ao vivo <small id="mkInfo">conectando…</small></h2>
-          <div class="mk-bar">
-            <div class="seg" id="mkSym"></div>
-            <div class="mk-px"><span class="big num" id="mkPx">--</span><span class="num" id="mkChg"></span></div>
-            <div class="seg" id="mkTf"><button type="button" data-tf="1m" aria-pressed="false">1m</button><button type="button" data-tf="15m" aria-pressed="true">15m</button><button type="button" data-tf="1h" aria-pressed="false">1h</button><button type="button" data-tf="4h" aria-pressed="false">4h</button><button type="button" data-tf="1d" aria-pressed="false">1d</button></div>
+        <section class="box agents-box" aria-label="Agentes">
+          <h2>Agentes <small>as 8 peças do robô e o que cada uma está fazendo</small></h2>
+          <div class="agents">
+        <div class="agent" style="--c: var(--teal)"><span class="ic">◉</span><span class="nm">COLETOR</span><span class="st" id="aColSt">LIVE</span><span class="ds" id="aCol">--</span></div>
+        <div class="agent" style="--c: var(--blue)"><span class="ic">≈</span><span class="nm">ESTRATÉGIA</span><span class="st" id="aEstSt">CHECK</span><span class="ds" id="aEst">--</span></div>
+        <div class="agent" style="--c: var(--violet)"><span class="ic">⛨</span><span class="nm">PORTEIRO DE RISCO</span><span class="st" id="aPorSt">ARMED</span><span class="ds" id="aPor">--</span></div>
+        <div class="agent" style="--c: var(--green)"><span class="ic">⇄</span><span class="nm">EXECUTOR</span><span class="st">FLAT</span><span class="ds" id="aExe">--</span></div>
+        <div class="agent" style="--c: var(--amber)"><span class="ic">✈</span><span class="nm">TELEGRAM</span><span class="st">ACTIVE</span><span class="ds" id="aTel">--</span></div>
+        <div class="agent" style="--c: var(--red)"><span class="ic">♥</span><span class="nm">SINAL DE VIDA</span><span class="st" id="aVidaSt">OK</span><span class="ds" id="aVida">--</span></div>
+        <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
+        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer · resumo no Telegram às 7h</span></div>
           </div>
-          <canvas id="candles" aria-label="Gráfico de velas ao vivo"></canvas>
-          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1,5 ponto), considerando os outros preços parados.</p>
         </section>
-
-        <div class="two">
-          <section class="box">
-            <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
-            <div class="alloc" id="alloc"></div>
-            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e opera o ativo mais fora do alvo: 1ª operação do dia com 1,5 ponto; 2ª e 3ª só com 2,5 pontos ou mais.</p>
-          </section>
-          <section class="box">
-            <h2>$ tail -f argos.log <small>última checagem</small></h2>
-            <ul class="tail" id="tail"><li>carregando…</li></ul>
-          </section>
-        </div>
-
-        <section class="box">
-          <h2>Patrimônio <small>robô vs carteira parada · início R$ 1.000 · último ponto = agora</small></h2>
-          <svg class="eq" id="eq" viewBox="0 0 760 150" role="img" aria-label="Curva de patrimônio do robô simulado"></svg>
-        </section>
-
-        <section class="box">
-          <h2>Diário de operações <small id="logCount">--</small></h2>
-          <div class="scroll" id="logBox"><div class="empty">carregando…</div></div>
-        </section>
-      </main>
-    </div>
+    </main>
     <div class="foot"><span>Dados do robô atualizados a cada 4 h · preços ao vivo a cada 30 s · <a href="painel-ativos.html">mercado ao vivo →</a> · <a href="https://github.com/diogo385/Claude/tree/ccr-62184269-ceu6z3/simulado/arquivo/v1-btc-eth">carteira antiga (BTC/ETH)</a></span><span>só saldo próprio · sem margem · sem saque</span></div>
   </div>
 </div>
@@ -421,7 +417,7 @@ h1 span { color: var(--amber); }
   function grafico(vAgora, vpAgora) {
     const pts = hist.map(r => ({ d: r.data, a: +r.patrimonio, p: +r.carteira_parada }));
     pts.push({ d: "agora", a: vAgora, p: vpAgora });
-    const N = pts.length, W = 760, H = 150, L = 50, R = 12, T = 12, B = 22;
+    const N = pts.length, W = 760, H = 220, L = 50, R = 12, T = 12, B = 22;
     const vals = pts.flatMap(x => [x.a, x.p]).concat([CAPITAL]);
     let lo = Math.min(...vals), hi = Math.max(...vals); const fol = Math.max(5, (hi - lo) * .15); lo -= fol; hi += fol;
     const x = i => N === 1 ? (L + W - R) / 2 : L + (W - L - R) * i / (N - 1), y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
