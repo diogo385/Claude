@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mercado Cripto ao Vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Painel de mercado em tempo real. Dados públicos da Binance via WebSocket, sem chave de API. */
+:root {
+  --bg: #070b14; --grid: rgba(80, 140, 255, .06); --surface: rgba(14, 22, 38, .88); --surface-2: #0c1322; --deep: #050810;
+  --fg: #dbe6ff; --muted: #7d8db0; --line: #1d2a44; --line-hi: #2c4170;
+  --cyan: #3ee0ff; --violet: #9b7bff; --amber: #ffb547; --slate: #5f6f92;
+  --good: #3ef0a0; --bad: #ff5d73;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background-color: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  background-image:
+    radial-gradient(1200px 500px at 85% -10%, rgba(62, 224, 255, .10), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(155, 123, 255, .10), transparent 60%),
+    linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: auto, auto, 32px 32px, 32px 32px; background-attachment: fixed;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 18px 16px 48px; display: grid; gap: 16px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.top { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; justify-content: space-between; }
+.eyebrow { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; color: var(--cyan); text-transform: uppercase; }
+h1 { font-family: var(--display); font-size: clamp(1.4rem, 3.2vw, 2rem); font-weight: 700; letter-spacing: .02em; margin: 2px 0 0; text-transform: uppercase; }
+h1 em { font-style: normal; color: var(--cyan); text-shadow: 0 0 18px rgba(62, 224, 255, .45); }
+.status { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-family: var(--mono); font-size: .76rem; color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid currentColor; border-radius: 4px; padding: 3px 9px; letter-spacing: .06em; text-transform: uppercase; font-size: .7rem; font-weight: 600; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+.chip.good { color: var(--good); } .chip.warn { color: var(--amber); } .chip.bad { color: var(--bad); }
+.chip.good::before { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+
+.panel { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; min-width: 0; }
+.panel::before, .panel::after { content: ""; position: absolute; width: 12px; height: 12px; border-color: var(--cyan); border-style: solid; opacity: .8; pointer-events: none; }
+.panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 6px; }
+.panel::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 6px; }
+h2 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-family: var(--mono); font-size: .72rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); margin: 0 0 12px; }
+h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
+
+/* Lista de ativos */
+.assets { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 10px; }
+.asset { all: unset; box-sizing: border-box; cursor: pointer; position: relative; overflow: hidden; display: grid; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; transition: border-color .15s, box-shadow .15s; }
+.asset:hover { border-color: var(--line-hi); }
+.asset:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.asset[aria-pressed="true"] { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 22px rgba(62, 224, 255, .18); }
+.asset .sym { font-family: var(--mono); font-size: .74rem; letter-spacing: .1em; color: var(--muted); display: flex; justify-content: space-between; }
+.asset .px { font-family: var(--mono); font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; transition: color .5s; }
+.asset .chg { font-family: var(--mono); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.asset canvas { width: 100%; height: 30px; margin-top: 4px; display: block; }
+.flash-up { color: var(--good) !important; } .flash-down { color: var(--bad) !important; }
+.up { color: var(--good); } .down { color: var(--bad); }
+
+/* Área principal */
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+.headline { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: baseline; margin-bottom: 10px; }
+.headline .big { font-family: var(--mono); font-size: clamp(1.6rem, 3.6vw, 2.3rem); font-weight: 600; font-variant-numeric: tabular-nums; text-shadow: 0 0 22px rgba(62, 224, 255, .25); }
+.stat { font-family: var(--mono); font-size: .78rem; color: var(--muted); }
+.stat b { color: var(--fg); font-weight: 500; }
+.stat b.up { color: var(--good); } .stat b.down { color: var(--bad); }
+.tf { display: flex; gap: 6px; margin-left: auto; }
+.tf button { font-family: var(--mono); font-size: .72rem; font-weight: 600; letter-spacing: .06em; border-radius: 4px; padding: 5px 9px; cursor: pointer; border: 1px solid var(--line-hi); background: var(--surface-2); color: var(--muted); }
+.tf button[aria-pressed="true"] { color: var(--cyan); border-color: var(--cyan); }
+.tf button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.chartpanel { display: flex; flex-direction: column; }
+#candles { width: 100%; flex: 1; min-height: 380px; display: block; }
+
+.side { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.book, .trades { font-family: var(--mono); font-size: .76rem; font-variant-numeric: tabular-nums; }
+.book .row, .trades .row { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 2px 6px; }
+.book .row span:last-child, .trades .row span:nth-child(2) { text-align: right; }
+.book .row i { position: absolute; top: 0; bottom: 0; right: 0; opacity: .16; }
+.book .ask i { background: var(--bad); } .book .bid i { background: var(--good); }
+.book .ask span:first-child { color: var(--bad); } .book .bid span:first-child { color: var(--good); }
+.book .row span { position: relative; }
+.spread { text-align: center; padding: 6px 0; margin: 4px 0; border-block: 1px dashed var(--line); color: var(--muted); }
+.trades { max-height: 260px; overflow: hidden; }
+.trades .row { grid-template-columns: 1fr 1fr 64px; }
+.trades .row span:last-child { text-align: right; color: var(--slate); }
+.trades .buy span:first-child { color: var(--good); } .trades .sell span:first-child { color: var(--bad); }
+.head-row { color: var(--slate); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+
+.msg { font-family: var(--mono); font-size: .8rem; color: var(--amber); border: 1px dashed rgba(255, 181, 71, .5); border-radius: 6px; padding: 8px 12px; }
+.foot { font-size: .8rem; color: var(--muted); }
+
+@media (max-width: 900px) { .main { grid-template-columns: 1fr; } #candles { min-height: 300px; flex: none; height: 300px; } }
+@media (prefers-reduced-motion: reduce) { .chip.good::before { animation: none; } .asset .px { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Mercado à vista · pares em reais · dados públicos Binance</div>
+      <h1>Mercado <em>Cripto</em> // Ao vivo</h1>
+    </div>
+    <div class="status">
+      <span id="conn" class="chip warn">Conectando</span>
+      <span>atraso <span class="num" id="lat">--</span> · <span class="num" id="clock">--</span></span>
+    </div>
+  </header>
+
+  <div class="msg" id="msg" hidden></div>
+
+  <section class="assets" id="assets" aria-label="Ativos acompanhados"></section>
+
+  <div class="main">
+    <section class="panel chartpanel">
+      <div class="headline">
+        <span class="big" id="bigPx">--</span>
+        <span class="stat">24h <b id="stChg">--</b></span>
+        <span class="stat">máx <b id="stHi">--</b></span>
+        <span class="stat">mín <b id="stLo">--</b></span>
+        <span class="stat">volume <b id="stVol">--</b></span>
+        <div class="tf" id="tf">
+          <button type="button" data-tf="1m" aria-pressed="true">1m</button>
+          <button type="button" data-tf="5m" aria-pressed="false">5m</button>
+          <button type="button" data-tf="15m" aria-pressed="false">15m</button>
+          <button type="button" data-tf="1h" aria-pressed="false">1h</button>
+        </div>
+      </div>
+      <canvas id="candles" aria-label="Gráfico de velas do ativo selecionado"></canvas>
+    </section>
+
+    <div class="side">
+      <section class="panel">
+        <h2>Livro de ofertas <small id="bookSym">--</small></h2>
+        <div class="book" id="book"></div>
+      </section>
+      <section class="panel">
+        <h2>Últimas negociações</h2>
+        <div class="trades" id="trades"><div class="row head-row"><span>Preço</span><span>Qtd.</span><span>Hora</span></div></div>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">Somente leitura: esta página não usa chave de API e não envia ordens. Preços em R$ dos pares à vista da Binance. Clique em um ativo para abrir o gráfico.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const ASSETS = [
+    { s: "BTCBRL", name: "Bitcoin" }, { s: "ETHBRL", name: "Ethereum" }, { s: "SOLBRL", name: "Solana" },
+    { s: "BNBBRL", name: "BNB" }, { s: "XRPBRL", name: "XRP" }, { s: "USDTBRL", name: "Tether" }
+  ];
+  const REST = ["https://data-api.binance.vision", "https://api.binance.com"];
+  const WS = ["wss://data-stream.binance.vision/stream", "wss://stream.binance.com:9443/stream"];
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  let sel = ASSETS[0].s, tf = "1m", candles = [], ws = null, wsIdx = 0, restIdx = 0, retry = 0, lastEvent = 0;
+  const state = {}; // por símbolo: { px, open, hi, lo, qv, spark: [] }
+
+  // Formatação
+  const dec = p => p >= 1000 ? 2 : p >= 10 ? 2 : p >= 1 ? 3 : 4;
+  const brl = p => "R$ " + p.toLocaleString("pt-BR", { minimumFractionDigits: dec(p), maximumFractionDigits: dec(p) });
+  const pct = v => (v >= 0 ? "+" : "−") + Math.abs(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+  const qty = q => q.toLocaleString("pt-BR", { maximumFractionDigits: q >= 100 ? 1 : q >= 1 ? 3 : 5 });
+  const compact = v => "R$ " + v.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
+  const hhmmss = t => new Date(t).toLocaleTimeString("pt-BR");
+  const showMsg = t => { const m = $("msg"); m.textContent = t; m.hidden = !t; };
+
+  // REST com alternativa de domínio
+  async function rest(path) {
+    for (let k = 0; k < REST.length; k++) {
+      const base = REST[(restIdx + k) % REST.length];
+      try {
+        const r = await fetch(base + path);
+        if (r.ok) { restIdx = (restIdx + k) % REST.length; return await r.json(); }
+      } catch (e) { /* tenta o próximo */ }
+    }
+    throw new Error("rest");
+  }
+
+  // Cartões de ativos
+  function buildCards() {
+    const box = $("assets");
+    ASSETS.forEach(a => {
+      state[a.s] = { spark: [] };
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "asset"; b.dataset.s = a.s; b.setAttribute("aria-pressed", a.s === sel);
+      b.innerHTML = `<span class="sym"><span>${a.s.replace("BRL", "")}/BRL</span><span>${a.name}</span></span>
+        <span class="px">--</span><span class="chg">--</span><canvas width="200" height="30"></canvas>`;
+      b.addEventListener("click", () => select(a.s));
+      box.appendChild(b);
+    });
+  }
+  function card(s) { return document.querySelector(`.asset[data-s="${s}"]`); }
+
+  function drawSpark(s) {
+    const st = state[s], c = card(s).querySelector("canvas");
+    const dpr = window.devicePixelRatio || 1, w = c.clientWidth || 160, h = 30;
+    c.width = w * dpr; c.height = h * dpr;
+    const g = c.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+    const d = st.spark; if (d.length < 2) return;
+    const lo = Math.min(...d), hi = Math.max(...d), span = hi - lo || 1;
+    const col = d[d.length - 1] >= d[0] ? css("--good") : css("--bad");
+    g.beginPath();
+    d.forEach((v, i) => { const x = i / (d.length - 1) * w, y = h - 3 - (v - lo) / span * (h - 6); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.strokeStyle = col; g.lineWidth = 1.4; g.shadowColor = col; g.shadowBlur = 6; g.stroke();
+  }
+
+  function updateCard(s) {
+    const st = state[s], el = card(s); if (!el || st.px == null) return;
+    const pxEl = el.querySelector(".px"), chg = (st.px / st.open - 1) * 100;
+    if (st.prev != null && st.px !== st.prev) {
+      pxEl.classList.remove("flash-up", "flash-down"); void pxEl.offsetWidth;
+      pxEl.classList.add(st.px > st.prev ? "flash-up" : "flash-down");
+      clearTimeout(st.ft); st.ft = setTimeout(() => pxEl.classList.remove("flash-up", "flash-down"), 600);
+    }
+    st.prev = st.px;
+    pxEl.textContent = brl(st.px);
+    const c = el.querySelector(".chg"); c.textContent = pct(chg) + " 24h"; c.className = "chg " + (chg >= 0 ? "up" : "down");
+    if (st.spark.length) { st.spark[st.spark.length - 1] = st.px; drawSpark(s); }
+    if (s === sel) updateHeadline();
+  }
+
+  function updateHeadline() {
+    const st = state[sel]; if (st.px == null) return;
+    $("bigPx").textContent = brl(st.px);
+    const chg = (st.px / st.open - 1) * 100, e = $("stChg");
+    e.textContent = pct(chg); e.className = chg >= 0 ? "up" : "down";
+    $("stHi").textContent = brl(st.hi); $("stLo").textContent = brl(st.lo); $("stVol").textContent = compact(st.qv);
+    document.title = `${brl(st.px)} ${sel.replace("BRL", "")} · Mercado Cripto ao Vivo`;
+  }
+
+  async function loadSparks() {
+    await Promise.all(ASSETS.map(async a => {
+      try {
+        const k = await rest(`/api/v3/klines?symbol=${a.s}&interval=1h&limit=24`);
+        state[a.s].spark = k.map(r => +r[4]); drawSpark(a.s);
+      } catch (e) { /* par pode não existir */ }
+    }));
+  }
+
+  // Gráfico de velas
+  async function loadCandles() {
+    candles = [];
+    drawCandles();
+    try {
+      const k = await rest(`/api/v3/klines?symbol=${sel}&interval=${tf}&limit=120`);
+      candles = k.map(r => ({ t: r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4] }));
+    } catch (e) { showMsg("Não foi possível baixar o histórico de preços. Verifique a conexão."); }
+    drawCandles();
+  }
+
+  function drawCandles() {
+    const c = $("candles"), dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+    c.width = w * dpr; c.height = h * dpr;
+    const g = c.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+    const P = { l: 8, r: 88, t: 10, b: 24 };
+    g.font = "11px " + css("--mono");
+    if (!candles.length) { g.fillStyle = css("--muted"); g.fillText("carregando…", P.l + 4, 24); return; }
+    const all = candles; const candles_ = all.slice(-Math.max(30, Math.floor((w - P.l - P.r) / 7)));
+    const lo = Math.min(...candles_.map(k => k.l)), hi = Math.max(...candles_.map(k => k.h)), pad = (hi - lo) * .06 || hi * .001;
+    const min = lo - pad, max = hi + pad;
+    const y = v => P.t + (h - P.t - P.b) * (1 - (v - min) / (max - min));
+    const cw = (w - P.l - P.r) / candles_.length;
+    // grade e eixo de preço
+    g.strokeStyle = css("--line"); g.fillStyle = css("--muted"); g.lineWidth = 1; g.setLineDash([2, 4]);
+    for (let i = 0; i <= 5; i++) {
+      const v = min + (max - min) * i / 5, yy = Math.round(y(v)) + .5;
+      g.beginPath(); g.moveTo(P.l, yy); g.lineTo(w - P.r, yy); g.stroke();
+      g.fillText(v.toLocaleString("pt-BR", { maximumFractionDigits: dec(v) }), w - P.r + 8, yy + 4);
+    }
+    g.setLineDash([]);
+    // eixo de tempo
+    const step = Math.ceil(candles_.length / 6);
+    candles_.forEach((k, i) => { if (i % step === 0) { const d = new Date(k.t); g.fillText(tf === "1h" ? `${d.getDate()}/${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}h` : d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), P.l + i * cw, h - 6); } });
+    // velas
+    const up = css("--good"), dn = css("--bad");
+    candles_.forEach((k, i) => {
+      const x = P.l + i * cw + cw / 2, col = k.c >= k.o ? up : dn;
+      g.strokeStyle = col; g.fillStyle = col;
+      g.beginPath(); g.moveTo(Math.round(x) + .5, y(k.h)); g.lineTo(Math.round(x) + .5, y(k.l)); g.stroke();
+      const bw = Math.max(1, cw * .62), top = y(Math.max(k.o, k.c)), bh = Math.max(1, Math.abs(y(k.o) - y(k.c)));
+      g.fillRect(x - bw / 2, top, bw, bh);
+    });
+    // linha do preço atual
+    const last = candles_[candles_.length - 1].c, ly = Math.round(y(last)) + .5, cy = css("--cyan");
+    g.strokeStyle = cy; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(P.l, ly); g.lineTo(w - P.r, ly); g.stroke(); g.setLineDash([]);
+    g.fillStyle = cy; g.shadowColor = cy; g.shadowBlur = 10; g.fillRect(w - P.r + 2, ly - 9, P.r - 4, 18); g.shadowBlur = 0;
+    g.fillStyle = css("--bg"); g.font = "600 11px " + css("--mono");
+    g.fillText(last.toLocaleString("pt-BR", { minimumFractionDigits: dec(last), maximumFractionDigits: dec(last) }), w - P.r + 6, ly + 4);
+  }
+
+  function onKline(k) {
+    const bar = { t: k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c };
+    if (!candles.length) return;
+    const last = candles[candles.length - 1];
+    if (bar.t === last.t) candles[candles.length - 1] = bar;
+    else if (bar.t > last.t) { candles.push(bar); if (candles.length > 120) candles.shift(); }
+    drawCandles();
+  }
+
+  // Livro de ofertas e negociações
+  function onDepth(d) {
+    const asks = d.asks.slice(0, 10).map(r => [+r[0], +r[1]]).reverse(), bids = d.bids.slice(0, 10).map(r => [+r[0], +r[1]]);
+    const maxQ = Math.max(...asks.map(r => r[1]), ...bids.map(r => r[1]), 1e-12);
+    const row = (cls, [p, q]) => `<div class="row ${cls}"><i style="width:${(q / maxQ * 100).toFixed(1)}%"></i><span>${p.toLocaleString("pt-BR", { minimumFractionDigits: dec(p), maximumFractionDigits: dec(p) })}</span><span>${qty(q)}</span></div>`;
+    const sp = asks.length && bids.length ? asks[asks.length - 1][0] - bids[0][0] : 0;
+    const spPct = bids.length ? sp / bids[0][0] * 100 : 0;
+    $("book").innerHTML = `<div class="row head-row"><span>Preço (R$)</span><span>Qtd.</span></div>` +
+      asks.map(r => row("ask", r)).join("") +
+      `<div class="spread">spread ${sp.toLocaleString("pt-BR", { maximumFractionDigits: dec(sp || 1) })} · ${spPct.toLocaleString("pt-BR", { maximumFractionDigits: 3 })}%</div>` +
+      bids.map(r => row("bid", r)).join("");
+  }
+
+  function onTrade(t) {
+    const box = $("trades"), p = +t.p, el = document.createElement("div");
+    el.className = "row " + (t.m ? "sell" : "buy");
+    el.innerHTML = `<span>${p.toLocaleString("pt-BR", { minimumFractionDigits: dec(p), maximumFractionDigits: dec(p) })}</span><span>${qty(+t.q)}</span><span>${hhmmss(t.T)}</span>`;
+    box.insertBefore(el, box.children[1] || null);
+    while (box.children.length > 16) box.removeChild(box.lastChild);
+  }
+
+  // WebSocket
+  const tickerStreams = () => ASSETS.map(a => a.s.toLowerCase() + "@miniTicker");
+  const selStreams = () => { const l = sel.toLowerCase(); return [`${l}@kline_${tf}`, `${l}@depth10@100ms`, `${l}@trade`]; };
+  let subscribed = [], msgId = 1;
+
+  function setConn(cls, text) { const c = $("conn"); c.className = "chip " + cls; c.textContent = text; }
+
+  function connect() {
+    const url = WS[wsIdx % WS.length] + "?streams=" + tickerStreams().concat(selStreams()).join("/");
+    subscribed = selStreams();
+    setConn("warn", retry ? "Reconectando" : "Conectando");
+    try { ws = new WebSocket(url); } catch (e) { return scheduleReconnect(); }
+    const opened = { ok: false };
+    ws.onopen = () => { opened.ok = true; retry = 0; setConn("good", "Ao vivo"); showMsg(""); };
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (!m.stream || !m.data) return;
+      const d = m.data, st = m.stream;
+      if (d.E) { lastEvent = Date.now(); $("lat").textContent = Math.max(0, Date.now() - d.E) + " ms"; }
+      if (st.endsWith("@miniTicker")) {
+        const s = state[d.s]; if (!s) return;
+        s.px = +d.c; s.open = +d.o; s.hi = +d.h; s.lo = +d.l; s.qv = +d.q; updateCard(d.s);
+      } else if (st.startsWith(sel.toLowerCase() + "@kline_" + tf)) onKline(d.k);
+      else if (st === sel.toLowerCase() + "@depth10@100ms") onDepth(d);
+      else if (st === sel.toLowerCase() + "@trade") onTrade(d);
+    };
+    ws.onclose = () => { if (!opened.ok) wsIdx++; scheduleReconnect(); };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  }
+  function scheduleReconnect() {
+    retry++; setConn("bad", "Desconectado");
+    if (retry >= 3) showMsg("Sem conexão com a Binance. Tentando de novo… Se persistir, verifique a internet ou se a rede bloqueia o site.");
+    setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(retry, 5)));
+  }
+  function resubscribe() {
+    if (!ws || ws.readyState !== 1) return;
+    const next = selStreams();
+    ws.send(JSON.stringify({ method: "UNSUBSCRIBE", params: subscribed, id: msgId++ }));
+    ws.send(JSON.stringify({ method: "SUBSCRIBE", params: next, id: msgId++ }));
+    subscribed = next;
+  }
+
+  // Seleção de ativo e tempo gráfico
+  function select(s) {
+    if (s === sel) return;
+    sel = s;
+    document.querySelectorAll(".asset").forEach(b => b.setAttribute("aria-pressed", b.dataset.s === s));
+    $("bookSym").textContent = s.replace("BRL", "/BRL");
+    $("book").innerHTML = ""; const tr = $("trades"); while (tr.children.length > 1) tr.removeChild(tr.lastChild);
+    updateHeadline(); loadCandles(); resubscribe();
+  }
+  $("tf").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.dataset.tf === tf) return;
+    tf = b.dataset.tf; document.querySelectorAll("#tf button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    loadCandles(); resubscribe();
+  });
+
+  // Relógio e verificação de dados parados
+  setInterval(() => {
+    $("clock").textContent = new Date().toLocaleTimeString("pt-BR");
+    if (ws && ws.readyState === 1 && lastEvent && Date.now() - lastEvent > 15000) setConn("warn", "Sem dados há 15 s");
+    else if (ws && ws.readyState === 1 && lastEvent) setConn("good", "Ao vivo");
+  }, 1000);
+  let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { drawCandles(); ASSETS.forEach(a => drawSpark(a.s)); }, 120); });
+
+  buildCards();
+  $("bookSym").textContent = sel.replace("BRL", "/BRL");
+  loadSparks(); loadCandles(); connect();
+})();
+</script>
+</body>
+</html>
