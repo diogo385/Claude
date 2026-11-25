@@ -13,3 +13,4 @@ data_hora;conta;tipo;descricao;valor;taxa;saldo_reais
 2026-11-25 11:31;Satélite;COMPRA;Compra de 55,1996 ADA a R$ 0,8140 (montagem);-45.00;0.0675;905.00
 2026-11-25 11:31;Satélite;COMPRA;Compra de 1,0671 AVAX a R$ 37,43 (montagem);-40.00;0.0600;865.00
 2026-11-25 11:31;Satélite;COMPRA;Compra de 2,4398 NEAR a R$ 16,37 (montagem);-40.00;0.0600;825.00
+2026-11-25 11:54;Satélite;DEPÓSITO;Reserva da satélite (para oportunidades);100.00;0.0000;925.00

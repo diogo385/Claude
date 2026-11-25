@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-25T11:31:09.031466-03:00",
+  "ultima_execucao": "2026-11-25T11:54:38.216469-03:00",
   "ops_dia": {
     "data": "2026-11-25",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 343684.0,
-    "eth": 9650.54,
-    "sol": 395.2,
-    "xrp": 5.327,
-    "bnb": 3158.0,
-    "link": 50.7,
-    "ltc": 236.0,
-    "doge": 0.3133,
-    "ada": 0.814,
-    "avax": 37.43,
-    "near": 16.37
+    "btc": 340911.0,
+    "eth": 9607.96,
+    "sol": 394.0,
+    "xrp": 5.279,
+    "bnb": 3136.0,
+    "link": 50.41,
+    "ltc": 236.1,
+    "doge": 0.3126,
+    "ada": 0.81,
+    "avax": 37.33,
+    "near": 16.34
   },
   "reserva": {
     "saldo": 500.0,
@@ -68,7 +68,7 @@
   },
   "parada_reserva": 500.0,
   "investido": 1000.0,
-  "capital_total": 1750.0,
+  "capital_total": 1850.0,
   "pico_cota": 1.0,
   "ops_periodo": 0,
   "satelite": {
@@ -110,6 +110,40 @@
     },
     "rebalanceamentos": 0,
     "taxas": 0.3375,
-    "pico": 250.0
-  }
+    "pico": 349.1714089745238,
+    "reserva": {
+      "saldo": 100.0
+    },
+    "posicoes": [],
+    "ultima_oport": {},
+    "parada_reserva": 100.0,
+    "sinais": {
+      "ltc": {
+        "status": "caindo",
+        "queda": 0.1756,
+        "repique": 0.0025
+      },
+      "doge": {
+        "status": "caindo",
+        "queda": 0.1891,
+        "repique": 0.0016
+      },
+      "ada": {
+        "status": "caindo",
+        "queda": 0.19,
+        "repique": 0.0012
+      },
+      "avax": {
+        "status": "caindo",
+        "queda": 0.2308,
+        "repique": 0.0
+      },
+      "near": {
+        "status": "caindo",
+        "queda": 0.2238,
+        "repique": 0.0
+      }
+    }
+  },
+  "ultima_checagem_carteiras": "2026-11-25T11:54:38.216469-03:00"
 }
