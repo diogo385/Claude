@@ -122,6 +122,7 @@ h1 span { color: var(--amber); }
 .step.usado b { color: var(--amber); }
 .dd { grid-column: 1 / -1; }
 .dd .track { height: 10px; }
+.side.sat { color: var(--teal); border: 1px solid var(--teal); margin-left: 4px; }
 .side.aporte { color: var(--amber); border: 1px solid var(--amber); }
 @media (max-width: 560px) { .res { grid-template-columns: 1fr; } .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .foot { color: var(--dim); font-size: 11px; padding: 10px 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -145,7 +146,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="regras.html?v=5">Regras</a><span class="mode">simulado</span></span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="regras.html?v=6">Regras</a><span class="mode">simulado</span></span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -182,6 +183,14 @@ h1 span { color: var(--amber); }
                   <div class="mark" style="left:20%"></div><div class="mark" style="left:30%"></div><div class="mark" style="left:40%"></div><div class="mark" style="left:50%"></div></div></div></div>
               <p class="note" id="rNota">--</p>
             </div>
+          </div>
+        </section>
+
+        <section class="box" id="satBox" hidden>
+          <h2>🛰️ Carteira satélite <small id="satInfo"></small></h2>
+          <div class="res">
+            <div><div class="big num" id="satVal" style="color: var(--teal)">--</div><div class="lab" id="satLab">--</div></div>
+            <div class="alloc" id="satAlloc"></div>
           </div>
         </section>
 
@@ -276,6 +285,7 @@ h1 span { color: var(--amber); }
   const brasilia = () => new Date(Date.now() - 3 * 3600e3);
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
 
+  let sat = null, satAtivos = [], opsSat = [];
   let estado = null, hist = [], ops = [], px = null, px24 = {}, pxHora = 0, ativos = [], GATILHO = 0.01;
 
   function aviso(t) { const m = $("msg"); m.textContent = t; m.hidden = !t; }
@@ -317,6 +327,8 @@ h1 span { color: var(--amber); }
       estado = novo; ativos = Object.keys(estado.alvo); GATILHO = estado.gatilho || 0.01;
       hist = csv(await baixar("historico.csv"));
       try { ops = csv(await baixar("operacoes.csv")); } catch (e) { ops = []; }
+      sat = estado.satelite || null; satAtivos = sat ? Object.keys(sat.alvo) : [];
+      try { opsSat = sat ? csv(await baixar("operacoes_satelite.csv")) : []; } catch (e) { opsSat = []; }
       if (mudou) montarEstrutura();
       aviso("");
     } catch (e) {
@@ -327,14 +339,16 @@ h1 span { color: var(--amber); }
 
   async function carregarPrecos() {
     if (!estado) return;
-    const pares = ativos.map(a => estado.pares[a]);
+    const todosPares = Object.assign({}, estado.pares, sat ? sat.pares : {});
+    const todos = Object.keys(todosPares);
+    const pares = todos.map(a => todosPares[a]);
     for (const base of FONTES) {
       try {
         const r = await fetch(`${base}/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(pares))}`);
         if (!r.ok) continue;
         const m = {}; (await r.json()).forEach(x => { m[x.symbol] = x; });
         px = {}; px24 = {};
-        ativos.forEach(a => { px[a] = +m[estado.pares[a]].lastPrice; px24[a] = +m[estado.pares[a]].priceChangePercent / 100; });
+        todos.forEach(a => { const x = m[todosPares[a]]; if (x) { px[a] = +x.lastPrice; px24[a] = +x.priceChangePercent / 100; } });
         pxHora = Date.now(); render(); return;
       } catch (e) { /* próxima fonte */ }
     }
@@ -342,6 +356,37 @@ h1 span { color: var(--amber); }
   }
 
   const valor = (c, p) => c.reais + ativos.reduce((s, a) => s + (c[a] || 0) * p[a], 0);
+  const valorSat = (c, p) => c.reais + satAtivos.reduce((s, a) => s + (c[a] || 0) * (p[a] || 0), 0);
+  const CORES_SAT = { ltc: "#a7b4c8", doge: "#d9b26a", ada: "#5fb4ff", avax: "#ff5d6c", near: "#3df59a" };
+
+  function renderSat(p) {
+    const box = $("satBox"); if (!sat) { box.hidden = true; return; }
+    box.hidden = false;
+    const c = sat.carteira, v = valorSat(c, p), vp = valorSat(sat.parada, p);
+    set("satVal", brl(v));
+    set("satLab", `${pct(v / sat.aporte - 1)} sobre ${brl(sat.aporte, 0)} · ${sgn(v - vp)}${brl(Math.abs(v - vp))} vs parada`);
+    const hoje = brasilia().toISOString().slice(0, 10);
+    const nHoje = sat.ops_dia && sat.ops_dia.data === hoje ? sat.ops_dia.n : 0;
+    set("satInfo", `${sat.rebalanceamentos} rebalanceamentos · ${nHoje} de 3 hoje`);
+    const al = $("satAlloc");
+    if (!al.children.length) satAtivos.concat(["reais"]).forEach(a => {
+      const alvo = a === "reais" ? 1 - Object.values(sat.alvo).reduce((t, x) => t + x, 0) : sat.alvo[a];
+      const row = el("div", "row"), top = el("div", "top"); top.id = "sal-" + a;
+      top.append(el("b", "", a === "reais" ? "Reais" : a.toUpperCase()), el("span", "num", "--"));
+      const tr = el("div", "track");
+      if (a !== "reais") { const band = el("div", "band"); band.style.left = ((alvo - GATILHO) * 100) + "%"; band.style.width = (GATILHO * 200) + "%"; tr.appendChild(band); }
+      const f = el("div", "fill"); f.id = "sfill-" + a; f.style.setProperty("--c", a === "reais" ? "#3df59a" : (CORES_SAT[a] || "#d9f2ea")); f.style.width = "0";
+      const mk = el("div", "mark"); mk.style.left = (alvo * 100) + "%";
+      tr.append(f, mk); row.append(top, tr); al.appendChild(row);
+    });
+    satAtivos.concat(["reais"]).forEach(a => {
+      const w = a === "reais" ? c.reais / v : (c[a] || 0) * (p[a] || 0) / v;
+      const alvo = a === "reais" ? 1 - Object.values(sat.alvo).reduce((t, x) => t + x, 0) : sat.alvo[a];
+      const top = $("sal-" + a); if (!top) return;
+      top.children[1].textContent = `${nf(w * 100, 1)}% · alvo ${Math.round(alvo * 100)}%` + (a !== "reais" && p[a] ? ` · ${brl(p[a], p[a] < 1 ? 4 : 2)}` : "");
+      $("sfill-" + a).style.width = Math.min(100, w * 100) + "%";
+    });
+  }
 
   function render() {
     if (!estado) return;
@@ -350,13 +395,14 @@ h1 span { color: var(--amber); }
     const res = estado.reserva || { saldo: 0, usados: [], aportes: [] };
     const capTot = estado.capital_total || CAPITAL;
     const vc = valor(c, p);
-    const v = vc + res.saldo, vp = valor(par, p) + (estado.parada_reserva || 0);
+    const vSat = sat ? valorSat(sat.carteira, p) : 0, vSatPar = sat ? valorSat(sat.parada, p) : 0;
+    const v = vc + res.saldo + vSat, vp = valor(par, p) + (estado.parada_reserva || 0) + vSatPar;
     const w = {}; ativos.forEach(a => w[a] = c[a] * p[a] / vc); w.reais = c.reais / vc;
     const dias = Math.max(0, Math.floor((Date.now() - new Date(estado.inicio)) / 864e5));
     const ultExec = estado.ultima_execucao ? new Date(estado.ultima_execucao) : null;
     const horasDesde = ultExec ? (Date.now() - ultExec) / 36e5 : 999;
 
-    set("kVal", brl(v)); set("kOps", String(ops.length));
+    set("kVal", brl(v)); set("kOps", String(ops.length + opsSat.filter(o => +o.peso_antes > 0).length));
     set("kRet", pct(v / capTot - 1), v >= capTot ? "up" : "down");
     set("kRetLab", `em ${dias} ${dias === 1 ? "dia" : "dias"}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
@@ -449,6 +495,7 @@ h1 span { color: var(--amber); }
     set("aRes", `${brl(res.saldo, 0)} disponível · ${res.usados.length} de 4 degraus · queda ${nf(queda * 100, 1)}%`);
     set("aResSt", res.saldo <= 0 ? "EMPTY" : "ARMED");
 
+    renderSat(p);
     grafico(v, vp); diario();
   }
 
@@ -477,8 +524,10 @@ h1 span { color: var(--amber); }
   function diario() {
     const box = $("logBox"); box.textContent = "";
     const aps = ((estado && estado.reserva && estado.reserva.aportes) || []).map(a => ({ data_hora: a.data_hora, tipo: "APORTE", ap: a }));
-    const linhas = ops.concat(aps).sort((x, y) => x.data_hora < y.data_hora ? -1 : x.data_hora > y.data_hora ? 1 : (x.tipo === "APORTE" ? -1 : 1));
-    set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}` + (aps.length ? ` · ${aps.length} ${aps.length === 1 ? "aporte" : "aportes"} da reserva` : ""));
+    const sats = opsSat.map(o => Object.assign({ sat: true }, o));
+    const linhas = ops.concat(aps, sats).sort((x, y) => x.data_hora < y.data_hora ? -1 : x.data_hora > y.data_hora ? 1 : (x.tipo === "APORTE" ? -1 : 1));
+    const nOps = ops.length + sats.length;
+    set("logCount", `${nOps} ${nOps === 1 ? "operação" : "operações"}` + (aps.length ? ` · ${aps.length} ${aps.length === 1 ? "aporte" : "aportes"} da reserva` : ""));
     if (!linhas.length) {
       box.appendChild(el("div", "empty", "Nenhuma operação ainda."));
       return;
@@ -494,10 +543,12 @@ h1 span { color: var(--amber); }
       }
       const a = o.ativo.toLowerCase();
       tr.appendChild(el("td", "num", `${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)} ${o.data_hora.slice(11, 16)}`));
-      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" ? "sell" : "buy"), o.tipo)); tr.appendChild(td2);
+      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" ? "sell" : "buy"), o.tipo)); if (o.sat) td2.appendChild(el("span", "side sat", "SAT")); tr.appendChild(td2);
       const td3 = el("td"); const q = +o.quantidade;
       td3.append(el("b", "", `${SIMB[a] || "●"} ${o.ativo} · ${nf(q, q < 1 ? 6 : 4)}`),
-        el("div", "why", `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da carteira (alvo ${Math.round((estado.alvo[a] || 0) * 100)}%) · preço ${brl(+o.preco, casas(+o.preco))} · taxa ${brl(+o.taxa)}`));
+        el("div", "why", (o.sat && +o.peso_antes === 0 ? "montagem da satélite" :
+          `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da ${o.sat ? "satélite" : "carteira"} (alvo ${Math.round(((o.sat ? sat && sat.alvo[a] : estado.alvo[a]) || 0) * 100)}%)`) +
+          ` · preço ${brl(+o.preco, +o.preco < 1 ? 4 : casas(+o.preco))} · taxa ${brl(+o.taxa)}`));
       tr.appendChild(td3);
       tr.appendChild(el("td", "r num", brl(+o.valor_reais)));
       tb.appendChild(tr);

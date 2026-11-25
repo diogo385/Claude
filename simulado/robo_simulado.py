@@ -8,6 +8,8 @@
   (desvio de 2,5 pontos ou mais). O resumo diário sai na checagem das 7h (Brasília).
 - Reserva de oportunidade: R$ 500 fora da carteira. Entra em degraus de R$ 125 quando a carteira
   cai 20%, 30%, 40% e 50% desde o pico (medido por cota, sem contar os aportes).
+- Carteira satélite (risco maior): aporte de R$ 250 em LTC 20% · DOGE 20% · ADA 18% · AVAX 16% · NEAR 16%
+  · reais 10%, com as mesmas regras de operação e sem reserva. Operações em simulado/operacoes_satelite.csv.
 - Guarda tudo em simulado/estado.json, simulado/operacoes.csv e simulado/historico.csv.
 - Avisa no Telegram se TELEGRAM_TOKEN e TELEGRAM_CHAT_ID estiverem configurados.
 
@@ -26,11 +28,15 @@ PASTA = Path(__file__).resolve().parent
 ESTADO = PASTA / "estado.json"
 OPERACOES = PASTA / "operacoes.csv"
 HISTORICO = PASTA / "historico.csv"
+OPERACOES_SAT = PASTA / "operacoes_satelite.csv"
 
 VERSAO = 2
 CAPITAL = 1000.0
 ALVO = {"btc": 0.35, "eth": 0.15, "sol": 0.08, "xrp": 0.05, "bnb": 0.04, "link": 0.03}  # o resto (30%) fica em reais
 PARES = {a: a.upper() + "BRL" for a in ALVO}
+SAT_APORTE = 250.0
+SAT_ALVO = {"ltc": 0.20, "doge": 0.20, "ada": 0.18, "avax": 0.16, "near": 0.16}  # o resto (10%) fica em reais
+SAT_PARES = {a: a.upper() + "BRL" for a in SAT_ALVO}
 DESVIO_MIN = 0.01        # 1ª operação do dia: ativo 1 ponto ou mais fora do alvo
 DESVIO_EXTRA = 0.025     # 2ª e 3ª operações do dia: só com 2,5 pontos ou mais (oportunidade muito boa)
 MAX_OPS_DIA = 3          # no máximo 3 operações por dia
@@ -50,6 +56,13 @@ APORTE = 125.0           # quanto entra em cada degrau
 # ---------- utilidades ----------
 def brl(v):
     s = f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {s}"
+
+
+def preco(v):
+    """Preço com casas suficientes para moedas baratas (ex.: DOGE a R$ 0,3132)."""
+    casas = 2 if v >= 10 else 4 if v >= 0.01 else 8
+    s = f"{v:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"R$ {s}"
 
 
@@ -75,13 +88,14 @@ def telegram(texto):
 
 
 def precos():
-    simbolos = urllib.parse.quote(json.dumps(list(PARES.values()), separators=(",", ":")))
+    todos = PARES | SAT_PARES
+    simbolos = urllib.parse.quote(json.dumps(list(todos.values()), separators=(",", ":")))
     erros = []
     for base in FONTES:
         try:
             with urllib.request.urlopen(f"{base}/api/v3/ticker/price?symbols={simbolos}", timeout=30) as r:
                 lido = {x["symbol"]: float(x["price"]) for x in json.loads(r.read())}
-            px = {a: lido[p] for a, p in PARES.items()}
+            px = {a: lido[p] for a, p in todos.items()}
             if all(v > 0 for v in px.values()):
                 return px
         except Exception as e:
@@ -90,19 +104,19 @@ def precos():
 
 
 # ---------- carteira ----------
-def valor(c, px):
-    return c["reais"] + sum(c.get(a, 0.0) * px[a] for a in ALVO)
+def valor(c, px, alvo=ALVO):
+    return c["reais"] + sum(c.get(a, 0.0) * px[a] for a in alvo)
 
 
-def pesos(c, px):
-    v = valor(c, px)
-    return {a: c.get(a, 0.0) * px[a] / v for a in ALVO} | {"reais": c["reais"] / v}
+def pesos(c, px, alvo=ALVO):
+    v = valor(c, px, alvo)
+    return {a: c.get(a, 0.0) * px[a] / v for a in alvo} | {"reais": c["reais"] / v}
 
 
-def montar(px):
-    c = {"reais": CAPITAL}
-    for a, p in ALVO.items():
-        gasto = CAPITAL * p
+def montar(px, alvo=ALVO, capital=CAPITAL):
+    c = {"reais": capital}
+    for a, p in alvo.items():
+        gasto = capital * p
         c[a] = gasto * (1 - CUSTO) / px[a]
         c["reais"] -= gasto
     return c
@@ -127,11 +141,11 @@ def estado_inicial(px, agora):
     }
 
 
-def rebalancear(c, px, limite, ja_feitas):
+def rebalancear(c, px, limite, ja_feitas, ALVO=ALVO):
     """Opera o(s) ativo(s) mais fora do alvo, até `limite` operações. Nunca usa saldo que não existe.
     A 1ª operação do dia exige DESVIO_MIN; as seguintes exigem DESVIO_EXTRA."""
     feitas = []
-    v = valor(c, px)
+    v = valor(c, px, ALVO)
     fila = sorted(ALVO, key=lambda a: -abs(c[a] * px[a] / v - ALVO[a]))
     for a in fila:
         if len(feitas) >= limite:
@@ -155,12 +169,12 @@ def rebalancear(c, px, limite, ja_feitas):
             feitas.append({"tipo": "VENDA", "ativo": a, "qtd": qtd, "reais": venda, "taxa": venda * CUSTO, "peso_antes": peso})
         if c["reais"] < -1e-9 or c[a] < -1e-12:
             raise RuntimeError("Trava: saldo negativo detectado. Nenhuma dívida é permitida.")
-        v = valor(c, px)
+        v = valor(c, px, ALVO)
     return feitas
 
 
-def texto_pesos(p):
-    return " · ".join(f"{a.upper()} {p[a]*100:.0f}%" for a in ALVO) + f" · R$ {p['reais']*100:.0f}%"
+def texto_pesos(p, alvo=ALVO):
+    return " · ".join(f"{a.upper()} {p[a]*100:.0f}%" for a in alvo) + f" · R$ {p['reais']*100:.0f}%"
 
 
 def qtd_txt(q):
@@ -209,6 +223,32 @@ def usar_reserva(est, c, v, agora):
     return feitos
 
 
+# ---------- carteira satélite ----------
+def preparar_satelite(est, px, agora):
+    """Faz o aporte de R$ 250 na carteira satélite (uma vez). Devolve as compras de montagem."""
+    if "satelite" in est:
+        return []
+    c = montar(px, SAT_ALVO, SAT_APORTE)
+    est["satelite"] = {
+        "inicio": agora.isoformat(), "aporte": SAT_APORTE, "alvo": SAT_ALVO, "pares": SAT_PARES,
+        "carteira": c, "parada": dict(c), "ops_dia": {"data": agora.date().isoformat(), "n": 0},
+        "rebalanceamentos": 0, "taxas": SAT_APORTE * sum(SAT_ALVO.values()) * CUSTO, "pico": SAT_APORTE,
+    }
+    est["capital_total"] = est.get("capital_total", CAPITAL) + SAT_APORTE
+    return [{"tipo": "COMPRA", "ativo": a, "qtd": c[a], "reais": SAT_APORTE * w, "taxa": SAT_APORTE * w * CUSTO,
+             "peso_antes": 0.0, "montagem": True} for a, w in SAT_ALVO.items()]
+
+
+def registrar(arquivo, ops, px, agora):
+    if not arquivo.exists():
+        arquivo.write_text("data_hora;tipo;ativo;quantidade;valor_reais;preco;taxa;peso_antes\n")
+    with open(arquivo, "a", newline="") as f:
+        w = csv.writer(f, delimiter=";")
+        for op in ops:
+            w.writerow([agora.strftime("%Y-%m-%d %H:%M"), op["tipo"], op["ativo"].upper(), f"{op['qtd']:.8f}",
+                        f"{op['reais']:.2f}", f"{px[op['ativo']]:.8f}", f"{op['taxa']:.4f}", f"{op['peso_antes']:.4f}"])
+
+
 # ---------- execução ----------
 def main():
     agora = datetime.now(BRASILIA)
@@ -225,6 +265,19 @@ def main():
     limite = MAX_OPS_DIA - est["ops_dia"]["n"]
     feitas = [] if novo or limite <= 0 else rebalancear(c, px, limite, est["ops_dia"]["n"])
     est["gatilho"], est["gatilho_extra"], est["max_ops_dia"] = DESVIO_MIN, DESVIO_EXTRA, MAX_OPS_DIA
+    # carteira satélite: aporte (uma vez) e rebalanceamento com as mesmas regras, contador próprio
+    sat_montagem = [] if novo else preparar_satelite(est, px, agora)
+    sat_feitas = []
+    if "satelite" in est and not sat_montagem:
+        sat = est["satelite"]
+        if sat["ops_dia"].get("data") != hoje:
+            sat["ops_dia"] = {"data": hoje, "n": 0}
+        lim = MAX_OPS_DIA - sat["ops_dia"]["n"]
+        sat_feitas = [] if lim <= 0 else rebalancear(sat["carteira"], px, lim, sat["ops_dia"]["n"], SAT_ALVO)
+        sat["ops_dia"]["n"] += len(sat_feitas)
+        sat["rebalanceamentos"] += len(sat_feitas)
+        sat["taxas"] += sum(f["taxa"] for f in sat_feitas)
+        est["ops_periodo"] = est.get("ops_periodo", 0) + len(sat_feitas)
     est["ops_dia"]["n"] += len(feitas)
     est["rebalanceamentos"] = est.get("rebalanceamentos", 0) + len(feitas)
     est["operacoes"] += len(feitas)
@@ -237,7 +290,12 @@ def main():
     est["pico"] = max(est["pico"], v)
     est["pico_cota"] = max(est["pico_cota"], v / est["investido"])
     reserva = est["reserva"]["saldo"]
-    v_tot, v_par_tot = v + reserva, v_parada + est["parada_reserva"]
+    v_sat = v_sat_par = 0.0
+    if "satelite" in est:
+        sat = est["satelite"]
+        v_sat, v_sat_par = valor(sat["carteira"], px, SAT_ALVO), valor(sat["parada"], px, SAT_ALVO)
+        sat["pico"] = max(sat.get("pico", SAT_APORTE), v_sat)
+    v_tot, v_par_tot = v + reserva + v_sat, v_parada + est["parada_reserva"] + v_sat_par
     est["ultima_execucao"] = agora.isoformat()
     est["ultimos_precos"] = px
 
@@ -249,6 +307,7 @@ def main():
         for op in feitas:
             w.writerow([agora.strftime("%Y-%m-%d %H:%M"), op["tipo"], op["ativo"].upper(), f"{op['qtd']:.8f}",
                         f"{op['reais']:.2f}", f"{px[op['ativo']]:.6f}", f"{op['taxa']:.4f}", f"{op['peso_antes']:.4f}"])
+    registrar(OPERACOES_SAT, sat_montagem + sat_feitas, px, agora)
     if not HISTORICO.exists():
         HISTORICO.write_text("data;patrimonio;carteira_parada;operacoes_no_dia\n")
     ops_24h = est["ops_periodo"]
@@ -260,7 +319,7 @@ def main():
 
     # mensagens
     if novo:
-        compras = "\n".join(f"• {a.upper()} {ALVO[a]*100:.0f}% a {brl(px[a])}" for a in ALVO)
+        compras = "\n".join(f"• {a.upper()} {ALVO[a]*100:.0f}% a {preco(px[a])}" for a in ALVO)
         telegram(f"{ROTULO} · Carteira nova iniciada\n"
                  f"Dinheiro de mentira: {brl(CAPITAL)} na carteira + {brl(RESERVA_INICIAL)} de reserva\n{compras}\n• Reais {(1 - sum(ALVO.values()))*100:.0f}%\n"
                  f"Checo o mercado a cada 4 horas. Faço até 3 operações por dia: a 1ª quando um ativo desvia 1 ponto do alvo; a 2ª e a 3ª só se a oportunidade for muito boa (2,5 pontos ou mais). Resumo todo dia às 7h.")
@@ -276,6 +335,26 @@ def main():
                  f"A carteira caiu {num(ap['queda']*100, 1)}% desde o pico (degrau de {ap['degrau']*100:.0f}%).\n"
                  f"{brl(ap['valor'])} entraram na carteira. O rebalanceamento distribui entre as moedas que mais caíram.\n"
                  f"Reserva restante: {brl(est['reserva']['saldo'])} · degraus usados: {len(est['reserva']['usados'])} de {len(DEGRAUS)}")
+    SAT = "🛰️ Satélite"
+    if sat_montagem:
+        telegram(f"{ROTULO} · {SAT} · 💵 Aporte de {brl(SAT_APORTE)}\n"
+                 f"Nova carteira satélite (risco maior), separada da carteira principal, que continua igual.\n"
+                 f"Divisão: " + " · ".join(f"{a.upper()} {w*100:.0f}%" for a, w in SAT_ALVO.items()) + f" · Reais {(1 - sum(SAT_ALVO.values()))*100:.0f}%\n"
+                 f"Mesmas regras de operação, sem reserva. Seguem as {len(sat_montagem)} compras.\n"
+                 f"Patrimônio total agora: {brl(v_tot)}")
+        for o in sat_montagem:
+            a = o["ativo"]
+            telegram(f"{ROTULO} · {SAT} · 🟢 COMPRA\n"
+                     f"{qtd_txt(o['qtd'])} {a.upper()} por {brl(o['reais'])} ({preco(px[a])}/{a.upper()})\n"
+                     f"Motivo: montagem da satélite (alvo {SAT_ALVO[a]*100:.0f}%)\n"
+                     f"Taxa: {brl(o['taxa'])}")
+    for i, op in enumerate(sat_feitas, start=1):
+        a = op["ativo"]; n = est["satelite"]["ops_dia"]["n"] - len(sat_feitas) + i
+        emoji = "🟢" if op["tipo"] == "COMPRA" else "🔴"
+        telegram(f"{ROTULO} · {SAT} · {emoji} {op['tipo']}\n"
+                 f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
+                 f"Motivo: {a.upper()} estava em {num(op['peso_antes']*100, 1)}% da satélite (alvo {SAT_ALVO[a]*100:.0f}%)\n"
+                 f"Taxa: {brl(op['taxa'])} · operação {n} de até {MAX_OPS_DIA} hoje na satélite")
     n_antes = est["ops_dia"]["n"] - len(feitas)
     for i, op in enumerate(feitas, start=1):
         a = op["ativo"]
@@ -286,7 +365,7 @@ def main():
             rodape = f"Operação {n} de até {MAX_OPS_DIA} hoje. Outra hoje só se a oportunidade for muito boa (desvio de 2,5 pontos ou mais)."
         emoji = "🟢" if op["tipo"] == "COMPRA" else "🔴"
         telegram(f"{ROTULO} · {emoji} {op['tipo']}\n"
-                 f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({brl(px[a])}/{a.upper()})\n"
+                 f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
                  f"Motivo: {a.upper()} estava em {num(op['peso_antes']*100, 1)}% da carteira (alvo {ALVO[a]*100:.0f}%)\n"
                  f"Taxa: {brl(op['taxa'])}\n"
                  f"{rodape}")
@@ -296,7 +375,8 @@ def main():
     resumo = (f"{ROTULO} · ☀️ Resumo da manhã · {agora:%d/%m}\n"
               f"Patrimônio total: {brl(v_tot)} ({pct(v_tot / est['capital_total'] - 1)} desde o início, {dias} {'dia' if dias == 1 else 'dias'})\n"
               f"Carteira: {brl(v)} · Reserva: {brl(reserva)} ({len(est['reserva']['usados'])} de {len(DEGRAUS)} degraus usados)\n"
-              f"Sem robô (parada + reserva parada): {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))} de diferença\n"
+              + (f"Satélite: {brl(v_sat)} ({pct(v_sat / SAT_APORTE - 1)} sobre {brl(SAT_APORTE)}) · parada: {brl(v_sat_par)}\n" if "satelite" in est else "") +
+              f"Sem robô (tudo parado): {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))} de diferença\n"
               f"Operações nas últimas 24 h: {ops_24h} · rebalanceamentos: {est['rebalanceamentos']} · taxas: {brl(est['taxas'])}\n"
               f"Divisão: {texto_pesos(pesos(c, px))}")
     queda = 1 - (v / est["investido"]) / est["pico_cota"]
