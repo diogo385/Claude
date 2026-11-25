@@ -1,6 +1,6 @@
 # Argos Trade Cripto · Plano
 
-Versão 2.4 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
+Versão 2.5 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 
 > Na mitologia grega, Argos é o gigante de cem olhos que nunca dormia: um vigia que não descansa.
 
@@ -8,13 +8,14 @@ Versão 2.4 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 
 ## 1. O que é e o que esperar
 
-**O que é:** um robô **100% autônomo** que administra carteiras de cripto **só com saldo próprio**. Ele rebalanceia as carteiras, aproveita quedas com reservas e avisa **toda operação** no Telegram.
+**O que é:** um robô **100% autônomo** que administra carteiras de cripto **só com saldo próprio**. Ele rebalanceia as carteiras, aumenta a fatia de Bitcoin e Ethereum quando a alta está confirmada, aproveita quedas com reservas e avisa **toda operação** no Telegram.
 
 **Expectativa sincera, com base nos testes:**
 - Quase todo o resultado vem do preço das moedas. O robô não cria lucro do nada.
 - **Rebalancear funciona:** de 2021 a 2026, qualquer forma de rebalanceamento rendeu bem mais que a carteira parada (+128% a +195%, contra +89%). Quanto mais moedas na carteira, maior o ganho do rebalanceamento.
 - **O jeito exato importa pouco:** rebalancear todo dia, a cada 3 meses ou uma vez por ano deu resultados parecidos, e a diferença veio mais da sorte de calendário.
-- **As quedas doem em qualquer estratégia:** cerca de −60% em 2021–2022.
+- **Concentrar na alta ajuda pouco e com moderação:** aumentar Bitcoin e Ethereum na alta confirmada rendeu +98% contra +91% da regra fixa. Concentrar quase tudo rendeu menos.
+- **As quedas doem em qualquer estratégia:** cerca de −60% a −70% em 2021–2022.
 - É um projeto de **aprendizado, com risco limitado e custo zero**, não uma fonte de renda.
 
 ---
@@ -49,7 +50,7 @@ Versão 2.4 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 
 | Parte | Valor inicial | Para que serve |
 |---|---|---|
-| **Carteira principal** | R$ 1.000 | O foco do sistema: BTC 35 · ETH 15 · SOL 8 · XRP 5 · BNB 4 · LINK 3 · Reais 30 |
+| **Carteira principal** | R$ 1.000 | O foco do sistema: BTC 35 · ETH 15 · SOL 8 · XRP 5 · BNB 4 · LINK 3 · Reais 30. Na alta confirmada, BTC vai a 45 e ETH a 20, e os reais caem para até 15 (seção 5.1.1) |
 | **Reserva para quedas** | R$ 500 | Entra na carteira principal quando ela cai forte (degraus) |
 | **Carteira satélite** | R$ 250 | Teste de risco maior: LTC 20 · DOGE 20 · ADA 18 · AVAX 16 · NEAR 16 · Reais 10 |
 | **Reserva do giro** | R$ 100 | Compras automáticas de giro curto nas moedas da satélite |
@@ -102,10 +103,11 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 
 | Quando | O quê |
 |---|---|
-| **A cada 15 minutos** | Rebalanceamento das duas carteiras, giro da satélite e reserva principal |
+| **A cada 15 minutos** | Rebalanceamento das duas carteiras, giro da satélite, reserva principal, trava de queda e comandos do Telegram |
+| **Uma vez por dia** (primeira checagem do dia) | Tendência de alta de Bitcoin e Ethereum, com os fechamentos diários da Binance |
 | **7h (Brasília)** | Resumo do dia no Telegram e registro de um ponto no histórico |
 
-O GitHub pode atrasar as execuções agendadas em alguns minutos. Para não sobrecarregar o site, o estado só é gravado quando algo acontece ou cerca de 1 vez por hora.
+Quem dispara o robô a cada 15 minutos é o **cron-job.org** (o agendamento do próprio GitHub não disparava). Para não sobrecarregar o site, o estado só é gravado quando algo acontece ou cerca de 1 vez por hora.
 
 ---
 
@@ -115,12 +117,16 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 
 | Evento | Mensagem |
 |---|---|
-| Rebalanceamento | 🟢 COMPRA / 🔴 VENDA, com o motivo e "operação N de até 20 hoje" |
+| Rebalanceamento | 🟢 COMPRA / 🔴 VENDA, com o motivo (peso, alvo e "alta confirmada" quando for o caso) e "operação N de até 20 hoje" |
+| Tendência de alta | 🧭 Situação de BTC e ETH quando o sinal liga ou desliga: alvo em vigor, fechamento e média de 200 dias |
 | Satélite | 🛰️ Satélite · COMPRA / VENDA |
 | Giro da satélite | 🔄 GIRO · COMPRA AUTOMÁTICA (com a venda programada) e 🔄 GIRO · VENDA AUTOMÁTICA (lucro) |
 | Reserva principal | 💰 Reserva acionada (degrau, valor e saldo restante) |
 | Aportes e montagens | 💵 Aporte, seguido de uma mensagem para cada compra |
 | Resumo das 7h | ☀️ Patrimônio total, carteira, reserva, satélite, comparação "sem robô", operações das últimas 24 h e divisão |
+| Pausa e retomada | ⏸️ / ▶️ quando o dono manda /pausar ou /retomar |
+| Trava de queda | 🛑 Ligou ou desligou (queda de 7% em 24 h pausa as compras de giro) |
+| Comandos | 📟 /status (situação, patrimônio, tendência e operações do dia) e 📅 /hoje (resultado das últimas 24 h, sem contar aportes) |
 | Falha | ⚠️ O robô não conseguiu rodar (nada é alterado) |
 
 ---
@@ -130,10 +136,13 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 | Página | Endereço | O que mostra |
 |---|---|---|
 | **Monitor** | diogo385.github.io/Claude | Patrimônio total, status do robô, resultado acumulado, carteira principal e satélite (com ganhos e perdas por cripto) e desempenho |
-| **Histórico** | botão no monitor | Todas as operações agrupadas por dia, com filtros (principal, satélite, giros, reserva) |
+| **Histórico** | botão no monitor | Total de operações, giros concluídos, volume negociado e taxas no topo. Todas as operações agrupadas por dia, com filtros (principal, satélite, giros, reserva) |
 | **Mercado ao vivo** | botão 📈 no monitor | Gráfico de linha ou velas das 11 moedas, com períodos de 24h a todo o histórico, livro de ofertas, negociações e linhas de gatilho do robô |
-| **Extrato** | botão no monitor | Toda entrada e saída de dinheiro com o saldo em reais, as duas reservas e os sinais da satélite |
+| **Extrato** | botão no monitor | Total depositado, saldo em reais, valor em cripto e taxas no topo. As duas reservas, os sinais da satélite e toda entrada e saída de dinheiro com o saldo em reais |
 | **Regras** | botão no monitor | Todas as regras num lugar só e o que faz cada agente do robô |
+| Maquete do console | claude.ai (artefato) | Versão de exemplo, sem dados reais |
+
+**Padrão das páginas:** todas usam a mesma paleta azul-marinho com ciano (a do Mercado ao vivo). Monitor, Histórico e Extrato têm a mesma moldura, a mesma barra de botões no topo (a página atual fica destacada) e o cabeçalho com logo e números-chave.
 
 **Comandos no Telegram:** /status, /hoje, /pausar, /retomar e /ajuda. A resposta chega na próxima checagem (até ~15 min).
 
@@ -148,9 +157,9 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
    - Filtro **Resumo | Completo**: o Resumo mostra só peso, alvo, valor, ganho e %. A escolha vale para os dois blocos e fica lembrada no navegador.
 6. **Desempenho:** "Resultado por período" (24 horas e desde o início; 7 e 30 dias aparecem quando houver histórico, sempre descontando aportes) e "O robô está se pagando?" (ganho antes das taxas, taxas pagas, resultado líquido contra o "sem robô" e veredito).
 
-Sem rodapé e sem legendas repetidas. Os agentes do robô ficam na página de Regras. No celular, cada moeda ocupa duas linhas e só aparece a situação que pede atenção.
+Sem rodapé e sem legendas repetidas. Os agentes do robô ficam na página de Regras. No celular, cada moeda ocupa duas linhas e só aparece a situação que pede atenção. O bloco da carteira principal mostra a tendência de BTC e ETH, e a coluna "Alvo" muda sozinha quando a alta é confirmada.
 
-| Maquete do console | claude.ai (artefato) | Versão de exemplo, sem dados reais |
+**Mercado ao vivo:** cartões das 11 moedas (6 da principal e 5 da satélite). No gráfico, botões de período (24h, 1 semana, 1 mês, 1 ano, 3, 5 e 10 anos, Tudo), tipo **Linha** (padrão) ou **Velas**, e a variação "no período". O histórico em reais na Binance começa em out/2020 para o Bitcoin; quando é mais curto que o período pedido, o gráfico avisa.
 
 ---
 
@@ -158,9 +167,10 @@ Sem rodapé e sem legendas repetidas. Os agentes do robô ficam na página de Re
 
 | Peça | Como funciona |
 |---|---|
-| Robô | `simulado/robo_simulado.py`, que o **GitHub Actions** roda a cada 15 minutos |
+| Robô | `simulado/robo_simulado.py`, rodado pelo **GitHub Actions** |
+| Agendamento | **cron-job.org** dispara o GitHub Actions a cada 15 minutos, com um token de acesso restrito a "Actions" (validade até 25/11/2027) |
 | Preços | Dados públicos da Binance (`data-api.binance.vision`), sem conta e sem chave |
-| Dados | `simulado/estado.json`, `historico.csv`, `operacoes.csv`, `operacoes_satelite.csv` e `extrato.csv`, gravados no repositório a cada execução |
+| Dados | `simulado/estado.json`, `historico.csv`, `operacoes.csv`, `operacoes_satelite.csv`, `extrato.csv` e `saude.json` (falhas), gravados no repositório quando algo acontece ou ~1 vez por hora |
 | Avisos | Bot do Telegram. O token e o Chat ID ficam como **segredos do GitHub** |
 | Monitor | **GitHub Pages** a partir do branch do projeto |
 | Arquivo | A carteira v1 (BTC/ETH, 24–25/11) está guardada em `simulado/arquivo/v1-btc-eth/` |
@@ -182,6 +192,8 @@ Sem rodapé e sem legendas repetidas. Os agentes do robô ficam na página de Re
 | Reserva em degraus (R$ 500) | Mesmo lucro de investir tudo, com queda menor (−58% contra −65%) quando a queda vem cedo |
 | Moedas da satélite desde 2025 | Caíram de 83% a 86%. A cesta perdeu 46% com o robô, contra 55% parada |
 | Reserva da satélite, giro curto (+1,5%) | −32% contra −33% com a reserva parada: 180 vendas com lucro, mas 5 posições presas |
+| Giro com no máximo 2 posições abertas | Reserva em +R$ 18,87, contra +R$ 3,11 sem limite. Saída por tempo piorou |
+| Concentração em BTC/ETH na alta (jun/2021–nov/2026) | Regra fixa +91% (queda −65%). **Moderada (45/20) +98% (−68%)**, adotada. Forte (55/25) +107% (−69%). "Quase tudo" (65/30) +69% (−70%). Freio de venda +84%. Com média de 100 dias: moderada +121%, forte +123% |
 
 O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 
@@ -195,6 +207,8 @@ O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 | Ordem maior que o saldo disponível | Nunca acontece: o robô limita ao saldo |
 | Mais de 20 operações por dia em cada carteira | Bloqueado |
 | Falha de preços ou de conexão | Nada muda, tenta de novo e avisa |
+| Sem dados para a tendência de alta | O sinal anterior é mantido e o alvo não muda |
+| Concentração na alta | Limitada: no máximo BTC 45% e ETH 20%, e sempre sobram pelo menos 15% em reais |
 | Robô sem rodar | O monitor mostra **ATRASO** depois de 3 horas sem checagem |
 | Queda de 7% em 24 h | **Trava de queda:** pausa só as compras de giro da satélite até recuperar (com aviso) |
 | Dono quer parar | **/pausar** no Telegram para tudo; **/retomar** volta (só o chat do dono é aceito) |
@@ -219,7 +233,8 @@ O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 - voltar a **faixas mais largas** (2 a 5 pontos), com **rebalanceamento parcial** (só metade do caminho até o alvo) e **faixas assimétricas** (vender mais rápido nas altas, comprar com mais calma nas quedas), porque faixas de 1% são as mais prejudicadas pelas taxas;
 - **pagar as taxas em BNB** (cerca de 25% de desconto na Binance) e usar ordens limitadas;
 - **confirmação do dono no Telegram** para operações acima de um valor (por exemplo, R$ 100) e para aportes;
-- o modo de teste atual (1 ponto, a cada 15 minutos, até 20 por dia) fica só no simulado, e o quadro "O robô está se pagando?" decide com dados.
+- o modo de teste atual (1 ponto, a cada 15 minutos, até 20 por dia) fica só no simulado, e o quadro "O robô está se pagando?" decide com dados;
+- a **concentração na alta** só vai para o dinheiro real se o simulado mostrar que o sinal não fica ligando e desligando à toa. As compras de ~R$ 100 de uma vez, quando o sinal liga, entram na regra de confirmação do dono.
 
 **Por que a fase 3 precisa de servidor:** o GitHub Actions muda de IP a cada execução, e a Binance só deixa a chave negociar a partir de um IP fixo.
 
@@ -241,7 +256,8 @@ O código e os resultados estão em `backtest/` e no `backtest/RESULTADO.md`.
 |---|---|
 | Queda forte das moedas | Reserva em degraus, reais na carteira e capital pequeno |
 | Moedas da satélite (alta volatilidade) | Valor pequeno, separado da principal, risco aceito |
-| Posições de giro presas | Uma por moeda, R$ 25 cada, no máximo R$ 125 |
+| Posições de giro presas | Uma por moeda, R$ 25 cada, no máximo 2 abertas (R$ 50) |
+| Sinal de alta falso (liga perto do topo) | Concentração moderada, folga de 3% no sinal e pelo menos 15% em reais. No teste, o sinal do Bitcoin trocou 24 vezes em cinco anos e meio |
 | Corretora quebrar ou travar saques | No real, deixar lá só o capital do robô |
 | Bug no código | Simulado primeiro, travas e limites pequenos |
 | Repositório público | Fechar antes do dinheiro real |
@@ -265,9 +281,12 @@ simulado/
   operacoes.csv       operações da principal
   operacoes_satelite.csv
   extrato.csv         entradas e saídas de dinheiro
+  saude.json          registro de falhas
   arquivo/            carteiras antigas
 backtest/             testes históricos e resultados
-.github/workflows/    agendamento do robô (a cada 15 minutos)
+  tendencia.py        teste da concentração em BTC/ETH na alta
+  RESULTADO.md        resultados dos testes
+.github/workflows/    execução do robô (disparada pelo cron-job.org a cada 15 minutos)
 PLANO.md              este documento
 ```
 
@@ -302,3 +321,4 @@ PLANO.md              este documento
 | 25/11 | Rodapé e link da carteira antiga saem do monitor; agentes do robô passam para a página de Regras |
 | 25/11 | Histórico e extrato no padrão do monitor. Mercado ao vivo com períodos de 24h a todo o histórico e gráfico de linha ou velas. Todas as páginas na paleta azul do mercado ao vivo |
 | 25/11 | Concentração moderada na alta: com a alta confirmada (média de 200 dias), o alvo de BTC vai a 45% e o de ETH a 20%. Testadas e descartadas: freio de venda, concentração forte e "quase tudo" |
+| 25/11 | Plano revisado por inteiro (versão 2.5): horários, avisos, páginas, infraestrutura, testes, travas e riscos atualizados |
