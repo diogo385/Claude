@@ -18,8 +18,8 @@
     "link": "LINKBRL"
   },
   "gatilho": 0.01,
-  "gatilho_extra": 0.025,
-  "max_ops_dia": 3,
+  "gatilho_extra": 0.01,
+  "max_ops_dia": 20,
   "carteira": {
     "reais": 300.0,
     "btc": 0.0009973003901021914,
@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-25T12:07:55.254148-03:00",
+  "ultima_execucao": "2026-11-25T12:31:13.683527-03:00",
   "ops_dia": {
     "data": "2026-11-25",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 342001.0,
-    "eth": 9676.08,
-    "sol": 395.4,
-    "xrp": 5.301,
-    "bnb": 3156.0,
-    "link": 50.8,
-    "ltc": 237.2,
-    "doge": 0.313,
-    "ada": 0.817,
-    "avax": 37.65,
-    "near": 16.39
+    "btc": 341298.0,
+    "eth": 9602.07,
+    "sol": 393.5,
+    "xrp": 5.252,
+    "bnb": 3131.0,
+    "link": 50.46,
+    "ltc": 234.7,
+    "doge": 0.3118,
+    "ada": 0.809,
+    "avax": 37.1,
+    "near": 16.0
   },
   "reserva": {
     "saldo": 500.0,
@@ -120,31 +120,40 @@
     "sinais": {
       "ltc": {
         "status": "caindo",
-        "queda": 0.1718,
-        "repique": 0.0072
+        "queda": 0.1805,
+        "repique": 0.0
       },
       "doge": {
         "status": "caindo",
-        "queda": 0.1881,
-        "repique": 0.0029
+        "queda": 0.1912,
+        "repique": 0.0
       },
       "ada": {
         "status": "caindo",
-        "queda": 0.183,
-        "repique": 0.0099
+        "queda": 0.191,
+        "repique": 0.0
       },
       "avax": {
         "status": "caindo",
-        "queda": 0.2242,
-        "repique": 0.0086
+        "queda": 0.2355,
+        "repique": 0.0
       },
       "near": {
         "status": "caindo",
-        "queda": 0.2214,
-        "repique": 0.0031
+        "queda": 0.2399,
+        "repique": 0.0
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-25T11:54:38.216469-03:00",
-  "ultimo_salvamento": "2026-11-25T12:07:55.254148-03:00"
+  "ultima_checagem_carteiras": "2026-11-25T12:31:13.683527-03:00",
+  "ultimo_salvamento": "2026-11-25T12:31:13.683527-03:00",
+  "tg_offset": 324349880,
+  "valores_24h": [
+    [
+      "2026-11-25T12:31:13.683527-03:00",
+      1828.53
+    ]
+  ],
+  "trava_queda": false,
+  "queda_24h": 0.0
 }
