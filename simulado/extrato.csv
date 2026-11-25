@@ -16,3 +16,5 @@ data_hora;conta;tipo;descricao;valor;taxa;saldo_reais
 2026-11-25 11:54;Satélite;DEPÓSITO;Reserva da satélite (para oportunidades);100.00;0.0000;925.00
 2026-11-25 14:54;Satélite;COMPRA;Compra de 0,102558 LTC a R$ 243,40 (oportunidade, com a reserva da satélite);-25.00;0.0375;900.00
 2026-11-25 14:54;Satélite;COMPRA;Compra de 1,5129 NEAR a R$ 16,50 (oportunidade, com a reserva da satélite);-25.00;0.0375;875.00
+2026-11-25 15:15;Satélite;VENDA;Venda de 1,5129 NEAR a R$ 16,79 (venda automática do giro, lucro R$ 0,36);25.36;0.0381;900.36
+2026-11-25 15:15;Satélite;COMPRA;Compra de 29,7882 ADA a R$ 0,8380 (compra automática do giro);-25.00;0.0375;875.36
