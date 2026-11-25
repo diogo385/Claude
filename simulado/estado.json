@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-25T11:54:38.216469-03:00",
+  "ultima_execucao": "2026-11-25T12:07:55.254148-03:00",
   "ops_dia": {
     "data": "2026-11-25",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 340911.0,
-    "eth": 9607.96,
-    "sol": 394.0,
-    "xrp": 5.279,
-    "bnb": 3136.0,
-    "link": 50.41,
-    "ltc": 236.1,
-    "doge": 0.3126,
-    "ada": 0.81,
-    "avax": 37.33,
-    "near": 16.34
+    "btc": 342001.0,
+    "eth": 9676.08,
+    "sol": 395.4,
+    "xrp": 5.301,
+    "bnb": 3156.0,
+    "link": 50.8,
+    "ltc": 237.2,
+    "doge": 0.313,
+    "ada": 0.817,
+    "avax": 37.65,
+    "near": 16.39
   },
   "reserva": {
     "saldo": 500.0,
@@ -110,7 +110,7 @@
     },
     "rebalanceamentos": 0,
     "taxas": 0.3375,
-    "pico": 349.1714089745238,
+    "pico": 350.3176986600693,
     "reserva": {
       "saldo": 100.0
     },
@@ -120,30 +120,31 @@
     "sinais": {
       "ltc": {
         "status": "caindo",
-        "queda": 0.1756,
-        "repique": 0.0025
+        "queda": 0.1718,
+        "repique": 0.0072
       },
       "doge": {
         "status": "caindo",
-        "queda": 0.1891,
-        "repique": 0.0016
+        "queda": 0.1881,
+        "repique": 0.0029
       },
       "ada": {
         "status": "caindo",
-        "queda": 0.19,
-        "repique": 0.0012
+        "queda": 0.183,
+        "repique": 0.0099
       },
       "avax": {
         "status": "caindo",
-        "queda": 0.2308,
-        "repique": 0.0
+        "queda": 0.2242,
+        "repique": 0.0086
       },
       "near": {
         "status": "caindo",
-        "queda": 0.2238,
-        "repique": 0.0
+        "queda": 0.2214,
+        "repique": 0.0031
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-25T11:54:38.216469-03:00"
+  "ultima_checagem_carteiras": "2026-11-25T11:54:38.216469-03:00",
+  "ultimo_salvamento": "2026-11-25T12:07:55.254148-03:00"
 }
