@@ -1,12 +1,12 @@
 # Plano do Agente Cripto
 
-Versão 1 · 25/11/2026
+Versão 1.1 · 25/11/2026 · funcionamento 100% autônomo, com notificações no Telegram
 
 ---
 
 ## 1. Objetivo e expectativa
 
-**O que é:** um robô que administra uma carteira pequena de cripto na corretora de forma automática e disciplinada. Ele compra quando um ativo cai abaixo da proporção-alvo e vende quando sobe acima dela, usando **somente saldo próprio**.
+**O que é:** um robô **100% autônomo** que administra uma carteira pequena de cripto na corretora de forma automática e disciplinada. Depois de configurado, ele funciona sem você precisar fazer nada e te informa de tudo pelo Telegram. Ele compra quando um ativo cai abaixo da proporção-alvo e vende quando sobe acima dela, usando **somente saldo próprio**.
 
 **O que esperar, com sinceridade:**
 - O resultado depende principalmente do preço do bitcoin. O robô não cria lucro do nada.
@@ -38,6 +38,8 @@ Versão 1 · 25/11/2026
 | Capital real | **R$ 1.000**, só na fase 3 | Suficiente para passar do mínimo de ordem e pequeno o bastante para um erro sair barato. |
 | Servidor | **Oracle Cloud Always Free, região São Paulo** | Gratuito, IP fixo e fora dos EUA, o que a Binance exige. |
 | Supervisor IA | **Sem API paga.** Revisão semanal feita nesta conversa com o Claude. | Custo zero. A estratégia funciona só com regras fixas. |
+| Autonomia | **100% autônomo.** Nenhuma situação normal pede resposta sua. | Pedido seu. Nas quedas de mercado ele continua operando, porque é quando compra barato. |
+| Acompanhamento | **Telegram:** cada operação, resumo diário, relatório semanal e alertas | Você acompanha tudo sem abrir nada. |
 | Custo mensal | **R$ 0 de infraestrutura.** Só a taxa da corretora (centavos por mês). | Pedido de custo zero. |
 
 ---
@@ -67,8 +69,8 @@ flowchart LR
 | **4 · Executor** | Envia a ordem limitada, acompanha, reajusta o preço até 3 vezes ou desiste. Registra tudo. | Aceitar pedido que não venha do porteiro. |
 | **5 · Banco de dados** | Guarda preços usados, propostas, vetos, ordens, execuções, taxas e saldos diários. | — |
 | **6 · Painel web** | O console da maquete com dados reais: patrimônio, comparação com referências, travas, carteira e diário. Com login. | Ficar aberto sem senha. |
-| **7 · Telegram** | Alertas automáticos e os comandos `/status`, `/pausar`, `/retomar`, `/parar` e `/relatorio`. | Mudar limites. |
-| **8 · Relatório semanal** | Arquivo gerado automaticamente. Você me envia aqui e eu analiso. | — |
+| **7 · Telegram** | Envia automaticamente cada operação, o resumo diário, o relatório semanal e os alertas (seção 9). Aceita os comandos opcionais `/status`, `/pausar`, `/retomar`, `/parar` e `/relatorio`. | Mudar limites. |
+| **8 · Relatório semanal** | Gerado e enviado sozinho no Telegram. Se quiser minha análise, você encaminha para cá. | — |
 
 ---
 
@@ -115,13 +117,15 @@ flowchart LR
 | Dados velhos | Preço com mais de 2 minutos | Não opera |
 | Volatilidade extrema | Movimento acima de 6% em 1 hora | Pausa novas ordens por 4 horas |
 | **Robô pior que a carteira parada** | 5 pontos abaixo da mesma carteira sem operar | **Para sozinho** e avisa |
-| **Queda do mercado** | Patrimônio 25% abaixo do pico | **Pausa e pede sua confirmação** (não vende nada) |
+| **Queda do mercado** | Patrimônio 25% abaixo do pico | **Avisa e continua operando** normalmente. Não pausa nem vende tudo. Repete o aviso a cada 10 pontos a mais de queda. |
 | Saldo inconsistente | Saldo da corretora diferente do esperado | Para e avisa |
 | Erros seguidos de API | 3 seguidos | Pausa 1 hora e avisa |
 | Margem ou dívida | Qualquer saldo negativo ou empréstimo detectado | **Para tudo** e avisa com urgência |
 
 ### Camada 3 · Na operação
-- **Sinal de vida:** se o robô ficar 30 minutos sem responder, o Telegram avisa.
+- **Paradas automáticas:** só por motivo técnico (robô pior que a carteira parada, saldo inconsistente, sinal de dívida). Nesses casos ele cancela as ordens abertas, **não vende nada**, para e explica no Telegram o que houve.
+- **Pausas temporárias** (volatilidade extrema ou erros de API) se resolvem sozinhas e são avisadas no Telegram.
+- **Sinal de vida:** um monitor separado avisa no Telegram se o robô ficar 30 minutos sem responder.
 - **Checagem a cada hora:** a chave continua sem permissão de saque e a conta segue sem margem.
 - **Parada de emergência:** cancela as ordens abertas e desliga o robô. **Nada é vendido.**
 - **Backup diário** do banco de dados.
@@ -196,14 +200,53 @@ flowchart LR
 
 ---
 
-## 9. Rotina depois de pronto
+## 9. Autonomia e notificações
 
+### Funcionamento autônomo
+Depois de configurado, o robô roda sozinho 24 horas por dia: coleta preços, decide, opera, se protege e reporta. **Nenhuma situação normal exige ação sua.** Os comandos do Telegram existem só se você *quiser* intervir.
+
+### O que chega no Telegram
+
+**A cada operação, na hora:**
+```
+🟢 COMPRA executada
+0,00021 BTC por R$ 114,90 (R$ 547.140/BTC)
+Motivo: BTC caiu para 44,8% da carteira (faixa 45–55%)
+Taxa: R$ 0,11
+Carteira agora: BTC 50% · ETH 15% · R$ 35%
+Patrimônio: R$ 1.041,20
+```
+
+**Resumo diário**, às 21h, com horário ajustável:
+```
+📊 Resumo de 25/11
+Patrimônio: R$ 1.041,20 (+0,8% no dia)
+Operações hoje: 1 · Taxas: R$ 0,11
+vs carteira parada: +0,3 ponto
+Travas: todas OK
+```
+
+**Relatório semanal**, todo domingo: resultado da semana e desde o início, comparação com as três referências, operações, taxas e eventos de risco.
+
+**Alertas**, só quando algo foge do normal:
+
+| Tipo | Exemplo | O robô faz |
+|---|---|---|
+| ℹ️ Informativo | Queda de 25% desde o pico | Continua operando |
+| ⏸️ Pausa temporária | Volatilidade extrema; corretora instável | Retoma sozinho |
+| 🛑 Parada técnica | Saldo inconsistente; robô pior que a carteira parada | Cancela as ordens e para, sem vender nada |
+| 🚨 Urgente | Sinal de dívida ou margem; chave com permissão indevida | Para tudo |
+| 📵 Sem sinal | Robô sem responder há 30 minutos (monitor separado) | — |
+
+Se for mensagem demais, dá para desligar o aviso de cada operação e manter só o resumo diário e os alertas.
+
+### O que ainda depende de você
 | Quando | O quê | Tempo seu |
 |---|---|---|
-| Sempre | Ler os alertas do Telegram, que só chegam se houver algo importante | ~0 |
-| Toda semana | Pedir `/relatorio` no Telegram e colar aqui. Eu analiso e comento. | 5 min |
-| Todo mês | Conferir o saldo direto no app da Binance | 2 min |
-| Todo ano | Exportar as operações para o contador | 10 min |
+| Uma vez | Configuração inicial: contas, chave de API e Telegram, com passo a passo | ~1 hora |
+| Opcional | Encaminhar o relatório semanal para cá, se quiser análise | 2 min |
+| Raramente | Resolver uma parada técnica junto comigo (o Telegram avisa) | Variável |
+| Todo ano | Encaminhar a planilha de operações ao contador | 10 min |
 
 ---
 
@@ -222,7 +265,7 @@ flowchart LR
 | A corretora quebrar ou travar saques | Deixar lá só o capital do robô |
 | Bug no código | Travas na corretora, fases simuladas e limites pequenos |
 | Chave de API vazar | Sem saque, IP restrito e chave fora do GitHub |
-| A Oracle desligar o servidor | Alerta de sinal de vida, Docker e backup. Plano B: computador em casa. |
+| A Oracle desligar o servidor | Monitor de sinal de vida avisando no Telegram, Docker e backup. Plano B: computador em casa. |
 | Mudança no imposto | Acompanhar e revisar com o contador |
 
 ---
@@ -238,7 +281,8 @@ agente/
   executor.py       # único módulo que envia ordens
   banco.py          # SQLite
   painel/           # painel web
-  telegram_bot.py   # alertas e comandos
+  telegram_bot.py   # notificações (operações, resumo, relatório, alertas) e comandos
+  monitor.py        # monitor separado de sinal de vida
   relatorio.py      # relatório semanal e exportação para o contador
 backtest/
   dados.py          # baixa o histórico público
