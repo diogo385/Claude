@@ -133,7 +133,7 @@ h1 span { color: var(--amber); }
       </div>
       <div class="kpis">
         <div><div class="big num" id="kVal">--</div><div class="lab">patrimônio agora (de mentira)</div></div>
-        <div><div class="big num" id="kOps">--</div><div class="lab">operações</div></div>
+        <div><div class="big num" id="kOps">--</div><div class="lab">rebalanceamentos</div></div>
         <div><div class="big num" id="kRet">--</div><div class="lab" id="kRetLab">desde o início</div></div>
         <div><div class="big num" id="kVs">--</div><div class="lab">vs carteira parada</div></div>
       </div>
@@ -298,7 +298,7 @@ h1 span { color: var(--amber); }
     const horasDesde = ultExec ? (Date.now() - ultExec) / 36e5 : 999;
 
     // cabeçalho
-    set("kVal", brl(v)); set("kOps", String(estado.operacoes));
+    set("kVal", brl(v)); set("kOps", String(ops.length));
     set("kRet", pct(v / CAPITAL - 1), v >= CAPITAL ? "up" : "down");
     set("kRetLab", `desde o início · ${dias} ${dias === 1 ? "dia" : "dias"}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
@@ -323,7 +323,7 @@ h1 span { color: var(--amber); }
     $("wExe").setAttribute("stroke", agiria ? "#3df59a" : "#4f7067");
     set("tDev", nf(Math.abs(maior[1]) * 100, 1) + " pt", Math.abs(maior[1]) >= GATILHO ? "warn" : "");
     set("tDevS", `${maior[0]} · gatilho em 2 pt`);
-    set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital");
+    set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital · inclui a montagem");
 
     // agentes
     const seg = px ? Math.round((Date.now() - pxHora) / 1000) : null;
@@ -402,7 +402,7 @@ h1 span { color: var(--amber); }
     set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
     if (!ops.length) {
       const d = document.createElement("div"); d.className = "empty";
-      d.textContent = "Nenhuma operação ainda. O robô só opera quando BTC ou ETH ficam 2 pontos ou mais fora do alvo. Nos testes, isso deu cerca de 2 operações por mês.";
+      d.textContent = "Nenhum rebalanceamento ainda (a montagem inicial da carteira, com 1 compra de BTC e 1 de ETH, não entra aqui). O robô só opera quando BTC ou ETH ficam 2 pontos ou mais fora do alvo. Nos testes, isso deu cerca de 2 operações por mês.";
       box.appendChild(d); return;
     }
     const t = document.createElement("table"); t.className = "log"; const tb = document.createElement("tbody");
