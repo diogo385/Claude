@@ -1,4 +1,4 @@
-"""Robô de rebalanceamento diário em MODO SIMULADO.
+"""Argo Trade Cripto · robô de rebalanceamento diário em MODO SIMULADO.
 
 - Usa preços reais e públicos da Binance (sem conta, sem chave).
 - Opera um dinheiro de mentira: R$ 1.000 iniciais.
@@ -167,7 +167,7 @@ def main():
     ESTADO.write_text(json.dumps(est, indent=2, ensure_ascii=False))
 
     # mensagens
-    rot = "🧪 SIMULADO"
+    rot = "🧪 Argo Trade Cripto · SIMULADO"
     if novo:
         telegram(f"{rot} · Robô iniciado\n"
                  f"Carteira de mentira: {brl(CAPITAL)}\n"
@@ -197,5 +197,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        telegram(f"🧪 SIMULADO · ⚠️ O robô não conseguiu rodar hoje.\nMotivo: {e}\nNada foi alterado na carteira simulada. Tento de novo amanhã.")
+        telegram(f"🧪 Argo Trade Cripto · SIMULADO · ⚠️ O robô não conseguiu rodar hoje.\nMotivo: {e}\nNada foi alterado na carteira simulada. Tento de novo amanhã.")
         sys.exit(1)

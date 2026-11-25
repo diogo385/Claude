@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mercado Cripto ao Vivo</title>
+<title>Argo Trade Cripto · Mercado</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
@@ -102,7 +102,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
 <div class="wrap">
   <header class="top">
     <div>
-      <div class="eyebrow">Mercado à vista · pares em reais · dados públicos Binance</div>
+      <div class="eyebrow">Argo Trade Cripto · mercado à vista · pares em reais · dados públicos Binance</div>
       <h1>Mercado <em>Cripto</em> // Ao vivo</h1>
     </div>
     <div class="status">
@@ -233,7 +233,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     const chg = (st.px / st.open - 1) * 100, e = $("stChg");
     e.textContent = pct(chg); e.className = chg >= 0 ? "up" : "down";
     $("stHi").textContent = brl(st.hi); $("stLo").textContent = brl(st.lo); $("stVol").textContent = compact(st.qv);
-    document.title = `${brl(st.px)} ${sel.replace("BRL", "")} · Mercado Cripto ao Vivo`;
+    document.title = `${brl(st.px)} ${sel.replace("BRL", "")} · Argo Trade Cripto`;
   }
 
   async function loadSparks() {
