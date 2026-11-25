@@ -161,7 +161,7 @@ h1 span { color: var(--amber); }
         <div class="agent" style="--c: var(--amber)"><span class="ic">✈</span><span class="nm">TELEGRAM</span><span class="st">ACTIVE</span><span class="ds" id="aTel">--</span></div>
         <div class="agent" style="--c: var(--red)"><span class="ic">♥</span><span class="nm">SINAL DE VIDA</span><span class="st" id="aVidaSt">OK</span><span class="ds" id="aVida">--</span></div>
         <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
-        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer · lê o resumo no Telegram</span></div>
+        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer · resumo no Telegram às 7h</span></div>
       </aside>
 
       <main class="main">
@@ -195,7 +195,7 @@ h1 span { color: var(--amber); }
             <text x="385" y="22" text-anchor="middle">gatilho 1,5 pt</text>
           </svg>
           <div class="tiles">
-            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">21h · 1h · 5h · 9h · 13h · 17h</div></div>
+            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">23h · 3h · 7h (resumo) · 11h · 15h · 19h</div></div>
             <div class="tile"><div class="lab">Maior desvio agora</div><div class="v num" id="tDev">--</div><div class="s" id="tDevS">--</div></div>
             <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
             <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
@@ -380,7 +380,7 @@ h1 span { color: var(--amber); }
     set("aPor", travasOk ? "saldo ok · sem dívida · sem margem" : "TRAVA: saldo negativo");
     set("aPorSt", travasOk ? "ARMED" : "STOP");
     const b = brasilia(); const prox = new Date(b); prox.setUTCMinutes(0, 0, 0);
-    do { prox.setUTCHours(prox.getUTCHours() + 1); } while ((prox.getUTCHours() + 3) % 4 !== 0);
+    do { prox.setUTCHours(prox.getUTCHours() + 1); } while ((prox.getUTCHours() + 3) % 4 !== 2);
     const falta = prox - b, h = Math.floor(falta / 36e5), m = Math.floor(falta % 36e5 / 6e4);
     set("tNext", `${h}h ${pad(m)}min`);
     set("aExe", `${usouHoje ? "limite do dia atingido" : `${nHojeR} de ${maxDia} operações hoje`} · próxima checagem em ${h}h ${pad(m)}min`);

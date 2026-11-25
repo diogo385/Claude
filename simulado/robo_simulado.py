@@ -5,7 +5,7 @@
 - Carteira-alvo: BTC 35% · ETH 15% · SOL 8% · XRP 5% · BNB 4% · LINK 3% · reais 30%.
 - Checa o mercado a cada 4 horas e opera o ativo mais fora do alvo. Até 3 operações por dia:
   a 1ª quando o desvio chega a 1,5 ponto; a 2ª e a 3ª só se a oportunidade for muito boa
-  (desvio de 2,5 pontos ou mais). O resumo diário sai na checagem das 21h.
+  (desvio de 2,5 pontos ou mais). O resumo diário sai na checagem das 7h (Brasília).
 - Guarda tudo em simulado/estado.json, simulado/operacoes.csv e simulado/historico.csv.
 - Avisa no Telegram se TELEGRAM_TOKEN e TELEGRAM_CHAT_ID estiverem configurados.
 
@@ -32,7 +32,7 @@ PARES = {a: a.upper() + "BRL" for a in ALVO}
 DESVIO_MIN = 0.015       # 1ª operação do dia: ativo 1,5 ponto ou mais fora do alvo
 DESVIO_EXTRA = 0.025     # 2ª e 3ª operações do dia: só com 2,5 pontos ou mais (oportunidade muito boa)
 MAX_OPS_DIA = 3          # no máximo 3 operações por dia
-HORA_RESUMO = 20         # a partir desta hora (Brasília) manda o resumo do dia
+HORA_RESUMO = 7          # a partir desta hora (Brasília) manda o resumo do dia
 TAXA = 0.001             # 0,1% (Binance)
 DESLIZE = 0.0005         # 0,05% de diferença de preço
 CUSTO = TAXA + DESLIZE
@@ -179,6 +179,7 @@ def main():
     est["ops_dia"]["n"] += len(feitas)
     est["rebalanceamentos"] = est.get("rebalanceamentos", 0) + len(feitas)
     est["operacoes"] += len(feitas)
+    est["ops_periodo"] = est.get("ops_periodo", 0) + len(feitas)   # operações desde o último resumo
     est["taxas"] += sum(f["taxa"] for f in feitas)
     resumo_agora = novo or (agora.hour >= HORA_RESUMO and est.get("ultimo_resumo") != hoje)
     if resumo_agora:
@@ -198,9 +199,11 @@ def main():
                         f"{op['reais']:.2f}", f"{px[op['ativo']]:.6f}", f"{op['taxa']:.4f}", f"{op['peso_antes']:.4f}"])
     if not HISTORICO.exists():
         HISTORICO.write_text("data;patrimonio;carteira_parada;operacoes_no_dia\n")
-    if resumo_agora:  # uma linha por dia, na checagem da noite
+    ops_24h = est["ops_periodo"]
+    if resumo_agora:  # uma linha por dia, na checagem da manhã
         with open(HISTORICO, "a") as f:
-            f.write(f"{agora:%Y-%m-%d};{v:.2f};{v_parada:.2f};{est['ops_dia']['n']}\n")
+            f.write(f"{agora:%Y-%m-%d};{v:.2f};{v_parada:.2f};{ops_24h}\n")
+        est["ops_periodo"] = 0
     ESTADO.write_text(json.dumps(est, indent=2, ensure_ascii=False))
 
     # mensagens
@@ -208,7 +211,7 @@ def main():
         compras = "\n".join(f"• {a.upper()} {ALVO[a]*100:.0f}% a {brl(px[a])}" for a in ALVO)
         telegram(f"{ROTULO} · Carteira nova iniciada\n"
                  f"Dinheiro de mentira: {brl(CAPITAL)}\n{compras}\n• Reais {(1 - sum(ALVO.values()))*100:.0f}%\n"
-                 f"Checo o mercado a cada 4 horas. Faço até 3 operações por dia: a 1ª quando um ativo desvia 1,5 ponto do alvo; a 2ª e a 3ª só se a oportunidade for muito boa (2,5 pontos ou mais). Resumo todo dia às 21h.")
+                 f"Checo o mercado a cada 4 horas. Faço até 3 operações por dia: a 1ª quando um ativo desvia 1,5 ponto do alvo; a 2ª e a 3ª só se a oportunidade for muito boa (2,5 pontos ou mais). Resumo todo dia às 7h.")
         return
     n_antes = est["ops_dia"]["n"] - len(feitas)
     for i, op in enumerate(feitas, start=1):
@@ -227,10 +230,10 @@ def main():
     if not resumo_agora:
         return
     dias = (agora.date() - datetime.fromisoformat(est["inicio"]).date()).days
-    resumo = (f"{ROTULO} · 📊 Resumo {agora:%d/%m}\n"
+    resumo = (f"{ROTULO} · ☀️ Resumo da manhã · {agora:%d/%m}\n"
               f"Patrimônio: {brl(v)} ({pct(v / CAPITAL - 1)} desde o início, {dias} {'dia' if dias == 1 else 'dias'})\n"
               f"Carteira parada: {brl(v_parada)} → robô {'+' if v >= v_parada else '−'}{brl(abs(v - v_parada))} de diferença\n"
-              f"Operações hoje: {est['ops_dia']['n']} de {MAX_OPS_DIA} · rebalanceamentos: {est['rebalanceamentos']} · taxas: {brl(est['taxas'])}\n"
+              f"Operações nas últimas 24 h: {ops_24h} · rebalanceamentos: {est['rebalanceamentos']} · taxas: {brl(est['taxas'])}\n"
               f"Carteira: {texto_pesos(pesos(c, px))}")
     if v < est["pico"] * 0.75:
         resumo += f"\nℹ️ Patrimônio {pct(v / est['pico'] - 1, 0)} abaixo do pico. Sigo operando normalmente."
