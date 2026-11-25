@@ -42,18 +42,28 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-24T23:49:01.312128-03:00",
+  "ultima_execucao": "2026-11-25T08:56:19.090192-03:00",
   "ops_dia": {
-    "data": "2026-11-24",
+    "data": "2026-11-25",
     "n": 0
   },
-  "ultimo_resumo": "2026-11-24",
+  "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 350421.0,
-    "eth": 9808.97,
-    "sol": 406.6,
-    "xrp": 5.425,
-    "bnb": 3200.0,
-    "link": 51.76
-  }
+    "btc": 348827.0,
+    "eth": 9766.1,
+    "sol": 402.0,
+    "xrp": 5.404,
+    "bnb": 3209.0,
+    "link": 51.18
+  },
+  "reserva": {
+    "saldo": 500.0,
+    "usados": [],
+    "aportes": []
+  },
+  "parada_reserva": 500.0,
+  "investido": 1000.0,
+  "capital_total": 1500.0,
+  "pico_cota": 1.0,
+  "ops_periodo": 0
 }
