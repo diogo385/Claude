@@ -186,7 +186,7 @@ h1 span { color: var(--amber); }
         <section class="box">
           <h2>Ganhos e perdas por cripto <small id="pnlInfo">ao vivo</small></h2>
           <div class="pnl-tot" id="pnlTot"></div>
-          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Preço médio</th><th>Agora</th><th>Valor</th><th>Ganho / perda</th><th>%</th><th></th></tr></thead><tbody id="pnlBody"></tbody></table></div>
+          <div class="scroll"><table class="pnl"><thead><tr><th>Moeda</th><th>Aplicado</th><th>Vale agora</th><th>Ganho / perda</th><th>%</th><th>Preço médio</th><th>Cotação</th><th></th></tr></thead><tbody id="pnlBody"></tbody></table></div>
         </section>
 
         <div class="two">
@@ -573,16 +573,17 @@ h1 span { color: var(--amber); }
     const escala = Math.max(0.01, ...linhas.flatMap(l => l.rows.map(x => Math.abs(x.pc))));
     linhas.forEach(({ nome, rows, gG, cG }) => {
       if (!rows.length) return;
-      const tr = el("tr", "grp"), td = el("td", "", nome); td.colSpan = 7;
-      const sp = el("span", gG >= 0 ? "up" : "down", `${sgn(gG)}${brl(Math.abs(gG))} (${pct(cG ? gG / cG : 0)})`); td.appendChild(sp); tr.appendChild(td); tb.appendChild(tr);
+      const tr = el("tr", "grp"), td = el("td", "", nome); td.colSpan = 8;
+      const sp = el("span", gG >= 0 ? "up" : "down", `aplicado ${brl(cG)} → vale ${brl(cG + gG)} · ${sgn(gG)}${brl(Math.abs(gG))} (${pct(cG ? gG / cG : 0)})`); td.appendChild(sp); tr.appendChild(td); tb.appendChild(tr);
       rows.forEach(x => {
         const r = el("tr"), cor = x.g >= 0 ? "up" : "down";
         r.appendChild(el("td", "", `${SIMB[x.a] || "●"} ${x.a.toUpperCase()}`));
-        r.appendChild(el("td", "", brl(x.medio, x.medio < 1 ? 4 : casas(x.medio))));
-        r.appendChild(el("td", "", brl(x.agora, x.agora < 1 ? 4 : casas(x.agora))));
-        r.appendChild(el("td", "", brl(x.valorAt)));
+        r.appendChild(el("td", "", brl(x.custo)));
+        const va = el("td", "", brl(x.valorAt)); va.style.color = "var(--fg)"; va.style.fontWeight = "600"; r.appendChild(va);
         r.appendChild(el("td", cor, `${sgn(x.g)}${brl(Math.abs(x.g))}`));
         r.appendChild(el("td", cor, pct(x.pc)));
+        const pm = el("td", "", brl(x.medio, x.medio < 1 ? 4 : casas(x.medio))); pm.style.color = "var(--muted)"; r.appendChild(pm);
+        const ct = el("td", "", brl(x.agora, x.agora < 1 ? 4 : casas(x.agora))); ct.style.color = "var(--muted)"; r.appendChild(ct);
         const tdb = el("td"), b = el("span", "barra"), i = el("i"), w = Math.min(50, Math.abs(x.pc) / escala * 50);
         i.style.left = x.pc >= 0 ? "50%" : (50 - w) + "%"; i.style.width = w + "%"; i.style.background = x.pc >= 0 ? "var(--green)" : "var(--red)";
         b.appendChild(i); tdb.appendChild(b); r.appendChild(tdb);
@@ -591,6 +592,8 @@ h1 span { color: var(--amber); }
     });
     const tot = $("pnlTot"); tot.textContent = "";
     const item = (rot, v, extra) => { const d = el("div", "", rot); const b = el("b", v >= 0 ? "up" : "down", `${sgn(v)}${brl(Math.abs(v))}` + (extra || "")); d.appendChild(b); tot.appendChild(d); };
+    const ap = el("div", "", "aplicado em cripto"); ap.appendChild(el("b", "", brl(totC))); tot.appendChild(ap);
+    const va = el("div", "", "vale agora"); va.appendChild(el("b", "", brl(totC + totG))); tot.appendChild(va);
     item("em aberto", totG, ` (${pct(totC ? totG / totC : 0)})`);
     item("já realizado", realP + realS + realOp);
     if (melhor) { const d = el("div", "", `melhor: ${melhor.a.toUpperCase()} `); d.appendChild(el("b", melhor.pc >= 0 ? "up" : "down", pct(melhor.pc))); tot.appendChild(d); }
