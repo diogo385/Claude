@@ -55,6 +55,23 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
 .conta { color: var(--muted); font-size: 11px; }
 .taxa { color: var(--dim); font-size: 11px; }
 .empty { color: var(--muted); padding: 10px 0; }
+.box h2 { margin: 0 0 10px; font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.res { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 22px; align-items: center; }
+.res .big { font-family: var(--display); font-size: 1.8rem; font-weight: 700; color: var(--amber); line-height: 1; }
+.res .lab { color: var(--muted); font-size: 11px; margin-top: 4px; }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.step { border: 1px dashed var(--line-hi); border-radius: 8px; padding: 8px 10px; background: var(--panel); }
+.step b { display: block; font-size: 13px; } .step span { color: var(--muted); font-size: 11px; }
+.step.usado { border-style: solid; border-color: var(--amber); box-shadow: 0 0 12px rgba(255,181,71,.15); }
+.step.usado b { color: var(--amber); }
+.dd { grid-column: 1 / -1; display: grid; gap: 4px; }
+.dd .top { display: flex; justify-content: space-between; font-size: 12px; } .dd .top span { color: var(--muted); }
+.track { position: relative; height: 10px; border-radius: 3px; background: var(--panel); border: 1px solid var(--line); }
+.fill { position: absolute; top: 2px; bottom: 2px; left: 2px; border-radius: 2px; background: var(--amber); box-shadow: 0 0 10px var(--amber); max-width: calc(100% - 4px); }
+.mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--fg); }
+.note { color: var(--dim); font-size: 11px; margin: 4px 0 0; }
+.warn { color: var(--amber); }
+@media (max-width: 560px) { .res { grid-template-columns: 1fr; } .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 </head>
@@ -70,6 +87,20 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
     <div class="tile"><div class="lab">Saldo em reais</div><div class="v num" id="tSaldo">--</div><div class="s" id="tSaldoS">--</div></div>
     <div class="tile"><div class="lab">Em cripto</div><div class="v num" id="tCripto">--</div><div class="s" id="tCriptoS">pelo último preço do robô</div></div>
     <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tTaxa">--</div><div class="s" id="tTaxaS">--</div></div>
+  </section>
+
+  <section class="box">
+    <h2>Reserva de oportunidade · carteira principal</h2>
+    <div class="res">
+      <div><div class="big num" id="rSaldo">--</div><div class="lab" id="rSaldoLab">--</div></div>
+      <div class="steps" id="rSteps"></div>
+      <div class="dd">
+        <div class="top"><b>Queda da carteira desde o pico</b><span class="num" id="rQueda">--</span></div>
+        <div class="track"><div class="fill" id="rFill" style="width:0"></div>
+          <div class="mark" style="left:20%"></div><div class="mark" style="left:30%"></div><div class="mark" style="left:40%"></div><div class="mark" style="left:50%"></div></div>
+        <p class="note" id="rNota">--</p>
+      </div>
+    </div>
   </section>
 
   <section class="box">
@@ -134,6 +165,23 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
     }
   }
 
+  function reserva(estado) {
+    if (!estado || !estado.reserva) return;
+    const res = estado.reserva, p = estado.ultimos_precos || {};
+    const vc = estado.carteira.reais + Object.keys(estado.alvo).reduce((t, a) => t + (estado.carteira[a] || 0) * (p[a] || 0), 0);
+    const inv = estado.investido || 1000, pico = Math.max(estado.pico_cota || 1, vc / inv);
+    const queda = Math.max(0, 1 - (vc / inv) / pico), degraus = [0.2, 0.3, 0.4, 0.5];
+    $("rSaldo").textContent = brl(res.saldo);
+    $("rSaldoLab").textContent = `${res.usados.length} de 4 degraus usados · R$ 125 cada`;
+    const st = $("rSteps"); st.textContent = "";
+    degraus.forEach(d => { const u = res.usados.includes(d); const b = el("div", "step" + (u ? " usado" : ""));
+      b.append(el("b", "", `−${d * 100}%`), el("span", "", u ? "usado" : "R$ 125")); st.appendChild(b); });
+    $("rQueda").textContent = "−" + nf(queda * 100, 1) + "%"; $("rQueda").className = "num" + (queda >= 0.2 ? " warn" : "");
+    $("rFill").style.width = Math.min(100, queda * 100) + "%";
+    const prox = degraus.find(d => !res.usados.includes(d));
+    $("rNota").textContent = res.saldo <= 0 ? "reserva toda aplicada" : prox ? `próximo degrau em −${prox * 100}% · faltam ${nf(Math.max(0, prox - queda) * 100, 1)} pt · pelo último preço do robô` : "";
+  }
+
   function tabela() {
     const tb = $("linhas"); tb.textContent = "";
     const lista = movs.filter(m => !filtro || m.conta === filtro).slice().reverse();
@@ -168,7 +216,7 @@ tr.dia td { background: var(--panel); color: var(--muted); font-size: 11px; lett
     let estado = null;
     try { movs = csv(await baixar("extrato.csv")); } catch (e) { movs = []; }
     try { estado = JSON.parse(await baixar("estado.json")); } catch (e) { /* sem estado: só o extrato */ }
-    resumo(estado); tabela();
+    resumo(estado); reserva(estado); tabela();
   }
   carregar(); setInterval(carregar, 5 * 60000);
 })();

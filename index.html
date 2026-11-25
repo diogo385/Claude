@@ -146,7 +146,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="extrato.html?v=6">Extrato</a><a class="btn ghost" href="regras.html?v=6">Regras</a><span class="mode">simulado</span></span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="extrato.html?v=7">Extrato</a><a class="btn ghost" href="regras.html?v=6">Regras</a><span class="mode">simulado</span></span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -170,20 +170,6 @@ h1 span { color: var(--amber); }
         <section class="box">
           <h2>Evolução do patrimônio</h2>
           <svg class="eq" id="eq" viewBox="0 0 760 220" role="img" aria-label="Curva de patrimônio do robô simulado"></svg>
-        </section>
-
-        <section class="box">
-          <h2>Reserva de oportunidade</h2>
-          <div class="res">
-            <div><div class="big num" id="rSaldo">--</div><div class="lab" id="rSaldoLab">disponível</div></div>
-            <div class="steps" id="rSteps"></div>
-            <div class="dd">
-              <div class="alloc"><div class="row"><div class="top"><b>Queda desde o pico</b><span class="num" id="rQueda">--</span></div>
-                <div class="track"><div class="fill" id="rFill" style="--c: var(--amber); width:0"></div>
-                  <div class="mark" style="left:20%"></div><div class="mark" style="left:30%"></div><div class="mark" style="left:40%"></div><div class="mark" style="left:50%"></div></div></div></div>
-              <p class="note" id="rNota">--</p>
-            </div>
-          </div>
         </section>
 
         <section class="box">
@@ -483,15 +469,6 @@ h1 span { color: var(--amber); }
     const degraus = [0.2, 0.3, 0.4, 0.5];
     const investido = estado.investido || CAPITAL, picoC = Math.max(estado.pico_cota || 1, vc / investido);
     const queda = Math.max(0, 1 - (vc / investido) / picoC);
-    set("rSaldo", brl(res.saldo));
-    set("rSaldoLab", `${res.usados.length} de 4 degraus usados`);
-    const st = $("rSteps"); st.textContent = "";
-    degraus.forEach(d => { const u = res.usados.includes(d); const b = el("div", "step" + (u ? " usado" : ""));
-      b.append(el("b", "", `−${d * 100}%`), el("span", "", u ? "usado" : "R$ 125")); st.appendChild(b); });
-    set("rQueda", "−" + nf(queda * 100, 1) + "%", queda >= 0.2 ? "warn" : "");
-    $("rFill").style.width = Math.min(100, queda * 100) + "%";
-    const proxDeg = degraus.find(d => !res.usados.includes(d));
-    set("rNota", res.saldo <= 0 ? "reserva toda aplicada" : proxDeg ? `próximo degrau em −${nf(proxDeg * 100, 0)}% · faltam ${nf(Math.max(0, proxDeg - queda) * 100, 1)} pt` : "");
     set("aRes", `${brl(res.saldo, 0)} disponível · ${res.usados.length} de 4 degraus · queda ${nf(queda * 100, 1)}%`);
     set("aResSt", res.saldo <= 0 ? "EMPTY" : "ARMED");
 
