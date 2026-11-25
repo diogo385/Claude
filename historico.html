@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
-/* Histórico de operações do robô simulado: principal, satélite, oportunidades e reserva */
+/* Histórico de operações do robô simulado: principal, satélite, giros e reserva */
 :root {
   --bg: #06100e; --panel: #0a1714; --panel-2: #0d1f1b; --line: #173029; --line-hi: #24493f;
   --fg: #d9f2ea; --muted: #7fa398; --dim: #4f7067;
@@ -68,7 +68,7 @@ h1 span { color: var(--amber); }
         <button type="button" data-f="" aria-pressed="true">Tudo</button>
         <button type="button" data-f="principal" aria-pressed="false">Principal</button>
         <button type="button" data-f="satelite" aria-pressed="false">Satélite</button>
-        <button type="button" data-f="oport" aria-pressed="false">Oportunidades</button>
+        <button type="button" data-f="oport" aria-pressed="false">Giros</button>
         <button type="button" data-f="reserva" aria-pressed="false">Reserva</button>
       </div>
       <span class="count" id="count">--</span>
@@ -126,11 +126,11 @@ h1 span { color: var(--amber); }
         tr.appendChild(el("td", "r num warn", brl(o.ap.valor))); tb.appendChild(tr); return;
       }
       const a = o.ativo.toLowerCase();
-      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" || o.tipo === "LUCRO" ? "sell" : "buy"), o.tipo)); if (o.sat) td2.appendChild(el("span", "side sat", "SAT")); tr.appendChild(td2);
+      const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" || o.tipo === "LUCRO" ? "sell" : "buy"), o.tipo === "OPORTUNIDADE" ? "GIRO · COMPRA" : o.tipo === "LUCRO" ? "GIRO · VENDA" : o.tipo)); if (o.sat) td2.appendChild(el("span", "side sat", "SAT")); tr.appendChild(td2);
       const td3 = el("td"); const q = +o.quantidade;
       td3.append(el("b", "", `${SIMB[a] || "●"} ${o.ativo} · ${nf(q, q < 1 ? 6 : 4)}`),
-        el("div", "why", (o.tipo === "OPORTUNIDADE" ? "compra de oportunidade com a reserva da satélite · vende com +1,5%" :
-          o.tipo === "LUCRO" ? "posição de oportunidade vendida com +1,5% · dinheiro voltou para a reserva da satélite" :
+        el("div", "why", (o.tipo === "OPORTUNIDADE" ? "compra automática do giro · vende sozinho com +1,5%" :
+          o.tipo === "LUCRO" ? "venda automática do giro com +1,5% · dinheiro voltou para a reserva do giro" :
           o.sat && +o.peso_antes === 0 ? "montagem da satélite" :
           `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da ${o.sat ? "satélite" : "carteira"} (alvo ${Math.round(((o.sat ? sat && sat.alvo[a] : estado && estado.alvo[a]) || 0) * 100)}%)`) +
           ` · preço ${brl(+o.preco, +o.preco < 1 ? 4 : casas(+o.preco))} · taxa ${brl(+o.taxa)}`));

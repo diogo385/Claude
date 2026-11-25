@@ -324,7 +324,7 @@ h2 small { color: var(--muted); font-weight: 400; letter-spacing: .06em; }
     });
     // gatilhos do robô
     const gt = gatilhos(sel, candles_[candles_.length - 1].c);
-    if (gt) [["vende", css("--amber"), "venderia"], ["compra", css("--good"), "compraria"], ["alvoOp", css("--cyan"), "vende a oportunidade"]].forEach(([k, cor, rot]) => {
+    if (gt) [["vende", css("--amber"), "venderia"], ["compra", css("--good"), "compraria"], ["alvoOp", css("--cyan"), "vende o giro"]].forEach(([k, cor, rot]) => {
       const v = gt[k]; if (v === undefined) return; g.fillStyle = cor; g.strokeStyle = cor; g.font = "11px " + css("--mono");
       const txt = v.toLocaleString("pt-BR", { maximumFractionDigits: dec(v) });
       if (v > min && v < max) {

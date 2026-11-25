@@ -50,9 +50,9 @@ Versão 2.2 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 | Parte | Valor inicial | Para que serve |
 |---|---|---|
 | **Carteira principal** | R$ 1.000 | O foco do sistema: BTC 35 · ETH 15 · SOL 8 · XRP 5 · BNB 4 · LINK 3 · Reais 30 |
-| **Reserva de oportunidade** | R$ 500 | Entra na carteira principal quando ela cai forte (degraus) |
+| **Reserva para quedas** | R$ 500 | Entra na carteira principal quando ela cai forte (degraus) |
 | **Carteira satélite** | R$ 250 | Teste de risco maior: LTC 20 · DOGE 20 · ADA 18 · AVAX 16 · NEAR 16 · Reais 10 |
-| **Reserva da satélite** | R$ 100 | Compras de oportunidade de giro curto nas moedas da satélite |
+| **Reserva do giro** | R$ 100 | Compras automáticas de giro curto nas moedas da satélite |
 | **Total depositado** | **R$ 1.850** | |
 
 As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negociado. As memecoins puras (PEPE, SHIB) e as moedas novas demais (SUI, POL, RENDER) ficaram de fora.
@@ -70,14 +70,14 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 - **Máximo de 20 operações por dia em cada carteira** (teste simulado), com contadores separados.
 - **Custo simulado:** 0,1% de taxa + 0,05% de diferença de preço por operação.
 
-### 5.2 Reserva de oportunidade da principal (R$ 500)
+### 5.2 Reserva para quedas da principal (R$ 500)
 - Entram **R$ 125** quando a carteira principal cai **20%, 30%, 40% e 50%** desde o pico.
 - A queda é medida pela **cota da carteira**, sem contar os aportes.
 - O dinheiro entra como reais, e o rebalanceamento compra as moedas que mais caíram.
 - Se a carteira fizer um novo pico e ainda houver reserva, os degraus voltam a valer.
 
-### 5.3 Reserva da satélite (R$ 100): giro curto
-- **Monitora as 5 moedas a cada 15 minutos.** Cada uma tem um status: normal, caindo, OPORTUNIDADE ou posição aberta.
+### 5.3 Reserva do giro da satélite (R$ 100)
+- **Monitora as 5 moedas a cada 15 minutos.** Cada uma tem um status: normal, caindo, sinal de compra ou em giro. O robô compra e vende sozinho.
 - **Compra:** quando a moeda está **10% ou mais abaixo do topo de 14 dias** e já **subiu 3% desde o fundo de 3 dias**, ou seja, parou de cair. O robô compra **R$ 25**, com **uma posição aberta por moeda**.
 - **Venda:** quando a posição chega a **+1,5%**. Isso cobre ~0,3% de custos (ida e volta) e deixa **~1,2% de ganho líquido**. O dinheiro volta para a reserva.
 - Essas posições ficam **separadas do rebalanceamento**, e pode haver **várias operações por dia**.
@@ -94,7 +94,7 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 
 | Quando | O quê |
 |---|---|
-| **A cada 15 minutos** | Rebalanceamento das duas carteiras, oportunidades da satélite e reserva principal |
+| **A cada 15 minutos** | Rebalanceamento das duas carteiras, giro da satélite e reserva principal |
 | **7h (Brasília)** | Resumo do dia no Telegram e registro de um ponto no histórico |
 
 O GitHub pode atrasar as execuções agendadas em alguns minutos. Para não sobrecarregar o site, o estado só é gravado quando algo acontece ou cerca de 1 vez por hora.
@@ -109,7 +109,7 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 |---|---|
 | Rebalanceamento | 🟢 COMPRA / 🔴 VENDA, com o motivo e "operação N de até 20 hoje" |
 | Satélite | 🛰️ Satélite · COMPRA / VENDA |
-| Oportunidade da satélite | 🎯 OPORTUNIDADE · COMPRA (com a venda programada) e 💰 LUCRO · VENDA |
+| Giro da satélite | 🔄 GIRO · COMPRA AUTOMÁTICA (com a venda programada) e 🔄 GIRO · VENDA AUTOMÁTICA (lucro) |
 | Reserva principal | 💰 Reserva acionada (degrau, valor e saldo restante) |
 | Aportes e montagens | 💵 Aporte, seguido de uma mensagem para cada compra |
 | Resumo das 7h | ☀️ Patrimônio total, carteira, reserva, satélite, comparação "sem robô", operações das últimas 24 h e divisão |
@@ -122,7 +122,7 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 | Página | Endereço | O que mostra |
 |---|---|---|
 | **Monitor** | diogo385.github.io/Claude | Patrimônio total, evolução, **ganhos e perdas por cripto**, carteira principal, satélite, fluxo de decisão e agentes |
-| **Histórico** | botão no monitor | Todas as operações agrupadas por dia, com filtros (principal, satélite, oportunidades, reserva) |
+| **Histórico** | botão no monitor | Todas as operações agrupadas por dia, com filtros (principal, satélite, giros, reserva) |
 | **Mercado ao vivo** | botão 📈 no monitor | Gráfico de velas das 6 moedas da principal, livro de ofertas, negociações e linhas de gatilho do robô |
 | **Extrato** | botão no monitor | Toda entrada e saída de dinheiro com o saldo em reais, as duas reservas e os sinais da satélite |
 | **Regras** | botão no monitor | Todas as regras num lugar só |
@@ -135,7 +135,7 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 - **Giro da satélite:** giros concluídos, lucro realizado e médio, tempo médio em posição, posições abertas (custo → vale agora) e reserva disponível.
 - **Queda desde o pico:** gráfico abaixo da evolução do patrimônio, descontando aportes.
 
-**Bloco "Ganhos e perdas por cripto" (monitor), ao vivo:** para cada moeda, o valor **aplicado**, quanto **vale agora**, o ganho ou perda em R$ e em %, o preço médio de compra (custo médio com taxas), a cotação e a **variação de 24h**. As moedas ficam agrupadas em principal, satélite e oportunidades abertas, com o total de cada grupo. No topo: total aplicado, valor atual, resultado em aberto, resultado já realizado, melhor e pior moeda.
+**Bloco "Ganhos e perdas por cripto" (monitor), ao vivo:** para cada moeda, o valor **aplicado**, quanto **vale agora**, o ganho ou perda em R$ e em %, o preço médio de compra (custo médio com taxas), a cotação e a **variação de 24h**. As moedas ficam agrupadas em principal, satélite e giros abertos, com o total de cada grupo. No topo: total aplicado, valor atual, resultado em aberto, resultado já realizado, melhor e pior moeda.
 | Maquete do console | claude.ai (artefato) | Versão de exemplo, sem dados reais |
 
 ---
@@ -267,7 +267,7 @@ PLANO.md              este documento
 | 24/11 | Nome Argo Trade Cripto. Monitor no estilo terminal, no GitHub Pages |
 | 25/11 | Carteira diversificada de 6 moedas, recomeçada do zero (a BTC/ETH foi arquivada) |
 | 25/11 | Até 3 operações por dia (extras com 2,5 pts). Resumo movido para as 7h |
-| 25/11 | Reserva de oportunidade de R$ 500 em degraus de R$ 125 |
+| 25/11 | Reserva para quedas de R$ 500 em degraus de R$ 125 |
 | 25/11 | Gatilho de 1,5 para 1 ponto e ordem mínima de R$ 10 |
 | 25/11 | Nome final: **Argos** Trade Cripto. Logo provisório |
 | 25/11 | Monitor reorganizado, página de regras, mercado ao vivo em página própria |
@@ -280,3 +280,5 @@ PLANO.md              este documento
 | 25/11 | Limite de operações por dia de 3 para 20 em cada carteira |
 | 25/11 | Rebalanceamento a cada 15 minutos e todas as operações com gatilho de 1 ponto (teste simulado) |
 | 25/11 | Pesquisa (GitHub, estudos e Anthropic) e recomendações implementadas: comandos e pausa pelo Telegram, trava de queda em 24 h, máximo de 2 giros abertos, painéis de desempenho, gráfico de queda e registro de falhas |
+| 25/11 | Agendamento passa a ser disparado pelo cron-job.org a cada 15 minutos (o agendamento do GitHub não disparava) |
+| 25/11 | "Oportunidade" vira "giro" (satélite) e "reserva para quedas" (principal), deixando claro que tudo é automático |

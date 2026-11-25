@@ -91,7 +91,7 @@ table.mini td { padding: 5px 6px; } table.mini th { padding: 4px 6px; }
   </section>
 
   <section class="box">
-    <h2>Reserva de oportunidade · carteira principal</h2>
+    <h2>Reserva para quedas · carteira principal</h2>
     <div class="res">
       <div><div class="big num" id="rSaldo">--</div><div class="lab" id="rSaldoLab">--</div></div>
       <div class="steps" id="rSteps"></div>
@@ -105,12 +105,12 @@ table.mini td { padding: 5px 6px; } table.mini th { padding: 4px 6px; }
   </section>
 
   <section class="box" id="satResBox" hidden>
-    <h2>Reserva da satélite · oportunidades</h2>
+    <h2>Reserva do giro · satélite</h2>
     <div class="res">
       <div><div class="big num" id="sSaldo" style="color: var(--teal)">--</div><div class="lab" id="sLab">--</div></div>
       <div class="scroll"><table class="mini"><thead><tr><th>Moeda</th><th>Status</th><th class="r">Do topo 14d</th><th class="r">Do fundo 3d</th><th class="r">Posição aberta</th></tr></thead><tbody id="sSinais"></tbody></table></div>
     </div>
-    <p class="note">Compra R$ 25 quando a moeda está 10% ou mais abaixo do topo de 14 dias e já subiu 3% do fundo de 3 dias. Vende com +1,5% (≈ +1,2% líquido) e devolve à reserva. Uma posição por moeda; checa a cada 15 minutos.</p>
+    <p class="note">O robô compra sozinho R$ 25 quando a moeda está 10% ou mais abaixo do topo de 14 dias e já subiu 3% do fundo de 3 dias. Vende sozinho com +1,5% (≈ +1,2% líquido) e devolve à reserva. Uma posição por moeda; checa a cada 15 minutos.</p>
   </section>
 
   <section class="box">
@@ -201,7 +201,7 @@ table.mini td { padding: 5px 6px; } table.mini th { padding: 4px 6px; }
     $("sSaldo").textContent = brl(sat.reserva.saldo);
     $("sLab").textContent = `disponível · ${pos.length} ${pos.length === 1 ? "posição aberta" : "posições abertas"}`;
     const tb = $("sSinais"); tb.textContent = "";
-    const ROT = { "normal": "normal", "caindo": "caindo", "posição aberta": "posição aberta", "oportunidade": "OPORTUNIDADE", "comprou": "comprou", "sem dados": "--" };
+    const ROT = { "normal": "normal", "caindo": "caindo", "posição aberta": "posição aberta", "oportunidade": "sinal de compra", "comprou": "comprou (giro)", "sem dados": "--" };
     Object.keys(sat.alvo).forEach(a => {
       const sn = (sat.sinais || {})[a] || {}, tr = el("tr");
       tr.appendChild(el("td", "", a.toUpperCase()));

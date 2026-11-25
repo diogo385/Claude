@@ -6,7 +6,7 @@
 - Checa o mercado a cada 15 minutos e opera o ativo mais fora do alvo. Até 20 operações por dia,
   a 1ª quando o desvio chega a 1 ponto; a 2ª e a 3ª só se a oportunidade for muito boa
   todas com desvio de 1 ponto ou mais. O resumo diário sai na checagem das 7h (Brasília).
-- Reserva de oportunidade: R$ 500 fora da carteira. Entra em degraus de R$ 125 quando a carteira
+- Reserva para quedas: R$ 500 fora da carteira. Entra em degraus de R$ 125 quando a carteira
   cai 20%, 30%, 40% e 50% desde o pico (medido por cota, sem contar os aportes).
 - Carteira satélite (risco maior): aporte de R$ 250 em LTC 20% · DOGE 20% · ADA 18% · AVAX 16% · NEAR 16%
   · reais 10%, com as mesmas regras de operação e sem reserva. Operações em simulado/operacoes_satelite.csv.
@@ -301,9 +301,9 @@ def oportunidades_satelite(est, px, agora, comprar=True, vender=True):
         else:
             status = "oportunidade"
         if status == "oportunidade" and not comprar:
-            status = "oportunidade (pausada)"
+            status = "sinal de compra (pausado)"
         elif status == "oportunidade" and len(sat["posicoes"]) >= OPORT_MAX_POSICOES:
-            status = "oportunidade (limite de posições)"
+            status = "sinal de compra (limite de 2 giros)"
         if status == "oportunidade" and res["saldo"] >= OPORT_VALOR:
             qtd = OPORT_VALOR * (1 - CUSTO) / px[a]
             res["saldo"] -= OPORT_VALOR
@@ -483,7 +483,7 @@ def main():
         for a, w in ALVO.items():
             movs.append(mov_operacao({"tipo": "COMPRA", "ativo": a, "qtd": c[a], "reais": CAPITAL * w, "taxa": CAPITAL * w * CUSTO}, px, "Principal", agora, True))
     if migrou:
-        movs.append({"data_hora": quando, "conta": "Reserva", "tipo": "DEPÓSITO", "descricao": "Reserva de oportunidade", "valor": RESERVA_INICIAL, "taxa": 0})
+        movs.append({"data_hora": quando, "conta": "Reserva", "tipo": "DEPÓSITO", "descricao": "Reserva para quedas", "valor": RESERVA_INICIAL, "taxa": 0})
     for ap in aportes:
         movs.append({"data_hora": quando, "conta": "Reserva", "tipo": "TRANSFERÊNCIA",
                      "descricao": f"Reserva → carteira principal: {brl(ap['valor'])} (degrau de {ap['degrau']*100:.0f}%)", "valor": 0.0, "taxa": 0})
@@ -493,11 +493,11 @@ def main():
         movs += [mov_operacao(op, px, "Satélite", agora, True) for op in sat_montagem]
     movs += [mov_operacao(op, px, "Satélite", agora) for op in sat_feitas]
     if sat_res_criada:
-        movs.append({"data_hora": quando, "conta": "Satélite", "tipo": "DEPÓSITO", "descricao": "Reserva da satélite (para oportunidades)", "valor": SAT_RESERVA, "taxa": 0})
+        movs.append({"data_hora": quando, "conta": "Satélite", "tipo": "DEPÓSITO", "descricao": "Reserva do giro da satélite", "valor": SAT_RESERVA, "taxa": 0})
     for op in sat_vendas_op:
-        m = mov_operacao(dict(op, tipo="VENDA"), px, "Satélite", agora); m["descricao"] += f" (lucro de oportunidade, {brl(op['ganho'])})"; movs.append(m)
+        m = mov_operacao(dict(op, tipo="VENDA"), px, "Satélite", agora); m["descricao"] += f" (venda automática do giro, lucro {brl(op['ganho'])})"; movs.append(m)
     for op in sat_compras_op:
-        m = mov_operacao(dict(op, tipo="COMPRA"), px, "Satélite", agora); m["descricao"] += " (oportunidade, com a reserva da satélite)"; movs.append(m)
+        m = mov_operacao(dict(op, tipo="COMPRA"), px, "Satélite", agora); m["descricao"] += " (compra automática do giro)"; movs.append(m)
     lancar(movs)
     if not HISTORICO.exists():
         HISTORICO.write_text("data;patrimonio;carteira_parada;operacoes_no_dia;capital\n")
@@ -534,7 +534,7 @@ def main():
                  if est["trava_queda"] else f"{ROTULO} · ✅ Trava de queda desligada\nCompras de giro da satélite liberadas de novo.")
     degraus_txt = ", ".join(f"{d*100:.0f}%" for d in DEGRAUS)
     if migrou:
-        telegram(f"{ROTULO} · 💰 Reserva de oportunidade criada\n"
+        telegram(f"{ROTULO} · 💰 Reserva para quedas criada\n"
                  f"{brl(RESERVA_INICIAL)} disponíveis na corretora, fora da carteira.\n"
                  f"Entram em degraus de {brl(APORTE)} quando a carteira cair {degraus_txt} desde o pico.\n"
                  f"Patrimônio total agora: {brl(v_tot)}")
@@ -557,22 +557,22 @@ def main():
                      f"Motivo: montagem da satélite (alvo {SAT_ALVO[a]*100:.0f}%)\n"
                      f"Taxa: {brl(o['taxa'])}")
     if sat_res_criada:
-        telegram(f"{ROTULO} · {SAT} · 💰 Reserva da satélite criada\n"
-                 f"{brl(SAT_RESERVA)} parados, destinados à satélite. Uso só em oportunidade: moeda {OPORT_QUEDA*100:.0f}% ou mais abaixo do topo de {OPORT_TOPO_DIAS} dias "
+        telegram(f"{ROTULO} · {SAT} · 💰 Reserva do giro criada\n"
+                 f"{brl(SAT_RESERVA)} parados, destinados à satélite. O robô compra sozinho quando a moeda está {OPORT_QUEDA*100:.0f}% ou mais abaixo do topo de {OPORT_TOPO_DIAS} dias "
                  f"e já {OPORT_REPIQUE*100:.0f}% acima do fundo de {OPORT_FUNDO_DIAS} dias. Compra de {brl(OPORT_VALOR)}, venda com +{num(OPORT_LUCRO*100, 1)}%.\n"
                  f"Patrimônio total agora: {brl(v_tot)}")
     for op in sat_compras_op:
         a = op["ativo"]
-        telegram(f"{ROTULO} · {SAT} · 🎯 OPORTUNIDADE · 🟢 COMPRA\n"
+        telegram(f"{ROTULO} · {SAT} · 🔄 GIRO · 🟢 COMPRA AUTOMÁTICA\n"
                  f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
                  f"Motivo: {a.upper()} está {num(op['queda']*100, 1)}% abaixo do topo de {OPORT_TOPO_DIAS} dias e subiu {num(op['repique']*100, 1)}% desde o fundo de {OPORT_FUNDO_DIAS} dias.\n"
-                 f"Venda programada em {preco(px[a] * (1 + OPORT_LUCRO))} (+{num(OPORT_LUCRO*100, 1)}%). Reserva da satélite: {brl(est['satelite']['reserva']['saldo'])}")
+                 f"Venda programada em {preco(px[a] * (1 + OPORT_LUCRO))} (+{num(OPORT_LUCRO*100, 1)}%). Reserva do giro: {brl(est['satelite']['reserva']['saldo'])}")
     for op in sat_vendas_op:
         a = op["ativo"]
-        telegram(f"{ROTULO} · {SAT} · 💰 LUCRO · 🔴 VENDA\n"
+        telegram(f"{ROTULO} · {SAT} · 🔄 GIRO · 🔴 VENDA AUTOMÁTICA (lucro)\n"
                  f"{qtd_txt(op['qtd'])} {a.upper()} por {brl(op['reais'])} ({preco(px[a])}/{a.upper()})\n"
-                 f"Posição de oportunidade atingiu +{num(OPORT_LUCRO*100, 1)}%. Ganho líquido: {brl(op['ganho'])}.\n"
-                 f"O dinheiro voltou para a reserva da satélite: {brl(est['satelite']['reserva']['saldo'])}")
+                 f"Giro atingiu +{num(OPORT_LUCRO*100, 1)}%. Ganho líquido: {brl(op['ganho'])}.\n"
+                 f"O dinheiro voltou para a reserva do giro: {brl(est['satelite']['reserva']['saldo'])}")
     for i, op in enumerate(sat_feitas, start=1):
         a = op["ativo"]; n = est["satelite"]["ops_dia"]["n"] - len(sat_feitas) + i
         emoji = "🟢" if op["tipo"] == "COMPRA" else "🔴"
@@ -625,7 +625,7 @@ def main():
     resumo = (f"{ROTULO} · ☀️ Resumo da manhã · {agora:%d/%m}\n"
               f"Patrimônio total: {brl(v_tot)} ({pct(v_tot / est['capital_total'] - 1)} desde o início, {dias} {'dia' if dias == 1 else 'dias'})\n"
               f"Carteira: {brl(v)} · Reserva: {brl(reserva)} ({len(est['reserva']['usados'])} de {len(DEGRAUS)} degraus usados)\n"
-              + (f"Satélite: {brl(v_sat)} ({pct(v_sat / (SAT_APORTE + est['satelite'].get('parada_reserva', 0)) - 1)}) · reserva dela: {brl(est['satelite'].get('reserva', {}).get('saldo', 0))} · oportunidades abertas: {len(est['satelite'].get('posicoes', []))}\n" if "satelite" in est else "") +
+              + (f"Satélite: {brl(v_sat)} ({pct(v_sat / (SAT_APORTE + est['satelite'].get('parada_reserva', 0)) - 1)}) · reserva dela: {brl(est['satelite'].get('reserva', {}).get('saldo', 0))} · giros abertos: {len(est['satelite'].get('posicoes', []))}\n" if "satelite" in est else "") +
               f"Sem robô (tudo parado): {brl(v_par_tot)} → robô {'+' if v_tot >= v_par_tot else '−'}{brl(abs(v_tot - v_par_tot))} de diferença\n"
               f"Operações nas últimas 24 h: {ops_24h} · rebalanceamentos: {est['rebalanceamentos']} · taxas: {brl(est['taxas'])}\n"
               f"Divisão: {texto_pesos(pesos(c, px))}"
