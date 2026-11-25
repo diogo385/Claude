@@ -2,7 +2,7 @@ name: Argos Trade Cripto · robô simulado
 
 on:
   schedule:
-    - cron: "0 * * * *"   # toda hora: oportunidades da satélite; carteiras rebalanceiam a cada ~4 h; resumo às 7h (Brasília)
+    - cron: "*/15 * * * *"   # a cada 15 min: oportunidades da satélite; carteiras rebalanceiam a cada ~4 h; resumo às 7h (Brasília)
   workflow_dispatch:       # botão "Run workflow" para rodar na hora
 
 permissions:
@@ -24,13 +24,14 @@ jobs:
           python-version: "3.12"
 
       - name: Rodar o robô simulado
+        id: robo
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python simulado/robo_simulado.py
 
       - name: Salvar a carteira simulada no repositório
-        if: always()
+        if: steps.robo.outputs.salvar == 'true'
         run: |
           git config user.name "argos-trade-cripto"
           git config user.email "argos-trade-cripto@users.noreply.github.com"

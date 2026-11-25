@@ -45,7 +45,8 @@ OPORT_REPIQUE = 0.03     # ...e 3% ou mais acima do fundo dos últimos 3 dias (p
 OPORT_FUNDO_DIAS = 3
 OPORT_VALOR = 25.0       # quanto compra em cada oportunidade (no máximo 1 posição aberta por moeda)
 OPORT_LUCRO = 0.015      # vende com +1,5%: cobre ~0,3% de custos (ida e volta) e deixa ~1,2% de ganho
-INTERVALO_CARTEIRAS = 3.5  # horas: rebalanceamento das carteiras segue a cada ~4 h; oportunidades, toda hora
+INTERVALO_CARTEIRAS = 3.5  # horas: rebalanceamento das carteiras segue a cada ~4 h; oportunidades, a cada 15 min
+SALVAR_A_CADA = 55         # minutos: sem novidade, grava o estado no repositório no máximo ~1 vez por hora
 DESVIO_MIN = 0.01        # 1ª operação do dia: ativo 1 ponto ou mais fora do alvo
 DESVIO_EXTRA = 0.025     # 2ª e 3ª operações do dia: só com 2,5 pontos ou mais (oportunidade muito boa)
 MAX_OPS_DIA = 3          # no máximo 3 operações por dia
@@ -449,6 +450,16 @@ def main():
         with open(HISTORICO, "a") as f:
             f.write(f"{agora:%Y-%m-%d};{v_tot:.2f};{v_par_tot:.2f};{ops_24h}\n")
         est["ops_periodo"] = 0
+    # grava no repositório só quando algo aconteceu ou ~1 vez por hora (limita commits e atualizações do site)
+    ult_salv = est.get("ultimo_salvamento")
+    salvar = (novo or bool(movs) or resumo_agora or checar_carteiras or not ult_salv
+              or (agora - datetime.fromisoformat(ult_salv)).total_seconds() >= SALVAR_A_CADA * 60)
+    if salvar:
+        est["ultimo_salvamento"] = agora.isoformat()
+    saida = os.environ.get("GITHUB_OUTPUT")
+    if saida:
+        with open(saida, "a") as f:
+            f.write(f"salvar={'true' if salvar else 'false'}\n")
     ESTADO.write_text(json.dumps(est, indent=2, ensure_ascii=False))
 
     # mensagens

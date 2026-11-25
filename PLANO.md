@@ -76,7 +76,7 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 - Se a carteira fizer um novo pico e ainda houver reserva, os degraus voltam a valer.
 
 ### 5.3 Reserva da satélite (R$ 100): giro curto
-- **Monitora as 5 moedas toda hora.** Cada uma tem um status: normal, caindo, OPORTUNIDADE ou posição aberta.
+- **Monitora as 5 moedas a cada 15 minutos.** Cada uma tem um status: normal, caindo, OPORTUNIDADE ou posição aberta.
 - **Compra:** quando a moeda está **10% ou mais abaixo do topo de 14 dias** e já **subiu 3% desde o fundo de 3 dias**, ou seja, parou de cair. O robô compra **R$ 25**, com **uma posição aberta por moeda**.
 - **Venda:** quando a posição chega a **+1,5%**. Isso cobre ~0,3% de custos (ida e volta) e deixa **~1,2% de ganho líquido**. O dinheiro volta para a reserva.
 - Essas posições ficam **separadas do rebalanceamento**, e pode haver **várias operações por dia**.
@@ -91,11 +91,11 @@ As moedas foram escolhidas entre os pares em reais da Binance, pelo volume negoc
 
 | Quando | O quê |
 |---|---|
-| **Toda hora** | Oportunidades da satélite e checagem da reserva principal |
+| **A cada 15 minutos** | Oportunidades da satélite e checagem da reserva principal |
 | **A cada ~4 horas** | Rebalanceamento das duas carteiras |
 | **7h (Brasília)** | Resumo do dia no Telegram e registro de um ponto no histórico |
 
-O GitHub pode atrasar as execuções agendadas em alguns minutos.
+O GitHub pode atrasar as execuções agendadas em alguns minutos. Para não sobrecarregar o site, o estado só é gravado quando algo acontece ou cerca de 1 vez por hora.
 
 ---
 
@@ -131,7 +131,7 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 
 | Peça | Como funciona |
 |---|---|
-| Robô | `simulado/robo_simulado.py`, que o **GitHub Actions** roda toda hora |
+| Robô | `simulado/robo_simulado.py`, que o **GitHub Actions** roda a cada 15 minutos |
 | Preços | Dados públicos da Binance (`data-api.binance.vision`), sem conta e sem chave |
 | Dados | `simulado/estado.json`, `historico.csv`, `operacoes.csv`, `operacoes_satelite.csv` e `extrato.csv`, gravados no repositório a cada execução |
 | Avisos | Bot do Telegram. O token e o Chat ID ficam como **segredos do GitHub** |
@@ -230,7 +230,7 @@ simulado/
   extrato.csv         entradas e saídas de dinheiro
   arquivo/            carteiras antigas
 backtest/             testes históricos e resultados
-.github/workflows/    agendamento do robô (toda hora)
+.github/workflows/    agendamento do robô (a cada 15 minutos)
 PLANO.md              este documento
 ```
 
@@ -252,3 +252,5 @@ PLANO.md              este documento
 | 25/11 | Carteira satélite de R$ 250 (LTC, DOGE, ADA, AVAX, NEAR), abaixo da principal no monitor |
 | 25/11 | Extrato da conta. Quadro da reserva movido para o extrato |
 | 25/11 | Reserva da satélite de R$ 100: giro curto com venda em +1,5%. Robô passa a rodar toda hora |
+| 25/11 | Monitor com ganhos e perdas por cripto (aplicado × vale agora). Histórico em página própria |
+| 25/11 | Robô passa a checar a cada 15 minutos (carteiras seguem a cada ~4 h) |
