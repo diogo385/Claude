@@ -46,7 +46,7 @@ h1 span { color: var(--amber); }
 .kpis .lab { color: var(--muted); font-size: 11px; }
 
 .body { display: block; }
-.agents { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.agents { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .sec { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin: 2px 2px 4px; }
 .sec b { color: var(--green); font-weight: 500; letter-spacing: 0; text-transform: none; }
 .agent { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
@@ -140,7 +140,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal · carteira diversificada · dados do robô simulado + preços ao vivo</span><span class="mode">simulado · dinheiro de mentira</span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="mode">simulado</span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -153,26 +153,26 @@ h1 span { color: var(--amber); }
         </div>
       </div>
       <div class="kpis">
-        <div><div class="big num" id="kVal">--</div><div class="lab">patrimônio total agora (carteira + reserva)</div></div>
+        <div><div class="big num" id="kVal">--</div><div class="lab">patrimônio total</div></div>
         <div><div class="big num" id="kOps">--</div><div class="lab">rebalanceamentos</div></div>
         <div><div class="big num" id="kRet">--</div><div class="lab" id="kRetLab">desde o início</div></div>
-        <div><div class="big num" id="kVs">--</div><div class="lab">vs sem robô (tudo parado)</div></div>
+        <div><div class="big num" id="kVs">--</div><div class="lab">vs sem robô</div></div>
       </div>
     </header>
 
     <main class="main">
         <section class="box">
-          <h2>Evolução do patrimônio <small>robô vs sem robô (carteira e reserva paradas) · início R$ 1.500 · último ponto = agora</small></h2>
+          <h2>Evolução do patrimônio</h2>
           <svg class="eq" id="eq" viewBox="0 0 760 220" role="img" aria-label="Curva de patrimônio do robô simulado"></svg>
         </section>
 
         <section class="box">
-          <h2>Reserva de oportunidade <small>saldo disponível na corretora · entra em degraus quando a carteira cai</small></h2>
+          <h2>Reserva de oportunidade</h2>
           <div class="res">
             <div><div class="big num" id="rSaldo">--</div><div class="lab" id="rSaldoLab">disponível</div></div>
             <div class="steps" id="rSteps"></div>
             <div class="dd">
-              <div class="alloc"><div class="row"><div class="top"><b>Queda da carteira desde o pico</b><span class="num" id="rQueda">--</span></div>
+              <div class="alloc"><div class="row"><div class="top"><b>Queda desde o pico</b><span class="num" id="rQueda">--</span></div>
                 <div class="track"><div class="fill" id="rFill" style="--c: var(--amber); width:0"></div>
                   <div class="mark" style="left:20%"></div><div class="mark" style="left:30%"></div><div class="mark" style="left:40%"></div><div class="mark" style="left:50%"></div></div></div></div>
               <p class="note" id="rNota">--</p>
@@ -192,23 +192,21 @@ h1 span { color: var(--amber); }
             <div class="seg" id="mkTf"><button type="button" data-tf="1m" aria-pressed="false">1m</button><button type="button" data-tf="15m" aria-pressed="true">15m</button><button type="button" data-tf="1h" aria-pressed="false">1h</button><button type="button" data-tf="4h" aria-pressed="false">4h</button><button type="button" data-tf="1d" aria-pressed="false">1d</button></div>
           </div>
           <canvas id="candles" aria-label="Gráfico de velas ao vivo"></canvas>
-          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1 ponto), considerando os outros preços parados.</p>
         </section>
 
         <div class="two">
           <section class="box">
-            <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
+            <h2>Carteira vs alvo</h2>
             <div class="alloc" id="alloc"></div>
-            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e opera o ativo mais fora do alvo: 1ª operação do dia com 1 ponto; 2ª e 3ª só com 2,5 pontos ou mais.</p>
           </section>
           <section class="box">
-            <h2>$ tail -f argos.log <small>última checagem</small></h2>
+            <h2>$ tail -f argos.log</h2>
             <ul class="tail" id="tail"><li>carregando…</li></ul>
           </section>
         </div>
 
         <section class="box">
-          <h2>Fluxo de decisão · coletor → estratégia → porteiro → executor <small>checa a cada 4 h · até 3 operações por dia</small></h2>
+          <h2>Fluxo de decisão</h2>
           <div class="chips" id="chips"></div>
           <svg class="flow" viewBox="0 0 760 170" role="img" aria-label="Fluxo de decisão do robô">
             <defs><radialGradient id="gC" cx=".35" cy=".3"><stop offset="0" stop-color="#12352c"/><stop offset="1" stop-color="#071512"/></radialGradient></defs>
@@ -237,7 +235,7 @@ h1 span { color: var(--amber); }
             <text x="385" y="22" text-anchor="middle">gatilho 1 pt</text>
           </svg>
           <div class="tiles">
-            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">23h · 3h · 7h (resumo) · 11h · 15h · 19h</div></div>
+            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">resumo às 7h</div></div>
             <div class="tile"><div class="lab">Maior desvio agora</div><div class="v num" id="tDev">--</div><div class="s" id="tDevS">--</div></div>
             <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
             <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
@@ -245,7 +243,7 @@ h1 span { color: var(--amber); }
         </section>
 
         <section class="box agents-box" aria-label="Agentes">
-          <h2>Agentes <small>as 9 peças do robô e o que cada uma está fazendo</small></h2>
+          <h2>Agentes</h2>
           <div class="agents">
         <div class="agent" style="--c: var(--teal)"><span class="ic">◉</span><span class="nm">COLETOR</span><span class="st" id="aColSt">LIVE</span><span class="ds" id="aCol">--</span></div>
         <div class="agent" style="--c: var(--blue)"><span class="ic">≈</span><span class="nm">ESTRATÉGIA</span><span class="st" id="aEstSt">CHECK</span><span class="ds" id="aEst">--</span></div>
@@ -255,11 +253,11 @@ h1 span { color: var(--amber); }
         <div class="agent" style="--c: var(--amber)"><span class="ic">✈</span><span class="nm">TELEGRAM</span><span class="st">ACTIVE</span><span class="ds" id="aTel">--</span></div>
         <div class="agent" style="--c: var(--red)"><span class="ic">♥</span><span class="nm">SINAL DE VIDA</span><span class="st" id="aVidaSt">OK</span><span class="ds" id="aVida">--</span></div>
         <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
-        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer · resumo no Telegram às 7h</span></div>
+        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer</span></div>
           </div>
         </section>
     </main>
-    <div class="foot"><span>Dados do robô atualizados a cada 4 h · preços ao vivo a cada 30 s · <a href="painel-ativos.html">mercado ao vivo →</a> · <a href="https://github.com/diogo385/Claude/tree/ccr-62184269-ceu6z3/simulado/arquivo/v1-btc-eth">carteira antiga (BTC/ETH)</a></span><span>só saldo próprio · sem margem · sem saque</span></div>
+    <div class="foot"><span><a href="regras.html">regras</a> · <a href="painel-ativos.html">mercado ao vivo</a> · <a href="https://github.com/diogo385/Claude/tree/ccr-62184269-ceu6z3/simulado/arquivo/v1-btc-eth">carteira antiga</a></span><span>só saldo próprio · sem dívida</span></div>
   </div>
 </div>
 
@@ -315,7 +313,7 @@ h1 span { color: var(--amber); }
     });
     const seg = $("mkSym"); seg.textContent = "";
     ativos.forEach((a, i) => { const b = el("button", "", `${SIMB[a] || ""} ${a.toUpperCase()}`.trim()); b.type = "button"; b.dataset.a = a; b.setAttribute("aria-pressed", i === 0); seg.appendChild(b); });
-    set("tagAlvo", "ATÉ 3 OPERAÇÕES/DIA · " + ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
+    set("tagAlvo", ativos.map(a => `${a.toUpperCase()} ${Math.round(estado.alvo[a] * 100)}`).join(" · ") + " · R$ " + Math.round((1 - Object.values(estado.alvo).reduce((s, x) => s + x, 0)) * 100));
   }
 
   async function carregarRobo() {
@@ -366,7 +364,7 @@ h1 span { color: var(--amber); }
 
     set("kVal", brl(v)); set("kOps", String(ops.length));
     set("kRet", pct(v / capTot - 1), v >= capTot ? "up" : "down");
-    set("kRetLab", `desde o início · ${dias} ${dias === 1 ? "dia" : "dias"}`);
+    set("kRetLab", `em ${dias} ${dias === 1 ? "dia" : "dias"}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
     const vivo = horasDesde < 9;
     $("runDot").className = "dot" + (vivo ? "" : " off");
@@ -395,8 +393,8 @@ h1 span { color: var(--amber); }
     set("fExe", agiria ? "age na próxima checagem" : "sem ordem");
     $("wExe").setAttribute("stroke", agiria ? "#3df59a" : "#4f7067");
     set("tDev", nf(Math.abs(dev[maior]) * 100, 1) + " pt", Math.abs(dev[maior]) >= GATILHO ? "warn" : "");
-    set("tDevS", `${maior.toUpperCase()} · gatilho agora: ${nf(gAgora * 100, 1)} pt (${nHojeR} de ${maxDia} hoje)`);
-    set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital · inclui a montagem");
+    set("tDevS", `${maior.toUpperCase()} · gatilho ${nf(gAgora * 100, 1)} pt`);
+    set("tFee", brl(estado.taxas || 0)); set("tFeeS", nf((estado.taxas || 0) / CAPITAL * 100, 2) + "% do capital");
 
     const seg = px ? Math.round((Date.now() - pxHora) / 1000) : null;
     set("aCol", px ? `${ativos.length} moedas ao vivo · há ${seg} s` : "usando os últimos preços salvos");
@@ -426,7 +424,7 @@ h1 span { color: var(--amber); }
       const o = ops[ops.length - 1];
       set("tLast", brl(+o.valor_reais), o.tipo === "VENDA" ? "up" : "");
       set("tLastS", `${o.tipo === "VENDA" ? "venda" : "compra"} de ${o.ativo} · ${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)}`);
-    } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem desvio de 1 pt"); }
+    } else { set("tLast", "nenhuma"); set("tLastS", ""); }
 
     const tail = $("tail"); tail.textContent = "";
     const hora = ultExec ? `${pad(ultExec.getHours())}:${pad(ultExec.getMinutes())}` : "--:--";
@@ -446,14 +444,14 @@ h1 span { color: var(--amber); }
     const investido = estado.investido || CAPITAL, picoC = Math.max(estado.pico_cota || 1, vc / investido);
     const queda = Math.max(0, 1 - (vc / investido) / picoC);
     set("rSaldo", brl(res.saldo));
-    set("rSaldoLab", `disponível de ${brl(500, 0)} · ${res.usados.length} de 4 degraus usados`);
+    set("rSaldoLab", `${res.usados.length} de 4 degraus usados`);
     const st = $("rSteps"); st.textContent = "";
     degraus.forEach(d => { const u = res.usados.includes(d); const b = el("div", "step" + (u ? " usado" : ""));
-      b.append(el("b", "", `−${d * 100}%`), el("span", "", u ? "usado · R$ 125 entrou" : "R$ 125 aguardando")); st.appendChild(b); });
+      b.append(el("b", "", `−${d * 100}%`), el("span", "", u ? "usado" : "R$ 125")); st.appendChild(b); });
     set("rQueda", "−" + nf(queda * 100, 1) + "%", queda >= 0.2 ? "warn" : "");
     $("rFill").style.width = Math.min(100, queda * 100) + "%";
     const proxDeg = degraus.find(d => !res.usados.includes(d));
-    set("rNota", res.saldo <= 0 ? "Reserva toda aplicada." : proxDeg ? `Próximo degrau: carteira ${nf(proxDeg * 100, 0)}% abaixo do pico (faltam ${nf(Math.max(0, proxDeg - queda) * 100, 1)} pontos). A queda é medida pela cota, sem contar os aportes.` : "--");
+    set("rNota", res.saldo <= 0 ? "reserva toda aplicada" : proxDeg ? `próximo degrau em −${nf(proxDeg * 100, 0)}% · faltam ${nf(Math.max(0, proxDeg - queda) * 100, 1)} pt` : "");
     set("aRes", `${brl(res.saldo, 0)} disponível · ${res.usados.length} de 4 degraus · queda ${nf(queda * 100, 1)}%`);
     set("aResSt", res.saldo <= 0 ? "EMPTY" : "ARMED");
 
@@ -478,7 +476,7 @@ h1 span { color: var(--amber); }
     o += `<path d="${path("p")}" fill="none" stroke="#ffb547" stroke-width="1.5" stroke-dasharray="4 3"/>`;
     o += `<path d="${path("a")}" fill="none" stroke="#3df59a" stroke-width="2.2"/>`;
     o += `<circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="4" fill="#3df59a"/><circle cx="${x(N - 1)}" cy="${y(pts[N - 1].a)}" r="9" fill="none" stroke="#3df59a" stroke-opacity=".4"/>`;
-    o += `<text x="${L + 8}" y="${H - B - 22}" style="fill:#3df59a">— robô (carteira + reserva)</text><text x="${L + 8}" y="${H - B - 8}" style="fill:#ffb547">- - sem robô (tudo parado)</text>`;
+    o += `<text x="${L + 8}" y="${H - B - 22}" style="fill:#3df59a">— robô</text><text x="${L + 8}" y="${H - B - 8}" style="fill:#ffb547">- - sem robô</text>`;
     $("eq").innerHTML = o;
   }
 
@@ -488,7 +486,7 @@ h1 span { color: var(--amber); }
     const linhas = ops.concat(aps).sort((x, y) => x.data_hora < y.data_hora ? -1 : x.data_hora > y.data_hora ? 1 : (x.tipo === "APORTE" ? -1 : 1));
     set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}` + (aps.length ? ` · ${aps.length} ${aps.length === 1 ? "aporte" : "aportes"} da reserva` : ""));
     if (!linhas.length) {
-      box.appendChild(el("div", "empty", "Nenhum rebalanceamento ainda (a montagem inicial da carteira não entra aqui). O robô opera o ativo mais fora do alvo: a 1ª operação do dia com desvio de 1 ponto, a 2ª e a 3ª só com 2,5 pontos ou mais. Nos testes, isso deu cerca de 6 operações por mês."));
+      box.appendChild(el("div", "empty", "Nenhuma operação ainda."));
       return;
     }
     const t = el("table", "log"), tb = el("tbody");

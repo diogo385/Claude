@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argos Trade Cripto · Regras</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #06100e; --panel: #0d1f1b; --line: #173029; --fg: #d9f2ea; --muted: #7fa398; --dim: #4f7067;
+  --green: #3df59a; --teal: #2ee6c8; --amber: #ffb547;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--mono); font-size: 14px; line-height: 1.6; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 14px; }
+header { display: flex; align-items: center; gap: 14px; }
+header img { width: 48px; height: 48px; border-radius: 50%; }
+h1 { font-family: var(--display); font-size: 1.6rem; margin: 0; }
+h1 span { color: var(--amber); }
+a { color: var(--teal); }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--teal); }
+ul { margin: 0; padding-left: 18px; } li { margin: 2px 0; }
+b { color: var(--fg); font-weight: 600; } .m { color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+td, th { padding: 4px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="assets/simbolo-argos.png" alt=""><div><h1><span>Argos Trade</span> Cripto · Regras</h1><a href="./">← voltar ao monitor</a></div></header>
+
+  <section>
+    <h2>Carteira-alvo</h2>
+    <div class="scroll"><table>
+      <tr><th>BTC</th><th>ETH</th><th>SOL</th><th>XRP</th><th>BNB</th><th>LINK</th><th>Reais</th></tr>
+      <tr><td>35%</td><td>15%</td><td>8%</td><td>5%</td><td>4%</td><td>3%</td><td>30%</td></tr>
+    </table></div>
+    <p class="m">Simulado com R$ 1.000 na carteira e R$ 500 de reserva, preços reais da Binance.</p>
+  </section>
+
+  <section>
+    <h2>Quando checa</h2>
+    <ul>
+      <li>A cada 4 horas: <b>23h, 3h, 7h, 11h, 15h, 19h</b> (Brasília).</li>
+      <li>Resumo no Telegram às <b>7h</b>, com as últimas 24 horas.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Quando opera</h2>
+    <ul>
+      <li>Escolhe a moeda <b>mais fora do alvo</b> e a devolve exatamente ao alvo.</li>
+      <li>1ª operação do dia: desvio de <b>1 ponto</b> ou mais.</li>
+      <li>2ª e 3ª do dia: só com desvio de <b>2,5 pontos</b> ou mais.</li>
+      <li>No máximo <b>3 operações por dia</b>. Ordem mínima de <b>R$ 10</b>.</li>
+      <li>Custo simulado por operação: 0,1% de taxa + 0,05% de diferença de preço.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Reserva de oportunidade</h2>
+    <ul>
+      <li><b>R$ 500</b> fora da carteira, disponíveis na corretora.</li>
+      <li>Entram <b>R$ 125</b> quando a carteira cai <b>20%, 30%, 40% e 50%</b> desde o pico.</li>
+      <li>A queda é medida pela cota da carteira, sem contar os aportes.</li>
+      <li>Se a carteira fizer novo pico e ainda houver reserva, os degraus voltam a valer.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Travas</h2>
+    <ul>
+      <li>Só saldo próprio: <b>sem dívida, sem margem, sem saque</b>.</li>
+      <li>Saldo negativo detectado → o robô para e avisa.</li>
+      <li>Falha de dados ou conexão → nada muda e tenta de novo na próxima checagem.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Como ler o monitor</h2>
+    <ul>
+      <li><b>Sem robô</b>: a mesma carteira comprada no início e nunca mexida, mais os R$ 500 parados.</li>
+      <li><b>Faixa verde</b> nas barras da carteira: zona em que a moeda não é operada.</li>
+      <li><b>Linhas tracejadas</b> no gráfico de velas: preço em que o robô <span style="color:var(--green)">compraria</span> ou <span style="color:var(--amber)">venderia</span> aquela moeda na próxima checagem, com os outros preços parados.</li>
+      <li>Patrimônio e preços do topo usam a cotação ao vivo; o histórico é gravado uma vez por dia, às 7h.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>
