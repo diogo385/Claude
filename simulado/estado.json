@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-25T16:30:18.102379-03:00",
+  "ultima_execucao": "2026-11-25T17:00:22.370055-03:00",
   "ops_dia": {
     "data": "2026-11-25",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 350043.0,
-    "eth": 9836.91,
-    "sol": 411.4,
-    "xrp": 5.49,
-    "bnb": 3220.0,
-    "link": 52.98,
-    "ltc": 247.8,
-    "doge": 0.3263,
+    "btc": 348950.0,
+    "eth": 9810.68,
+    "sol": 409.2,
+    "xrp": 5.469,
+    "bnb": 3219.0,
+    "link": 53.0,
+    "ltc": 247.1,
+    "doge": 0.3251,
     "ada": 0.855,
     "avax": 38.64,
-    "near": 17.06
+    "near": 16.95
   },
   "reserva": {
     "saldo": 500.0,
@@ -134,14 +134,14 @@
     "parada_reserva": 100.0,
     "sinais": {
       "ltc": {
-        "status": "comprou",
-        "queda": 0.1302,
-        "repique": 0.0522
+        "status": "posição aberta",
+        "queda": 0.1327,
+        "repique": 0.0493
       },
       "doge": {
-        "status": "comprou",
-        "queda": 0.1476,
-        "repique": 0.0455
+        "status": "posição aberta",
+        "queda": 0.1507,
+        "repique": 0.0417
       },
       "ada": {
         "status": "sinal de compra (limite de 2 giros)",
@@ -155,13 +155,13 @@
       },
       "near": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1742,
-        "repique": 0.0709
+        "queda": 0.1796,
+        "repique": 0.064
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-25T16:30:18.102379-03:00",
-  "ultimo_salvamento": "2026-11-25T16:30:18.102379-03:00",
+  "ultima_checagem_carteiras": "2026-11-25T17:00:22.370055-03:00",
+  "ultimo_salvamento": "2026-11-25T17:00:22.370055-03:00",
   "tg_offset": 324349881,
   "valores_24h": [
     [
@@ -189,8 +189,38 @@
       "2026-11-25T16:30:18.102379-03:00",
       1862.21,
       1850.0
+    ],
+    [
+      "2026-11-25T17:00:22.370055-03:00",
+      1859.17,
+      1850.0
     ]
   ],
   "trava_queda": false,
-  "queda_24h": 0.0
+  "queda_24h": 0.0016,
+  "tendencia": {
+    "btc": {
+      "alta": false,
+      "fechamento": 353897.0,
+      "media": 375494.49
+    },
+    "eth": {
+      "alta": false,
+      "fechamento": 9934.49,
+      "media": 11012.78605
+    },
+    "data": "2026-11-25"
+  },
+  "alvo_base": {
+    "btc": 0.35,
+    "eth": 0.15,
+    "sol": 0.08,
+    "xrp": 0.05,
+    "bnb": 0.04,
+    "link": 0.03
+  },
+  "alvo_alta": {
+    "btc": 0.45,
+    "eth": 0.2
+  }
 }
