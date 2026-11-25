@@ -17,7 +17,7 @@
     "bnb": "BNBBRL",
     "link": "LINKBRL"
   },
-  "gatilho": 0.015,
+  "gatilho": 0.01,
   "gatilho_extra": 0.025,
   "max_ops_dia": 3,
   "carteira": {
@@ -42,19 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-25T08:56:19.090192-03:00",
+  "ultima_execucao": "2026-11-25T11:31:09.031466-03:00",
   "ops_dia": {
     "data": "2026-11-25",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 348827.0,
-    "eth": 9766.1,
-    "sol": 402.0,
-    "xrp": 5.404,
-    "bnb": 3209.0,
-    "link": 51.18
+    "btc": 343684.0,
+    "eth": 9650.54,
+    "sol": 395.2,
+    "xrp": 5.327,
+    "bnb": 3158.0,
+    "link": 50.7,
+    "ltc": 236.0,
+    "doge": 0.3133,
+    "ada": 0.814,
+    "avax": 37.43,
+    "near": 16.37
   },
   "reserva": {
     "saldo": 500.0,
@@ -63,7 +68,48 @@
   },
   "parada_reserva": 500.0,
   "investido": 1000.0,
-  "capital_total": 1500.0,
+  "capital_total": 1750.0,
   "pico_cota": 1.0,
-  "ops_periodo": 0
+  "ops_periodo": 0,
+  "satelite": {
+    "inicio": "2026-11-25T11:31:09.031466-03:00",
+    "aporte": 250.0,
+    "alvo": {
+      "ltc": 0.2,
+      "doge": 0.2,
+      "ada": 0.18,
+      "avax": 0.16,
+      "near": 0.16
+    },
+    "pares": {
+      "ltc": "LTCBRL",
+      "doge": "DOGEBRL",
+      "ada": "ADABRL",
+      "avax": "AVAXBRL",
+      "near": "NEARBRL"
+    },
+    "carteira": {
+      "reais": 25.0,
+      "ltc": 0.21154661016949156,
+      "doge": 159.3520587296521,
+      "ada": 55.19963144963146,
+      "avax": 1.0670585092172056,
+      "near": 2.439828955406231
+    },
+    "parada": {
+      "reais": 25.0,
+      "ltc": 0.21154661016949156,
+      "doge": 159.3520587296521,
+      "ada": 55.19963144963146,
+      "avax": 1.0670585092172056,
+      "near": 2.439828955406231
+    },
+    "ops_dia": {
+      "data": "2026-11-25",
+      "n": 0
+    },
+    "rebalanceamentos": 0,
+    "taxas": 0.3375,
+    "pico": 250.0
+  }
 }
