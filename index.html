@@ -146,7 +146,7 @@ h1 span { color: var(--amber); }
 <body>
 <div class="wrap">
   <div class="frame">
-    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="extrato.html?v=8">Extrato</a><a class="btn ghost" href="regras.html?v=8">Regras</a><span class="mode">simulado</span></span></div>
+    <div class="bar"><span>Argos Trade Cripto · terminal</span><span class="links"><a class="btn" href="painel-ativos.html?v=5">📈 Mercado ao vivo</a><a class="btn ghost" href="extrato.html?v=9">Extrato</a><a class="btn ghost" href="regras.html?v=9">Regras</a><span class="mode">simulado</span></span></div>
     <div class="msg" id="msg" hidden></div>
 
     <header class="head">
@@ -226,7 +226,7 @@ h1 span { color: var(--amber); }
             <text x="385" y="22" text-anchor="middle">gatilho 1 pt</text>
           </svg>
           <div class="tiles">
-            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">resumo às 7h</div></div>
+            <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">toda hora · resumo às 7h</div></div>
             <div class="tile"><div class="lab">Maior desvio agora</div><div class="v num" id="tDev">--</div><div class="s" id="tDevS">--</div></div>
             <div class="tile"><div class="lab">Taxas pagas</div><div class="v num" id="tFee">--</div><div class="s" id="tFeeS">--</div></div>
             <div class="tile"><div class="lab">Última operação</div><div class="v num" id="tLast">--</div><div class="s" id="tLastS">--</div></div>
@@ -348,7 +348,7 @@ h1 span { color: var(--amber); }
   const posSat = p => sat ? (sat.posicoes || []).reduce((t, x) => t + x.qtd * (p[x.ativo] || x.preco), 0) : 0;
   const totalSat = p => sat ? valorSat(sat.carteira, p) + posSat(p) + ((sat.reserva || {}).saldo || 0) : 0;
   const totalSatPar = p => sat ? valorSat(sat.parada, p) + (sat.parada_reserva || 0) : 0;
-  const STATUS = { "normal": "normal", "caindo": "caindo", "recuperando (prazo)": "recuperando", "oportunidade": "OPORTUNIDADE", "comprou": "comprou", "sem dados": "--" };
+  const STATUS = { "normal": "normal", "caindo": "caindo", "posição aberta": "posição aberta", "oportunidade": "OPORTUNIDADE", "comprou": "comprou", "sem dados": "--" };
 
   function renderSat(p) {
     const box = $("satBox"); if (!sat) { box.hidden = true; return; }
@@ -402,9 +402,9 @@ h1 span { color: var(--amber); }
     set("kRet", pct(v / capTot - 1), v >= capTot ? "up" : "down");
     set("kRetLab", `em ${dias} ${dias === 1 ? "dia" : "dias"}`);
     set("kVs", sgn(v - vp) + brl(Math.abs(v - vp)), v >= vp ? "up" : "down");
-    const vivo = horasDesde < 9;
+    const vivo = horasDesde < 3;
     $("runDot").className = "dot" + (vivo ? "" : " off");
-    set("runTxt", vivo ? "rodando" : "sem checagem há mais de 9 h");
+    set("runTxt", vivo ? "rodando" : "sem checagem há mais de 3 h");
 
     ativos.forEach(a => {
       const ch = $("chip-" + a); if (!ch) return;
@@ -440,12 +440,12 @@ h1 span { color: var(--amber); }
     set("aPor", travasOk ? "saldo ok · sem dívida · sem margem" : "TRAVA: saldo negativo");
     set("aPorSt", travasOk ? "ARMED" : "STOP");
     const b = brasilia(); const prox = new Date(b); prox.setUTCMinutes(0, 0, 0);
-    do { prox.setUTCHours(prox.getUTCHours() + 1); } while ((prox.getUTCHours() + 3) % 4 !== 2);
+    prox.setUTCHours(prox.getUTCHours() + 1);
     const falta = prox - b, h = Math.floor(falta / 36e5), m = Math.floor(falta % 36e5 / 6e4);
     set("tNext", `${h}h ${pad(m)}min`);
     set("aExe", `${usouHoje ? "limite do dia atingido" : `${nHojeR} de ${maxDia} operações hoje`} · próxima checagem em ${h}h ${pad(m)}min`);
     set("aTel", ultExec ? "última checagem " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
-    set("aVida", vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem checagem há mais de 9 h");
+    set("aVida", vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem checagem há mais de 3 h");
     set("aVidaSt", vivo ? "OK" : "ATRASO");
     set("aDia", `${hist.length} ${hist.length === 1 ? "dia registrado" : "dias registrados"} · ${ops.length} ${ops.length === 1 ? "operação" : "operações"}`);
 
@@ -533,8 +533,8 @@ h1 span { color: var(--amber); }
       const td2 = el("td"); td2.appendChild(el("span", "side " + (o.tipo === "VENDA" || o.tipo === "LUCRO" ? "sell" : "buy"), o.tipo)); if (o.sat) td2.appendChild(el("span", "side sat", "SAT")); tr.appendChild(td2);
       const td3 = el("td"); const q = +o.quantidade;
       td3.append(el("b", "", `${SIMB[a] || "●"} ${o.ativo} · ${nf(q, q < 1 ? 6 : 4)}`),
-        el("div", "why", (o.tipo === "OPORTUNIDADE" ? "compra de oportunidade com a reserva da satélite · vende com +30%" :
-          o.tipo === "LUCRO" ? "posição de oportunidade vendida com +30% · dinheiro voltou para a reserva da satélite" :
+        el("div", "why", (o.tipo === "OPORTUNIDADE" ? "compra de oportunidade com a reserva da satélite · vende com +1,5%" :
+          o.tipo === "LUCRO" ? "posição de oportunidade vendida com +1,5% · dinheiro voltou para a reserva da satélite" :
           o.sat && +o.peso_antes === 0 ? "montagem da satélite" :
           `motivo: ${o.ativo} estava em ${nf(+o.peso_antes * 100, 1)}% da ${o.sat ? "satélite" : "carteira"} (alvo ${Math.round(((o.sat ? sat && sat.alvo[a] : estado.alvo[a]) || 0) * 100)}%)`) +
           ` · preço ${brl(+o.preco, +o.preco < 1 ? 4 : casas(+o.preco))} · taxa ${brl(+o.taxa)}`));

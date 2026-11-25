@@ -2,7 +2,7 @@ name: Argos Trade Cripto · robô simulado
 
 on:
   schedule:
-    - cron: "0 2,6,10,14,18,22 * * *"   # a cada 4 h: 23h, 3h, 7h, 11h, 15h e 19h em Brasília (resumo às 7h)
+    - cron: "0 * * * *"   # toda hora: oportunidades da satélite; carteiras rebalanceiam a cada ~4 h; resumo às 7h (Brasília)
   workflow_dispatch:       # botão "Run workflow" para rodar na hora
 
 permissions:
