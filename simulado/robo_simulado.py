@@ -4,7 +4,7 @@
 - Opera um dinheiro de mentira: R$ 1.000 iniciais.
 - Carteira-alvo: BTC 35% · ETH 15% · SOL 8% · XRP 5% · BNB 4% · LINK 3% · reais 30%.
 - Checa o mercado a cada 4 horas e opera o ativo mais fora do alvo. Até 3 operações por dia:
-  a 1ª quando o desvio chega a 1,5 ponto; a 2ª e a 3ª só se a oportunidade for muito boa
+  a 1ª quando o desvio chega a 1 ponto; a 2ª e a 3ª só se a oportunidade for muito boa
   (desvio de 2,5 pontos ou mais). O resumo diário sai na checagem das 7h (Brasília).
 - Reserva de oportunidade: R$ 500 fora da carteira. Entra em degraus de R$ 125 quando a carteira
   cai 20%, 30%, 40% e 50% desde o pico (medido por cota, sem contar os aportes).
@@ -31,14 +31,14 @@ VERSAO = 2
 CAPITAL = 1000.0
 ALVO = {"btc": 0.35, "eth": 0.15, "sol": 0.08, "xrp": 0.05, "bnb": 0.04, "link": 0.03}  # o resto (30%) fica em reais
 PARES = {a: a.upper() + "BRL" for a in ALVO}
-DESVIO_MIN = 0.015       # 1ª operação do dia: ativo 1,5 ponto ou mais fora do alvo
+DESVIO_MIN = 0.01        # 1ª operação do dia: ativo 1 ponto ou mais fora do alvo
 DESVIO_EXTRA = 0.025     # 2ª e 3ª operações do dia: só com 2,5 pontos ou mais (oportunidade muito boa)
 MAX_OPS_DIA = 3          # no máximo 3 operações por dia
 HORA_RESUMO = 7          # a partir desta hora (Brasília) manda o resumo do dia
 TAXA = 0.001             # 0,1% (Binance)
 DESLIZE = 0.0005         # 0,05% de diferença de preço
 CUSTO = TAXA + DESLIZE
-ORDEM_MIN = 20.0         # ignora ajustes menores que R$ 20
+ORDEM_MIN = 10.0         # ignora ajustes menores que R$ 10 (mínimo da Binance)
 FONTES = ["https://data-api.binance.vision", "https://api.binance.com"]
 BRASILIA = timezone(timedelta(hours=-3))
 ROTULO = "🧪 Argos Trade Cripto · SIMULADO"
@@ -263,7 +263,7 @@ def main():
         compras = "\n".join(f"• {a.upper()} {ALVO[a]*100:.0f}% a {brl(px[a])}" for a in ALVO)
         telegram(f"{ROTULO} · Carteira nova iniciada\n"
                  f"Dinheiro de mentira: {brl(CAPITAL)} na carteira + {brl(RESERVA_INICIAL)} de reserva\n{compras}\n• Reais {(1 - sum(ALVO.values()))*100:.0f}%\n"
-                 f"Checo o mercado a cada 4 horas. Faço até 3 operações por dia: a 1ª quando um ativo desvia 1,5 ponto do alvo; a 2ª e a 3ª só se a oportunidade for muito boa (2,5 pontos ou mais). Resumo todo dia às 7h.")
+                 f"Checo o mercado a cada 4 horas. Faço até 3 operações por dia: a 1ª quando um ativo desvia 1 ponto do alvo; a 2ª e a 3ª só se a oportunidade for muito boa (2,5 pontos ou mais). Resumo todo dia às 7h.")
         return
     degraus_txt = ", ".join(f"{d*100:.0f}%" for d in DEGRAUS)
     if migrou:

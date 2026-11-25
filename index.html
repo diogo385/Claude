@@ -192,14 +192,14 @@ h1 span { color: var(--amber); }
             <div class="seg" id="mkTf"><button type="button" data-tf="1m" aria-pressed="false">1m</button><button type="button" data-tf="15m" aria-pressed="true">15m</button><button type="button" data-tf="1h" aria-pressed="false">1h</button><button type="button" data-tf="4h" aria-pressed="false">4h</button><button type="button" data-tf="1d" aria-pressed="false">1d</button></div>
           </div>
           <canvas id="candles" aria-label="Gráfico de velas ao vivo"></canvas>
-          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1,5 ponto), considerando os outros preços parados.</p>
+          <p class="note">Linhas tracejadas: preço em que o robô <span class="up">compraria</span> ou <span class="warn">venderia</span> na próxima checagem (desvio de 1 ponto), considerando os outros preços parados.</p>
         </section>
 
         <div class="two">
           <section class="box">
             <h2>Carteira · agora vs alvo <small>faixa verde = sem operar</small></h2>
             <div class="alloc" id="alloc"></div>
-            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e opera o ativo mais fora do alvo: 1ª operação do dia com 1,5 ponto; 2ª e 3ª só com 2,5 pontos ou mais.</p>
+            <p class="note">Calculado com os preços de agora. O robô checa a cada 4 horas e opera o ativo mais fora do alvo: 1ª operação do dia com 1 ponto; 2ª e 3ª só com 2,5 pontos ou mais.</p>
           </section>
           <section class="box">
             <h2>$ tail -f argos.log <small>última checagem</small></h2>
@@ -234,7 +234,7 @@ h1 span { color: var(--amber); }
             <text x="680" y="140" text-anchor="middle" class="t">EXECUTOR</text>
             <text x="680" y="156" text-anchor="middle" id="fExe">--</text>
             <rect x="345" y="8" width="80" height="20" rx="4" fill="#0a1714" stroke="#24493f"/>
-            <text x="385" y="22" text-anchor="middle">gatilho 1,5 pt</text>
+            <text x="385" y="22" text-anchor="middle">gatilho 1 pt</text>
           </svg>
           <div class="tiles">
             <div class="tile"><div class="lab">Próxima checagem</div><div class="v num" id="tNext">--</div><div class="s">23h · 3h · 7h (resumo) · 11h · 15h · 19h</div></div>
@@ -282,7 +282,7 @@ h1 span { color: var(--amber); }
   const brasilia = () => new Date(Date.now() - 3 * 3600e3);
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
 
-  let estado = null, hist = [], ops = [], px = null, px24 = {}, pxHora = 0, ativos = [], GATILHO = 0.015;
+  let estado = null, hist = [], ops = [], px = null, px24 = {}, pxHora = 0, ativos = [], GATILHO = 0.01;
 
   function aviso(t) { const m = $("msg"); m.textContent = t; m.hidden = !t; }
   function csv(txt) {
@@ -322,7 +322,7 @@ h1 span { color: var(--amber); }
     try {
       const novo = JSON.parse(await baixar("estado.json"));
       const mudou = !estado || JSON.stringify(novo.alvo) !== JSON.stringify(estado.alvo);
-      estado = novo; ativos = Object.keys(estado.alvo); GATILHO = estado.gatilho || 0.015;
+      estado = novo; ativos = Object.keys(estado.alvo); GATILHO = estado.gatilho || 0.01;
       hist = csv(await baixar("historico.csv"));
       try { ops = csv(await baixar("operacoes.csv")); } catch (e) { ops = []; }
       if (mudou) { montarEstrutura(); mkAtivo = ativos[0]; carregarVelas(); }
@@ -426,14 +426,14 @@ h1 span { color: var(--amber); }
       const o = ops[ops.length - 1];
       set("tLast", brl(+o.valor_reais), o.tipo === "VENDA" ? "up" : "");
       set("tLastS", `${o.tipo === "VENDA" ? "venda" : "compra"} de ${o.ativo} · ${o.data_hora.slice(8, 10)}/${o.data_hora.slice(5, 7)}`);
-    } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem desvio de 1,5 pt"); }
+    } else { set("tLast", "nenhuma"); set("tLastS", "ainda sem desvio de 1 pt"); }
 
     const tail = $("tail"); tail.textContent = "";
     const hora = ultExec ? `${pad(ultExec.getHours())}:${pad(ultExec.getMinutes())}` : "--:--";
     const ep = estado.ultimos_precos || {};
     const nHoje = estado.ops_dia && estado.ops_dia.data === hojeBR ? estado.ops_dia.n : 0;
     [["info", "coletor", ativos.slice(0, 3).map(a => `${a.toUpperCase()} ${ep[a] ? brl(ep[a], casas(ep[a])) : "--"}`).join(" · ") + " …"],
-     ["info", "estratégia", `${ativos.length} moedas avaliadas · gatilho 1,5 pt`],
+     ["info", "estratégia", `${ativos.length} moedas avaliadas · gatilho 1 pt`],
      ["ok", "porteiro", nHoje ? `${nHoje} ordem(ns) aprovada(s) hoje · limite ${estado.max_ops_dia || 1}/dia` : "nada a aprovar hoje · travas ok"],
      ["ok", "executor", nHoje ? `${nHoje} operação(ões) hoje` : "sem ordem"],
      ["w", "telegram", "avisos em dia"],
@@ -488,7 +488,7 @@ h1 span { color: var(--amber); }
     const linhas = ops.concat(aps).sort((x, y) => x.data_hora < y.data_hora ? -1 : x.data_hora > y.data_hora ? 1 : (x.tipo === "APORTE" ? -1 : 1));
     set("logCount", `${ops.length} ${ops.length === 1 ? "operação" : "operações"}` + (aps.length ? ` · ${aps.length} ${aps.length === 1 ? "aporte" : "aportes"} da reserva` : ""));
     if (!linhas.length) {
-      box.appendChild(el("div", "empty", "Nenhum rebalanceamento ainda (a montagem inicial da carteira não entra aqui). O robô opera o ativo mais fora do alvo: a 1ª operação do dia com desvio de 1,5 ponto, a 2ª e a 3ª só com 2,5 pontos ou mais. Nos testes, isso deu cerca de 3 operações por mês."));
+      box.appendChild(el("div", "empty", "Nenhum rebalanceamento ainda (a montagem inicial da carteira não entra aqui). O robô opera o ativo mais fora do alvo: a 1ª operação do dia com desvio de 1 ponto, a 2ª e a 3ª só com 2,5 pontos ou mais. Nos testes, isso deu cerca de 6 operações por mês."));
       return;
     }
     const t = el("table", "log"), tb = el("tbody");
