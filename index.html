@@ -292,22 +292,7 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
         </div>
 
 
-        <details class="box agents-box">
-          <summary>Agentes do robô (detalhes técnicos)</summary>
-          <div class="agents">
-        <div class="agent" style="--c: var(--teal)"><span class="ic">◉</span><span class="nm">COLETOR</span><span class="st" id="aColSt">LIVE</span><span class="ds" id="aCol">--</span></div>
-        <div class="agent" style="--c: var(--blue)"><span class="ic">≈</span><span class="nm">ESTRATÉGIA</span><span class="st" id="aEstSt">CHECK</span><span class="ds" id="aEst">--</span></div>
-        <div class="agent" style="--c: var(--violet)"><span class="ic">⛨</span><span class="nm">PORTEIRO DE RISCO</span><span class="st" id="aPorSt">ARMED</span><span class="ds" id="aPor">--</span></div>
-        <div class="agent" style="--c: var(--green)"><span class="ic">⇄</span><span class="nm">EXECUTOR</span><span class="st">FLAT</span><span class="ds" id="aExe">--</span></div>
-        <div class="agent" style="--c: var(--amber)"><span class="ic">$</span><span class="nm">RESERVA</span><span class="st" id="aResSt">ARMED</span><span class="ds" id="aRes">--</span></div>
-        <div class="agent" style="--c: var(--amber)"><span class="ic">✈</span><span class="nm">TELEGRAM</span><span class="st">ACTIVE</span><span class="ds" id="aTel">--</span></div>
-        <div class="agent" style="--c: var(--red)"><span class="ic">♥</span><span class="nm">SINAL DE VIDA</span><span class="st" id="aVidaSt">OK</span><span class="ds" id="aVida">--</span></div>
-        <div class="agent" style="--c: var(--blue)"><span class="ic">✎</span><span class="nm">DIÁRIO</span><span class="st">ACTIVE</span><span class="ds" id="aDia">--</span></div>
-        <div class="agent" style="--c: var(--dim)"><span class="ic" style="color: var(--fg)">☾</span><span class="nm" style="color: var(--fg)">VOCÊ</span><span class="st">DORMINDO</span><span class="ds">nada a fazer</span></div>
-          </div>
-        </details>
     </main>
-    <div class="foot"><span>Argos Trade Cripto · simulado</span><span>só saldo próprio · sem dívida</span></div>
   </div>
 </div>
 
@@ -609,9 +594,7 @@ details.agents-box[open] > summary { margin-bottom: 10px; }
     set("aTel", ultExec ? "última checagem " + ultExec.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "--");
     set("aVida", vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"}` : "sem checagem há mais de 3 h");
     const falhas = (saude.erros || []).filter(x => Date.now() - new Date(x.quando) < 864e5).length;
-    $("aVida").textContent = "";
-    $("aVida").append(vivo ? `última checagem há ${horasDesde < 1 ? "menos de 1 h" : Math.floor(horasDesde) + " h"} · ${falhas} ${falhas === 1 ? "falha" : "falhas"} em 24 h · ` : "sem checagem há mais de 3 h · ");
-    const lk = el("a", "saude-link", "execuções"); lk.href = "https://github.com/diogo385/Claude/actions/workflows/robo-simulado.yml"; lk.target = "_blank"; lk.rel = "noopener"; $("aVida").appendChild(lk);
+    const lk = { href: "https://github.com/diogo385/Claude/actions/workflows/robo-simulado.yml" };
     set("aVidaSt", !vivo ? "ATRASO" : falhas ? "FALHAS" : "OK");
     set("sSaude", falhas ? `${falhas} ${falhas === 1 ? "falha" : "falhas"}` : "sem falhas", falhas ? "warn" : "up");
     const ss = $("sSaudeS"); ss.textContent = "nas últimas 24 h · ";

@@ -116,6 +116,23 @@ th { color: var(--muted); font-weight: 500; font-size: 12px; }
   </section>
 
   <section>
+    <h2>Agentes do robô</h2>
+    <p class="m" style="margin:0 0 8px">O robô é dividido em partes, cada uma com uma tarefa. A cada checagem (15 min), elas trabalham nesta ordem:</p>
+    <div class="scroll"><table>
+      <tr><th>Agente</th><th>O que faz</th></tr>
+      <tr><td><b>◉ Coletor</b></td><td>Busca as cotações na Binance. Sem preço confiável, nada é feito.</td></tr>
+      <tr><td><b>≈ Estratégia</b></td><td>Compara o peso de cada moeda com o alvo e encontra o maior desvio; na satélite, procura sinais de giro.</td></tr>
+      <tr><td><b>⛨ Porteiro de risco</b></td><td>Só deixa passar ordens com saldo próprio: sem dívida, sem margem, sem saque, mínimo R$ 10, até 20 por dia.</td></tr>
+      <tr><td><b>⇄ Executor</b></td><td>Faz a compra ou venda (simulada), já descontando taxa de 0,1% e deslize de 0,05%.</td></tr>
+      <tr><td><b>$ Reserva</b></td><td>Entra com R$ 125 da reserva para quedas a cada degrau de queda (−20/−30/−40/−50%).</td></tr>
+      <tr><td><b>✈ Telegram</b></td><td>Avisa toda operação e responde aos comandos (/status, /hoje, /pausar, /retomar).</td></tr>
+      <tr><td><b>♥ Sinal de vida</b></td><td>Registra falhas; se algo der errado, avisa no Telegram e tenta de novo na próxima checagem.</td></tr>
+      <tr><td><b>✎ Diário</b></td><td>Grava carteira, operações, extrato e histórico no repositório, que o monitor lê.</td></tr>
+      <tr><td><b>☾ Você</b></td><td>Nada a fazer: só acompanhar pelo monitor e pelo Telegram.</td></tr>
+    </table></div>
+  </section>
+
+  <section>
     <h2>Como ler o monitor</h2>
     <ul>
       <li><b>Sem robô</b>: a mesma carteira comprada no início e nunca mexida, mais os R$ 500 parados.</li>
