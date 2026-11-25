@@ -1,6 +1,6 @@
 # Argos Trade Cripto · Plano
 
-Versão 2.2 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
+Versão 2.3 · 25/11/2026 · sistema em **modo simulado**, rodando sozinho
 
 > Na mitologia grega, Argos é o gigante de cem olhos que nunca dormia: um vigia que não descansa.
 
@@ -121,21 +121,27 @@ Toda mensagem começa com `🧪 Argos Trade Cripto · SIMULADO`.
 
 | Página | Endereço | O que mostra |
 |---|---|---|
-| **Monitor** | diogo385.github.io/Claude | Patrimônio total, evolução, **ganhos e perdas por cripto**, carteira principal, satélite, fluxo de decisão e agentes |
+| **Monitor** | diogo385.github.io/Claude | Patrimônio total, status do robô, resultado acumulado, carteira principal e satélite (com ganhos e perdas por cripto) e desempenho |
 | **Histórico** | botão no monitor | Todas as operações agrupadas por dia, com filtros (principal, satélite, giros, reserva) |
 | **Mercado ao vivo** | botão 📈 no monitor | Gráfico de velas das 6 moedas da principal, livro de ofertas, negociações e linhas de gatilho do robô |
 | **Extrato** | botão no monitor | Toda entrada e saída de dinheiro com o saldo em reais, as duas reservas e os sinais da satélite |
-| **Regras** | botão no monitor | Todas as regras num lugar só |
+| **Regras** | botão no monitor | Todas as regras num lugar só e o que faz cada agente do robô |
 
 **Comandos no Telegram:** /status, /hoje, /pausar, /retomar e /ajuda. A resposta chega na próxima checagem (até ~15 min).
 
-**Painéis de desempenho (monitor):**
-- **Resultado por período:** 24 horas, 7 dias, 30 dias e desde o início, descontando os aportes.
-- **"O robô está se pagando?":** ganho das operações antes das taxas, taxas pagas e resultado líquido contra o "sem robô", com um veredito.
-- **Giro da satélite:** giros concluídos, lucro realizado e médio, tempo médio em posição, posições abertas (custo → vale agora) e reserva disponível.
-- **Queda desde o pico:** gráfico abaixo da evolução do patrimônio, descontando aportes.
+**Monitor, de cima para baixo:**
+1. **Topo:** patrimônio total, resultado desde 24/11, operações do robô e diferença contra o "sem robô".
+2. **Status do robô** (8 quadros): situação, próxima checagem, última operação, total de operações (principal · satélite · giros), maior desvio, taxas pagas, reserva para quedas e saúde (falhas em 24 h e link para as execuções).
+3. **Resultado acumulado:** patrimônio menos o que foi depositado, do robô e do "sem robô", com os aportes marcados. Logo abaixo, a **queda desde o pico**. Gráfico baixo, com altura fixa e letras do mesmo tamanho em qualquer tela.
+4. **Carteira principal** e 5. **Carteira satélite**, no **mesmo formato**:
+   - No topo: valor da carteira; **carteira inteira** (resultado sobre o depositado, incluindo reais e reserva, e diferença contra o "sem robô"); **só criptos** (aplicado → vale agora, resultado em aberto e já realizado) e a reserva da carteira.
+   - Uma linha por moeda: barra de peso × alvo (mesma escala nas duas carteiras, faixa verde = zona sem operação), peso, alvo, aplicado, vale agora, ganho em R$ e %, preço médio, cotação, variação de 24h e situação ("no alvo", "acima → vende na checagem", "abaixo → compra na checagem", "caindo", "sinal de compra", "giro aberto").
+   - Na satélite: uma linha de resumo do giro (giros concluídos, lucro, abertos de 2, tempo médio, trava de queda) e os **giros abertos** embaixo, com a barra do caminho até +1,5% e o preço em que vai vender.
+   - Filtro **Resumo | Completo**: o Resumo mostra só peso, alvo, valor, ganho e %. A escolha vale para os dois blocos e fica lembrada no navegador.
+6. **Desempenho:** "Resultado por período" (24 horas e desde o início; 7 e 30 dias aparecem quando houver histórico, sempre descontando aportes) e "O robô está se pagando?" (ganho antes das taxas, taxas pagas, resultado líquido contra o "sem robô" e veredito).
 
-**Bloco "Ganhos e perdas por cripto" (monitor), ao vivo:** para cada moeda, o valor **aplicado**, quanto **vale agora**, o ganho ou perda em R$ e em %, o preço médio de compra (custo médio com taxas), a cotação e a **variação de 24h**. As moedas ficam agrupadas em principal, satélite e giros abertos, com o total de cada grupo. No topo: total aplicado, valor atual, resultado em aberto, resultado já realizado, melhor e pior moeda.
+Sem rodapé e sem legendas repetidas. Os agentes do robô ficam na página de Regras. No celular, cada moeda ocupa duas linhas e só aparece a situação que pede atenção.
+
 | Maquete do console | claude.ai (artefato) | Versão de exemplo, sem dados reais |
 
 ---
@@ -242,7 +248,7 @@ index.html            monitor (GitHub Pages)
 painel-ativos.html    mercado ao vivo
 historico.html        histórico de operações
 extrato.html          extrato da conta
-regras.html           regras
+regras.html           regras e agentes do robô
 assets/               logo e ícone
 simulado/
   robo_simulado.py    o robô
@@ -282,3 +288,7 @@ PLANO.md              este documento
 | 25/11 | Pesquisa (GitHub, estudos e Anthropic) e recomendações implementadas: comandos e pausa pelo Telegram, trava de queda em 24 h, máximo de 2 giros abertos, painéis de desempenho, gráfico de queda e registro de falhas |
 | 25/11 | Agendamento passa a ser disparado pelo cron-job.org a cada 15 minutos (o agendamento do GitHub não disparava) |
 | 25/11 | "Oportunidade" vira "giro" (satélite) e "reserva para quedas" (principal), deixando claro que tudo é automático |
+| 25/11 | Revisão do monitor com a skill Dashboard Design: resultado acumulado sem contar aportes, contagem única de operações, faixa "Status do robô", contraste maior, tabela que cabe no celular |
+| 25/11 | Carteiras principal e satélite no mesmo formato, com filtro Resumo/Completo. Gráfico do resultado mais baixo |
+| 25/11 | Ganhos e perdas por cripto passam para dentro das carteiras; giro resumido dentro da satélite; carteiras logo abaixo do gráfico. Resultado de 24 h (monitor e /hoje) não conta mais aportes como ganho |
+| 25/11 | Rodapé e link da carteira antiga saem do monitor; agentes do robô passam para a página de Regras |
