@@ -22,3 +22,5 @@ data_hora;conta;tipo;descricao;valor;taxa;saldo_reais
 2026-11-25 16:30;Satélite;VENDA;Venda de 29,7882 ADA a R$ 0,8550 (venda automática do giro, lucro R$ 0,43);25.43;0.0382;926.17
 2026-11-25 16:30;Satélite;COMPRA;Compra de 0,100736 LTC a R$ 247,80 (compra automática do giro);-25.00;0.0375;901.17
 2026-11-25 16:30;Satélite;COMPRA;Compra de 76,5017 DOGE a R$ 0,3263 (compra automática do giro);-25.00;0.0375;876.17
+2026-11-25 21:15;Satélite;VENDA;Venda de 0,100736 LTC a R$ 253,00 (venda automática do giro, lucro R$ 0,45);25.45;0.0382;901.62
+2026-11-25 21:15;Satélite;COMPRA;Compra de 0,098666 LTC a R$ 253,00 (compra automática do giro);-25.00;0.0375;876.62
