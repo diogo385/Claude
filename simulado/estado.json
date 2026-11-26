@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-26T04:30:23.748450-03:00",
+  "ultima_execucao": "2026-11-26T05:30:17.992075-03:00",
   "ops_dia": {
     "data": "2026-11-26",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 353804.0,
-    "eth": 9881.55,
-    "sol": 414.7,
+    "btc": 354666.0,
+    "eth": 9886.79,
+    "sol": 414.2,
     "xrp": 5.558,
-    "bnb": 3246.0,
-    "link": 53.58,
-    "ltc": 255.3,
+    "bnb": 3240.0,
+    "link": 53.61,
+    "ltc": 253.4,
     "doge": 0.3303,
     "ada": 0.866,
-    "avax": 38.79,
-    "near": 17.94
+    "avax": 38.84,
+    "near": 17.88
   },
   "reserva": {
     "saldo": 500.0,
@@ -135,8 +135,8 @@
     "sinais": {
       "ltc": {
         "status": "posição aberta",
-        "queda": 0.1039,
-        "repique": 0.0841
+        "queda": 0.1106,
+        "repique": 0.076
       },
       "doge": {
         "status": "posição aberta",
@@ -150,18 +150,18 @@
       },
       "avax": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.2007,
-        "repique": 0.0484
+        "queda": 0.1997,
+        "repique": 0.0497
       },
       "near": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1227,
-        "repique": 0.1262
+        "queda": 0.1257,
+        "repique": 0.1224
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-26T04:30:23.748450-03:00",
-  "ultimo_salvamento": "2026-11-26T04:30:23.748450-03:00",
+  "ultima_checagem_carteiras": "2026-11-26T05:30:17.992075-03:00",
+  "ultimo_salvamento": "2026-11-26T05:30:17.992075-03:00",
   "tg_offset": 324349881,
   "valores_24h": [
     [
@@ -259,10 +259,15 @@
       "2026-11-26T04:30:23.748450-03:00",
       1874.48,
       1850.0
+    ],
+    [
+      "2026-11-26T05:30:17.992075-03:00",
+      1874.58,
+      1850.0
     ]
   ],
   "trava_queda": false,
-  "queda_24h": 0.0038,
+  "queda_24h": 0.0037,
   "tendencia": {
     "btc": {
       "alta": false,
