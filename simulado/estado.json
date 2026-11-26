@@ -38,28 +38,28 @@
     "bnb": 0.012481250000000001,
     "link": 0.5787287480680062
   },
-  "pico": 1012.423421062404,
+  "pico": 1013.2272921519886,
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-26T00:30:22.665484-03:00",
+  "ultima_execucao": "2026-11-26T01:30:18.116215-03:00",
   "ops_dia": {
     "data": "2026-11-26",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 354933.0,
-    "eth": 9923.06,
-    "sol": 416.2,
+    "btc": 356735.0,
+    "eth": 9960.18,
+    "sol": 416.1,
     "xrp": 5.609,
-    "bnb": 3266.0,
+    "bnb": 3276.0,
     "link": 53.77,
-    "ltc": 255.6,
-    "doge": 0.3322,
+    "ltc": 256.7,
+    "doge": 0.3327,
     "ada": 0.87,
     "avax": 39.04,
-    "near": 18.01
+    "near": 17.85
   },
   "reserva": {
     "saldo": 500.0,
@@ -69,7 +69,7 @@
   "parada_reserva": 500.0,
   "investido": 1000.0,
   "capital_total": 1850.0,
-  "pico_cota": 1.0124234210624041,
+  "pico_cota": 1.0132272921519887,
   "ops_periodo": 12,
   "satelite": {
     "inicio": "2026-11-25T11:31:09.031466-03:00",
@@ -110,7 +110,7 @@
     },
     "rebalanceamentos": 0,
     "taxas": 0.3375,
-    "pico": 367.8049269292996,
+    "pico": 367.87313776438964,
     "reserva": {
       "saldo": 51.924552385873895
     },
@@ -135,13 +135,13 @@
     "sinais": {
       "ltc": {
         "status": "posição aberta",
-        "queda": 0.1028,
-        "repique": 0.0854
+        "queda": 0.099,
+        "repique": 0.09
       },
       "doge": {
         "status": "posição aberta",
-        "queda": 0.1198,
-        "repique": 0.0644
+        "queda": 0.1184,
+        "repique": 0.066
       },
       "ada": {
         "status": "sinal de compra (limite de 2 giros)",
@@ -155,13 +155,13 @@
       },
       "near": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1193,
-        "repique": 0.1306
+        "queda": 0.1271,
+        "repique": 0.1205
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-26T00:30:22.665484-03:00",
-  "ultimo_salvamento": "2026-11-26T00:30:22.665484-03:00",
+  "ultima_checagem_carteiras": "2026-11-26T01:30:18.116215-03:00",
+  "ultimo_salvamento": "2026-11-26T01:30:18.116215-03:00",
   "tg_offset": 324349881,
   "valores_24h": [
     [
@@ -239,10 +239,15 @@
       "2026-11-26T00:30:22.665484-03:00",
       1878.56,
       1850.0
+    ],
+    [
+      "2026-11-26T01:30:18.116215-03:00",
+      1881.1,
+      1850.0
     ]
   ],
   "trava_queda": false,
-  "queda_24h": 0.0001,
+  "queda_24h": 0.0,
   "tendencia": {
     "btc": {
       "alta": false,
