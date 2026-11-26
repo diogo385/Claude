@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-25T21:15:13.819720-03:00",
+  "ultima_execucao": "2026-11-25T21:30:17.972679-03:00",
   "ops_dia": {
     "data": "2026-11-25",
     "n": 0
   },
   "ultimo_resumo": "2026-11-25",
   "ultimos_precos": {
-    "btc": 356681.0,
-    "eth": 9983.18,
-    "sol": 416.0,
-    "xrp": 5.515,
-    "bnb": 3267.0,
-    "link": 53.59,
-    "ltc": 253.0,
-    "doge": 0.3308,
-    "ada": 0.857,
-    "avax": 39.11,
-    "near": 18.11
+    "btc": 356261.0,
+    "eth": 9979.73,
+    "sol": 416.9,
+    "xrp": 5.524,
+    "bnb": 3262.0,
+    "link": 53.61,
+    "ltc": 252.2,
+    "doge": 0.3313,
+    "ada": 0.86,
+    "avax": 39.1,
+    "near": 18.05
   },
   "reserva": {
     "saldo": 500.0,
@@ -70,7 +70,7 @@
   "investido": 1000.0,
   "capital_total": 1850.0,
   "pico_cota": 1.0124234210624041,
-  "ops_periodo": 10,
+  "ops_periodo": 12,
   "satelite": {
     "inicio": "2026-11-25T11:31:09.031466-03:00",
     "aporte": 250.0,
@@ -112,56 +112,56 @@
     "taxas": 0.3375,
     "pico": 366.34581728660913,
     "reserva": {
-      "saldo": 51.617561470688486
+      "saldo": 51.924552385873895
     },
     "posicoes": [
-      {
-        "ativo": "doge",
-        "qtd": 76.50168556543059,
-        "preco": 0.3263,
-        "custo": 25.0,
-        "data": "2026-11-25T16:30:18.102379-03:00"
-      },
       {
         "ativo": "ltc",
         "qtd": 0.09866600790513835,
         "preco": 253.0,
         "custo": 25.0,
         "data": "2026-11-25T21:15:13.819720-03:00"
+      },
+      {
+        "ativo": "doge",
+        "qtd": 75.34711741623907,
+        "preco": 0.3313,
+        "custo": 25.0,
+        "data": "2026-11-25T21:30:17.972679-03:00"
       }
     ],
     "ultima_oport": {},
     "parada_reserva": 100.0,
     "sinais": {
       "ltc": {
-        "status": "comprou",
-        "queda": 0.112,
-        "repique": 0.0743
+        "status": "posição aberta",
+        "queda": 0.1148,
+        "repique": 0.0709
       },
       "doge": {
-        "status": "posição aberta",
-        "queda": 0.126,
-        "repique": 0.0599
+        "status": "comprou",
+        "queda": 0.1247,
+        "repique": 0.0615
       },
       "ada": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1396,
-        "repique": 0.0593
+        "queda": 0.1365,
+        "repique": 0.063
       },
       "avax": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1941,
-        "repique": 0.057
+        "queda": 0.1943,
+        "repique": 0.0568
       },
       "near": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1144,
-        "repique": 0.1368
+        "queda": 0.1174,
+        "repique": 0.1331
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-25T21:15:13.819720-03:00",
-  "ultimo_salvamento": "2026-11-25T21:15:13.819720-03:00",
+  "ultima_checagem_carteiras": "2026-11-25T21:30:17.972679-03:00",
+  "ultimo_salvamento": "2026-11-25T21:30:17.972679-03:00",
   "tg_offset": 324349881,
   "valores_24h": [
     [
@@ -219,10 +219,15 @@
       "2026-11-25T21:15:13.819720-03:00",
       1878.84,
       1850.0
+    ],
+    [
+      "2026-11-25T21:30:17.972679-03:00",
+      1878.38,
+      1850.0
     ]
   ],
   "trava_queda": false,
-  "queda_24h": 0.0,
+  "queda_24h": 0.0002,
   "tendencia": {
     "btc": {
       "alta": false,
