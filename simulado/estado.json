@@ -42,24 +42,24 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-26T06:30:17.800526-03:00",
+  "ultima_execucao": "2026-11-26T07:00:22.817291-03:00",
   "ops_dia": {
     "data": "2026-11-26",
     "n": 0
   },
-  "ultimo_resumo": "2026-11-25",
+  "ultimo_resumo": "2026-11-26",
   "ultimos_precos": {
-    "btc": 355125.0,
-    "eth": 9929.19,
-    "sol": 414.7,
-    "xrp": 5.575,
-    "bnb": 3232.0,
-    "link": 54.08,
+    "btc": 355899.0,
+    "eth": 9949.78,
+    "sol": 415.0,
+    "xrp": 5.581,
+    "bnb": 3238.0,
+    "link": 54.09,
     "ltc": 255.2,
     "doge": 0.3312,
     "ada": 0.866,
-    "avax": 38.84,
-    "near": 17.93
+    "avax": 38.93,
+    "near": 17.86
   },
   "reserva": {
     "saldo": 500.0,
@@ -70,7 +70,7 @@
   "investido": 1000.0,
   "capital_total": 1850.0,
   "pico_cota": 1.0135837777383943,
-  "ops_periodo": 12,
+  "ops_periodo": 0,
   "satelite": {
     "inicio": "2026-11-25T11:31:09.031466-03:00",
     "aporte": 250.0,
@@ -150,18 +150,18 @@
       },
       "avax": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1997,
-        "repique": 0.0497
+        "queda": 0.1978,
+        "repique": 0.0522
       },
       "near": {
         "status": "sinal de compra (limite de 2 giros)",
-        "queda": 0.1232,
-        "repique": 0.1255
+        "queda": 0.1267,
+        "repique": 0.1212
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-26T06:30:17.800526-03:00",
-  "ultimo_salvamento": "2026-11-26T06:30:17.800526-03:00",
+  "ultima_checagem_carteiras": "2026-11-26T07:00:22.817291-03:00",
+  "ultimo_salvamento": "2026-11-26T07:00:22.817291-03:00",
   "tg_offset": 324349881,
   "valores_24h": [
     [
@@ -269,10 +269,15 @@
       "2026-11-26T06:30:17.800526-03:00",
       1877.01,
       1850.0
+    ],
+    [
+      "2026-11-26T07:00:22.817291-03:00",
+      1878.21,
+      1850.0
     ]
   ],
   "trava_queda": false,
-  "queda_24h": 0.0024,
+  "queda_24h": 0.0018,
   "tendencia": {
     "btc": {
       "alta": false,
