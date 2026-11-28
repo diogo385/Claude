@@ -42,23 +42,23 @@
   "operacoes": 6,
   "rebalanceamentos": 0,
   "taxas": 1.05,
-  "ultima_execucao": "2026-11-28T04:00:25.075096-03:00",
+  "ultima_execucao": "2026-11-28T05:00:20.509754-03:00",
   "ops_dia": {
     "data": "2026-11-28",
     "n": 0
   },
   "ultimo_resumo": "2026-11-27",
   "ultimos_precos": {
-    "btc": 336281.0,
-    "eth": 9327.48,
-    "sol": 401.9,
-    "xrp": 5.327,
-    "bnb": 3107.0,
-    "link": 51.56,
-    "ltc": 248.8,
-    "doge": 0.3209,
-    "ada": 0.821,
-    "avax": 36.76,
+    "btc": 336660.0,
+    "eth": 9335.72,
+    "sol": 400.8,
+    "xrp": 5.316,
+    "bnb": 3105.0,
+    "link": 51.65,
+    "ltc": 248.6,
+    "doge": 0.3197,
+    "ada": 0.827,
+    "avax": 36.81,
     "near": 17.08
   },
   "reserva": {
@@ -135,23 +135,23 @@
     "sinais": {
       "ltc": {
         "status": "posição aberta",
-        "queda": 0.1098,
-        "repique": 0.0565
+        "queda": 0.0973,
+        "repique": 0.0556
       },
       "doge": {
         "status": "posição aberta",
-        "queda": 0.1091,
-        "repique": 0.0282
+        "queda": 0.1124,
+        "repique": 0.0244
       },
       "ada": {
         "status": "caindo",
-        "queda": 0.1266,
-        "repique": 0.0148
+        "queda": 0.1202,
+        "repique": 0.0222
       },
       "avax": {
         "status": "caindo",
-        "queda": 0.2023,
-        "repique": 0.003
+        "queda": 0.2012,
+        "repique": 0.0044
       },
       "near": {
         "status": "sinal de compra (limite de 2 giros)",
@@ -160,15 +160,10 @@
       }
     }
   },
-  "ultima_checagem_carteiras": "2026-11-28T04:00:25.075096-03:00",
-  "ultimo_salvamento": "2026-11-28T04:00:25.075096-03:00",
+  "ultima_checagem_carteiras": "2026-11-28T05:00:20.509754-03:00",
+  "ultimo_salvamento": "2026-11-28T05:00:20.509754-03:00",
   "tg_offset": 324349881,
   "valores_24h": [
-    [
-      "2026-11-27T04:15:15.815159-03:00",
-      1854.08,
-      1850.0
-    ],
     [
       "2026-11-27T05:15:15.474493-03:00",
       1842.23,
@@ -288,10 +283,15 @@
       "2026-11-28T04:00:25.075096-03:00",
       1830.03,
       1850.0
+    ],
+    [
+      "2026-11-28T05:00:20.509754-03:00",
+      1830.29,
+      1850.0
     ]
   ],
   "trava_queda": false,
-  "queda_24h": 0.013,
+  "queda_24h": 0.0114,
   "tendencia": {
     "btc": {
       "alta": false,
